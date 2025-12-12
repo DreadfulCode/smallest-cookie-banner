@@ -6,18 +6,29 @@
 
 ~2KB minified + gzipped. Zero dependencies. TypeScript. Works with React, Vue, Angular, Svelte, or vanilla JS.
 
-## What Makes This Different
+## Features
 
-- **Geo-aware**: Auto-detects EU users (via timezone) for GDPR compliance
-- **Implied consent elsewhere**: Non-EU users get auto-accept after scroll/5s (legally sufficient)
-- **Truly minimal**: Every byte counts. No bloat.
-- **TypeScript**: Full type definitions included
-- **Framework agnostic**: Works with any framework or vanilla JS
-- **100% customizable**: Every string, every style, every behavior
-- **Full i18n**: Localize to any language
-- **Well-tested**: 86 tests, TDD approach
-- **WCAG 2.1 AA**: Fully accessible out of the box
-- **Secure**: CSS sanitization, input validation, CSP support
+### Minimal
+- **~2KB gzipped** — smaller than a favicon
+- **Zero dependencies** — no bloat, no supply chain risk
+- **No external requests** — works offline, no tracking
+
+### Flexible
+- **100% customizable** — every string, every style, every behavior
+- **Full i18n** — localize to any language (EN, NL, DE, ES, ZH, JA, etc.)
+- **CSS variables** — style with your own design system
+- **Framework agnostic** — React, Vue, Angular, Svelte, or vanilla JS
+
+### Smart
+- **Geo-aware** — auto-detects EU users via timezone for GDPR
+- **Implied consent** — auto-accepts in regions where it's legal (USA, Asia, etc.)
+- **TypeScript** — full type definitions included
+- **Well-tested** — 91 tests, TDD approach
+
+### Compliant & Accessible
+- **GDPR, CCPA, LGPD** — legally compliant worldwide
+- **WCAG 2.1 AA** — keyboard navigation, screen readers, 44px touch targets
+- **Secure** — CSS sanitization, input validation, CSP nonce support
 
 ## Quick Start
 
