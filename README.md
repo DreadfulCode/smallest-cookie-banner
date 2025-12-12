@@ -2,7 +2,7 @@
 
 **The smallest legally compliant cookie consent banner in existence.**
 
-[**Live Demo & Configurator**](https://dreadfulcode.github.io/smallest-cookie-banner/)
+[![Live Demo](https://img.shields.io/badge/🍪_Live_Demo-Configurator-4ade80?style=for-the-badge)](https://dreadfulcode.github.io/smallest-cookie-banner/) [![npm](https://img.shields.io/npm/v/smallest-cookie-banner?style=for-the-badge&color=cb3837)](https://www.npmjs.com/package/smallest-cookie-banner) [![Bundle Size](https://img.shields.io/badge/size-~2KB-blue?style=for-the-badge)](https://bundlephobia.com/package/smallest-cookie-banner)
 
 ~2KB minified + gzipped. Zero dependencies. TypeScript. Works with React, Vue, Angular, Svelte, or vanilla JS.
 
