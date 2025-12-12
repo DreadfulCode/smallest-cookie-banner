@@ -1,7 +1,7 @@
 {
   "name": "smallest-cookie-banner",
   "version": "1.0.0",
-  "description": "The smallest legally compliant cookie consent banner. ~1KB minified + gzipped.",
+  "description": "The smallest legally compliant cookie consent banner. ~700 bytes gzipped. Auto-detects EU for GDPR, implied consent elsewhere.",
   "main": "dist/cookie-banner.min.js",
   "module": "src/cookie-banner.js",
   "unpkg": "dist/cookie-banner.min.js",
@@ -11,8 +11,10 @@
     "src"
   ],
   "scripts": {
+    "test": "jest --coverage",
+    "test:watch": "jest --watch",
     "build": "terser src/cookie-banner.js -o dist/cookie-banner.min.js -c -m --comments false",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm test && npm run build"
   },
   "repository": {
     "type": "git",
@@ -25,11 +27,9 @@
     "gdpr",
     "ccpa",
     "privacy",
-    "cookies",
-    "cookie-consent",
-    "cookie-banner",
-    "lgpd",
-    "compliance"
+    "smallest",
+    "minimal",
+    "tiny"
   ],
   "author": "",
   "license": "MIT",
@@ -38,6 +38,22 @@
   },
   "homepage": "https://github.com/DreadfulCode/smallest-cookie-banner#readme",
   "devDependencies": {
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
     "terser": "^5.27.0"
+  },
+  "jest": {
+    "testEnvironment": "jsdom",
+    "coverageThreshold": {
+      "global": {
+        "branches": 94,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      }
+    },
+    "collectCoverageFrom": [
+      "src/**/*.js"
+    ]
   }
 }

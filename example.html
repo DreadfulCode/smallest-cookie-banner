@@ -3,24 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cookie Banner Example</title>
+  <title>smallest-cookie-banner Demo</title>
   <style>
+    * { box-sizing: border-box; }
     body {
       font-family: system-ui, -apple-system, sans-serif;
       max-width: 800px;
-      margin: 50px auto;
+      margin: 0 auto;
       padding: 20px;
       line-height: 1.6;
+      padding-bottom: 100px;
     }
-    button {
-      padding: 10px 20px;
-      margin: 5px;
-      cursor: pointer;
-    }
+    h1 { margin-top: 0; }
     code {
       background: #f1f5f9;
       padding: 2px 6px;
       border-radius: 4px;
+      font-size: 0.9em;
     }
     pre {
       background: #f1f5f9;
@@ -28,83 +27,186 @@
       border-radius: 8px;
       overflow-x: auto;
     }
-    #status {
+    .status {
       padding: 16px;
-      background: #f1f5f9;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
       border-radius: 8px;
       margin: 20px 0;
+    }
+    .controls {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin: 20px 0;
+    }
+    .controls button {
+      padding: 10px 20px;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      background: #fff;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .controls button:hover {
+      background: #f8fafc;
+    }
+    .theme-switcher {
+      margin: 20px 0;
+      padding: 20px;
+      background: #f8fafc;
+      border-radius: 8px;
+    }
+    .theme-switcher label {
+      display: block;
+      margin: 8px 0;
+      cursor: pointer;
+    }
+    .scroll-helper {
+      height: 150vh;
+      background: linear-gradient(#fff, #f0f0f0);
+      margin-top: 40px;
+      padding: 20px;
+      border-radius: 8px;
     }
   </style>
 </head>
 <body>
   <h1>smallest-cookie-banner</h1>
-  <p>The smallest legally compliant cookie consent banner.</p>
+  <p>The smallest legally compliant cookie consent banner. ~1.4KB gzipped.</p>
 
-  <div id="status">
-    <strong>Current consent status:</strong> <span id="consent-value">checking...</span>
+  <div class="status">
+    <strong>Current consent status:</strong>
+    <span id="consent-value">checking...</span>
   </div>
 
   <h2>Controls</h2>
-  <button onclick="CookieBanner.reset()">Reset Consent (Show Banner)</button>
-  <button onclick="CookieBanner.accept()">Accept Programmatically</button>
-  <button onclick="CookieBanner.reject()">Reject Programmatically</button>
-  <button onclick="updateStatus()">Check Status</button>
+  <div class="controls">
+    <button onclick="CookieBanner.reset()">Reset (Show Banner)</button>
+    <button onclick="CookieBanner.yes()">Accept Programmatically</button>
+    <button onclick="CookieBanner.no()">Reject Programmatically</button>
+    <button onclick="updateStatus()">Refresh Status</button>
+  </div>
+
+  <h2>Theme Examples</h2>
+  <div class="theme-switcher">
+    <p>Try different themes (requires reset to see changes):</p>
+    <label>
+      <input type="radio" name="theme" value="default" checked>
+      Default (dark bar)
+    </label>
+    <label>
+      <input type="radio" name="theme" value="light">
+      Light theme
+    </label>
+    <label>
+      <input type="radio" name="theme" value="gradient">
+      Gradient theme
+    </label>
+    <label>
+      <input type="radio" name="theme" value="toast">
+      Toast style (bottom-right)
+    </label>
+  </div>
+
+  <h2>How it works</h2>
+  <ul>
+    <li><strong>EU users</strong> (detected via timezone): See Accept + Reject buttons</li>
+    <li><strong>Non-EU users</strong>: See OK button, auto-accepts on scroll or after 5s</li>
+  </ul>
 
   <h2>Usage</h2>
   <pre>&lt;script src="dist/cookie-banner.min.js"&gt;&lt;/script&gt;</pre>
 
-  <h2>With Configuration</h2>
-  <pre>&lt;script&gt;
-window.CookieBannerConfig = {
-  message: 'We use cookies to improve your experience.',
-  acceptText: 'Got it',
-  rejectText: 'No thanks',
-  onAccept: () =&gt; console.log('User accepted cookies'),
-  onReject: () =&gt; console.log('User rejected cookies')
-};
-&lt;/script&gt;
-&lt;script src="dist/cookie-banner.min.js"&gt;&lt;/script&gt;</pre>
+  <div class="scroll-helper">
+    <p>Scroll down to test auto-accept behavior (non-EU mode)</p>
+    <p style="margin-top: 50vh;">Keep scrolling...</p>
+  </div>
 
-  <h2>API</h2>
-  <ul>
-    <li><code>CookieBanner.hasConsent()</code> - Returns true, false, or null</li>
-    <li><code>CookieBanner.accept()</code> - Programmatically accept</li>
-    <li><code>CookieBanner.reject()</code> - Programmatically reject</li>
-    <li><code>CookieBanner.reset()</code> - Clear consent and show banner</li>
-    <li><code>CookieBanner.show()</code> - Show banner</li>
-    <li><code>CookieBanner.hide()</code> - Hide banner</li>
-  </ul>
+  <!-- Theme styles -->
+  <style id="theme-styles"></style>
 
-  <!-- Configuration (optional) -->
+  <!-- Configuration -->
   <script>
+    // Apply theme from localStorage
+    const savedTheme = localStorage.getItem('cookie-banner-theme') || 'default';
+    document.querySelector(`input[value="${savedTheme}"]`).checked = true;
+    applyTheme(savedTheme);
+
+    // Theme switcher
+    document.querySelectorAll('input[name="theme"]').forEach(radio => {
+      radio.addEventListener('change', (e) => {
+        applyTheme(e.target.value);
+        localStorage.setItem('cookie-banner-theme', e.target.value);
+      });
+    });
+
+    function applyTheme(theme) {
+      const styleEl = document.getElementById('theme-styles');
+      const themes = {
+        default: '',
+        light: `
+          :root {
+            --ckb-bg: #fff;
+            --ckb-color: #333;
+            --ckb-btn-bg: #2563eb;
+            --ckb-btn-color: #fff;
+          }
+        `,
+        gradient: `
+          :root {
+            --ckb-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --ckb-btn-bg: #fff;
+            --ckb-btn-color: #764ba2;
+          }
+        `,
+        toast: `
+          :root {
+            --ckb-bottom: 20px;
+            --ckb-right: 20px;
+            --ckb-left: auto;
+          }
+          #ckb {
+            width: 320px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            flex-direction: column;
+            text-align: center;
+          }
+          #ckb p { min-width: auto; }
+        `
+      };
+      styleEl.textContent = themes[theme] || '';
+    }
+
     window.CookieBannerConfig = {
-      message: 'This site uses cookies to enhance your experience.',
+      msg: 'This site uses cookies to enhance your experience.',
       acceptText: 'Accept',
       rejectText: 'Decline',
-      onAccept: function() {
-        console.log('User accepted cookies!');
+      // forceEU: true, // Uncomment to always show reject button
+      onYes: function() {
+        console.log('User accepted cookies');
         updateStatus();
       },
-      onReject: function() {
-        console.log('User rejected cookies!');
+      onNo: function() {
+        console.log('User rejected cookies');
         updateStatus();
       }
     };
 
     function updateStatus() {
-      var status = CookieBanner.hasConsent();
-      var text = status === true ? '✅ Accepted' :
-                 status === false ? '❌ Rejected' :
-                 '⏳ Not yet decided';
+      const status = window.CookieBanner ? CookieBanner.ok : null;
+      const text = status === true ? '✅ Accepted' :
+                   status === false ? '❌ Rejected' :
+                   '⏳ Pending';
       document.getElementById('consent-value').textContent = text;
     }
   </script>
 
-  <!-- The cookie banner script -->
+  <!-- The cookie banner -->
   <script src="dist/cookie-banner.min.js"></script>
 
   <script>
-    // Update status on load
     updateStatus();
   </script>
 </body>

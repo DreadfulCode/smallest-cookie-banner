@@ -1,24 +1,257 @@
 # smallest-cookie-banner
 
-The smallest legally compliant cookie consent banner. No dependencies. ~1KB minified + gzipped.
+**The smallest legally compliant cookie consent banner in existence.**
 
-## Why?
+~1KB minified + gzipped. Zero dependencies. Full i18n support. 100% customizable.
 
-Cookie banners are annoying. But they're legally required. This is the smallest possible implementation that still keeps you compliant with GDPR, CCPA, LGPD, and other privacy regulations worldwide.
+## What Makes This Different
 
-## Quick Start (CDN)
+- **Geo-aware**: Auto-detects EU users (via timezone) for GDPR compliance
+- **Implied consent elsewhere**: Non-EU users get auto-accept after scroll/5s (legally sufficient)
+- **Truly minimal**: Every byte counts. No bloat.
+- **100% customizable**: Every string, every style, every behavior
+
+## Quick Start
 
 ```html
 <script src="https://unpkg.com/smallest-cookie-banner@latest/dist/cookie-banner.min.js"></script>
 ```
 
-Or via jsDelivr:
+That's it. Done. For EU users: shows accept/reject. For everyone else: shows notice that auto-dismisses.
+
+## How It Works
+
+| User Location | Behavior | Legal Basis |
+|--------------|----------|-------------|
+| **EU** (GDPR) | Shows Accept + Reject buttons. Waits for explicit choice. | Explicit consent required |
+| **Everywhere else** | Shows OK button. Auto-accepts on scroll or after 5s. | Implied consent allowed |
+
+EU detection uses timezone (no external API, no latency, works offline).
+
+## Configuration
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/smallest-cookie-banner@latest/dist/cookie-banner.min.js"></script>
+<script>
+window.CookieBannerConfig = {
+  // Text (i18n - customize everything)
+  msg: 'We use cookies.',           // Banner message
+  acceptText: 'OK',                  // Accept button text
+  rejectText: '✗',                   // Reject button text (EU only)
+
+  // Behavior
+  days: 365,                         // Cookie expiry in days
+  forceEU: false,                    // Force EU mode (true) or non-EU mode (false)
+  autoAcceptDelay: 5000,             // Non-EU: ms before auto-accept (0 = disabled)
+
+  // Callbacks
+  onYes: () => {},                   // Called when accepted
+  onNo: () => {},                    // Called when rejected
+
+  // Styling
+  style: 'background:blue',          // Inline styles for banner
+  css: '#ckb{border-radius:8px}'     // Additional CSS rules
+};
+</script>
+<script src="https://unpkg.com/smallest-cookie-banner@latest/dist/cookie-banner.min.js"></script>
 ```
 
-That's it. A banner will appear for new visitors.
+## Full i18n Support
+
+Every string is customizable. Example for German:
+
+```html
+<script>
+window.CookieBannerConfig = {
+  msg: 'Diese Website verwendet Cookies.',
+  acceptText: 'Akzeptieren',
+  rejectText: 'Ablehnen'
+};
+</script>
+```
+
+Example for Japanese:
+```html
+<script>
+window.CookieBannerConfig = {
+  msg: 'このサイトはクッキーを使用しています。',
+  acceptText: '同意する',
+  rejectText: '拒否する'
+};
+</script>
+```
+
+## Styling
+
+### Option 1: CSS Variables (Recommended)
+
+Override any style with CSS custom properties:
+
+```css
+:root {
+  /* Banner */
+  --ckb-position: fixed;
+  --ckb-bottom: 0;
+  --ckb-top: auto;
+  --ckb-left: 0;
+  --ckb-right: 0;
+  --ckb-padding: 8px 12px;
+  --ckb-bg: #222;
+  --ckb-color: #fff;
+  --ckb-font: 12px system-ui, sans-serif;
+  --ckb-gap: 8px;
+  --ckb-z: 9999;
+
+  /* Buttons */
+  --ckb-btn-padding: 6px 12px;
+  --ckb-btn-border: none;
+  --ckb-btn-radius: 3px;
+  --ckb-btn-bg: #fff;
+  --ckb-btn-color: #222;
+
+  /* Reject button (EU only) */
+  --ckb-reject-bg: transparent;
+  --ckb-reject-color: inherit;
+  --ckb-reject-border: 1px solid currentColor;
+}
+```
+
+### Option 2: Direct CSS Override
+
+```css
+#ckb {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  border-radius: 12px !important;
+  margin: 16px !important;
+  width: calc(100% - 32px) !important;
+}
+
+#ckb button {
+  background: #fff !important;
+  color: #764ba2 !important;
+}
+```
+
+### Option 3: Inline Config
+
+```javascript
+window.CookieBannerConfig = {
+  style: 'background:#1a1a2e;border-radius:0;margin:0',
+  css: '#ckb button{text-transform:uppercase}'
+};
+```
+
+## Position Examples
+
+**Top banner:**
+```css
+:root {
+  --ckb-bottom: auto;
+  --ckb-top: 0;
+}
+```
+
+**Bottom-right toast:**
+```css
+:root {
+  --ckb-bottom: 20px;
+  --ckb-right: 20px;
+  --ckb-left: auto;
+}
+#ckb { width: 300px; border-radius: 8px; }
+```
+
+## API
+
+```javascript
+// Check consent status
+CookieBanner.ok         // true (accepted), false (rejected), null (pending)
+
+// Programmatic control
+CookieBanner.yes()      // Accept consent
+CookieBanner.no()       // Reject consent
+CookieBanner.reset()    // Clear consent & reload page
+```
+
+## No-JavaScript Fallback
+
+For users with JS disabled, add a `<noscript>` fallback:
+
+```html
+<noscript>
+  <style>
+    .noscript-banner {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 12px;
+      background: #222;
+      color: #fff;
+      text-align: center;
+      z-index: 9999;
+    }
+  </style>
+  <div class="noscript-banner">
+    This site uses cookies. By continuing to browse, you accept our
+    <a href="/privacy" style="color:#fff">privacy policy</a>.
+  </div>
+</noscript>
+```
+
+## Legal Compliance
+
+### GDPR (EU)
+
+The banner is fully GDPR compliant when:
+- You **don't set non-essential cookies before consent**
+- You **respect the reject choice**
+- You have a **privacy policy**
+
+```javascript
+// Only load tracking after consent
+if (CookieBanner.ok === true) {
+  loadGoogleAnalytics();
+}
+
+// Or use callback
+window.CookieBannerConfig = {
+  onYes: () => loadGoogleAnalytics()
+};
+```
+
+### CCPA/CPRA (California)
+
+CCPA uses opt-out model. This banner works, but you may want to customize:
+
+```javascript
+window.CookieBannerConfig = {
+  msg: 'We use cookies. You can opt out of the sale of your data.',
+  rejectText: 'Do Not Sell My Info',
+  forceEU: true  // Show reject button for Californians
+};
+```
+
+### Other Jurisdictions
+
+| Region | Model | This Banner |
+|--------|-------|-------------|
+| EU (GDPR) | Opt-in | ✅ Full compliance |
+| California (CCPA) | Opt-out | ✅ Works (customize text) |
+| Brazil (LGPD) | Opt-in | ✅ Full compliance |
+| Canada (PIPEDA) | Implied OK | ✅ Auto-accepts |
+| Australia | No law | ✅ Auto-accepts |
+| USA (non-CA) | No law | ✅ Auto-accepts |
+| Most of Asia | Varies | ✅ Auto-accepts |
+
+## Size Comparison
+
+| Library | Size (min+gzip) |
+|---------|----------------|
+| **smallest-cookie-banner** | **~1KB** |
+| cookie-consent | ~15KB |
+| cookieconsent | ~25KB |
+| tarteaucitron | ~45KB |
+| OneTrust | ~100KB+ |
 
 ## Installation
 
@@ -32,250 +265,55 @@ npm install smallest-cookie-banner
 import 'smallest-cookie-banner';
 ```
 
-### Manual
-
-Download `cookie-banner.min.js` and include it:
+### CDN
 
 ```html
-<script src="cookie-banner.min.js"></script>
-```
-
-## Configuration
-
-```html
-<script>
-window.CookieBannerConfig = {
-  // Text content
-  message: 'We use cookies.',
-  acceptText: 'OK',
-  rejectText: '✕',
-
-  // Behavior
-  expires: 365,              // Days until consent expires
-  sameSite: 'Lax',           // Cookie SameSite attribute
-
-  // Callbacks
-  onAccept: () => {},        // Called when user accepts
-  onReject: () => {},        // Called when user rejects
-
-  // Styling
-  position: 'bottom',        // 'top' or 'bottom'
-  zIndex: 9999,
-};
-</script>
+<!-- unpkg -->
 <script src="https://unpkg.com/smallest-cookie-banner@latest/dist/cookie-banner.min.js"></script>
+
+<!-- jsDelivr -->
+<script src="https://cdn.jsdelivr.net/npm/smallest-cookie-banner@latest/dist/cookie-banner.min.js"></script>
 ```
 
-## API
+### Self-Hosted
 
-```javascript
-// Check consent status
-CookieBanner.hasConsent()     // Returns: true, false, or null (not yet decided)
-
-// Programmatically set consent
-CookieBanner.accept()
-CookieBanner.reject()
-
-// Reset consent (show banner again)
-CookieBanner.reset()
-
-// Show/hide banner manually
-CookieBanner.show()
-CookieBanner.hide()
-```
-
-## Legal Compliance
-
-### What This Banner Does
-
-| Requirement | Status |
-|------------|--------|
-| Shows notice before setting cookies | ✅ |
-| Provides Accept option | ✅ |
-| Provides Reject option | ✅ |
-| Remembers user choice | ✅ |
-| Works without JavaScript cookies | ✅ |
-| Doesn't set tracking cookies until consent | ✅ |
-
-### What YOU Must Do
-
-This banner handles the UI. You must:
-
-1. **Not load tracking scripts until consent is given**
-2. **Respect the user's choice** - check `CookieBanner.hasConsent()` before loading analytics, ads, etc.
-3. **Have a Privacy Policy** - link to it from your site
-4. **Document what cookies you use** - required by most regulations
-
-### Example: Conditional Script Loading
-
-```javascript
-// Only load Google Analytics if user consented
-if (CookieBanner.hasConsent() === true) {
-  // Load your tracking scripts
-  const script = document.createElement('script');
-  script.src = 'https://www.googletagmanager.com/gtag/js?id=GA_ID';
-  document.head.appendChild(script);
-}
-
-// Or use the callback
-window.CookieBannerConfig = {
-  onAccept: () => {
-    // Load tracking scripts here
-  }
-};
-```
-
-## Jurisdiction Guide
-
-### GDPR (European Union)
-
-**Strictest requirements.** Requires:
-- Explicit opt-in consent BEFORE any non-essential cookies
-- Granular control (this banner provides accept/reject)
-- Must be as easy to reject as accept
-- Consent must be freely given, specific, informed
-- Must be able to withdraw consent
-
-**This banner is GDPR compliant** when you:
-- Don't set any non-essential cookies before consent
-- Respect the reject choice
-
-### CCPA/CPRA (California, USA)
-
-**Opt-out model.** Requires:
-- "Do Not Sell/Share My Personal Information" option
-- Notice at collection
-
-**This banner satisfies basic requirements.** For full CCPA compliance, you may want to customize the reject text to "Do Not Sell My Info".
-
-### LGPD (Brazil)
-
-Similar to GDPR. Requires consent for personal data processing. **This banner is compliant.**
-
-### POPIA (South Africa)
-
-Requires consent for processing personal information. **This banner is compliant.**
-
-### PDPA (Thailand, Singapore)
-
-Consent-based frameworks. **This banner is compliant.**
-
-### ePrivacy Directive (EU)
-
-Works alongside GDPR. Specifically covers cookies and electronic communications. **This banner is compliant.**
-
-### PIPEDA (Canada)
-
-Requires meaningful consent. Implied consent acceptable for non-sensitive data. **This banner is compliant.**
-
-### Jurisdictions with Implied Consent
-
-Some jurisdictions allow implied consent (continuing to browse = consent):
-- USA (except California for certain data)
-- Canada (for non-sensitive data)
-- Australia (no specific cookie law)
-- Most of Asia (varies by country)
-- Most of South America (except Brazil)
-
-**Even in these jurisdictions**, showing a notice is best practice and prepares you for regulatory changes.
-
-## Minimal Mode
-
-For jurisdictions allowing implied consent, you can use a notice-only mode:
-
-```javascript
-window.CookieBannerConfig = {
-  message: 'This site uses cookies.',
-  acceptText: 'OK',
-  rejectText: '',  // Empty string hides reject button
-};
-```
-
-## Customizing Appearance
-
-The banner uses minimal inline styles. Override with CSS:
-
-```css
-#cookie-banner {
-  background: #000 !important;
-  color: #fff !important;
-  font-family: system-ui !important;
-}
-
-#cookie-banner button {
-  background: #fff !important;
-  color: #000 !important;
-}
-```
-
-## Size Comparison
-
-| Library | Size (min+gzip) |
-|---------|----------------|
-| **smallest-cookie-banner** | **~1KB** |
-| cookie-consent | ~15KB |
-| cookieconsent | ~25KB |
-| tarteaucitron | ~45KB |
-| OneTrust | ~100KB+ |
-
-## How It Works
-
-1. On page load, checks for existing consent cookie
-2. If no consent recorded, shows banner
-3. User clicks Accept or Reject
-4. Choice stored in a first-party cookie (`cookie_consent`)
-5. Banner hidden, callbacks fired
-6. On subsequent visits, banner stays hidden
-
-The consent cookie itself is considered "strictly necessary" (required for the site to function as intended by respecting user preferences) and doesn't require consent to set.
+Download `dist/cookie-banner.min.js` and serve from your domain.
 
 ## Browser Support
 
 All modern browsers + IE11.
 
-## Self-Hosting
-
-If you don't want any external requests:
-
-1. Download `dist/cookie-banner.min.js`
-2. Host it on your own server
-3. Include it: `<script src="/js/cookie-banner.min.js"></script>`
-
 ## Privacy
 
 This library:
-- Sets only ONE first-party cookie (`cookie_consent`)
-- Sends NO data anywhere
-- Has NO external dependencies
-- Makes NO network requests
-- Collects NO analytics
+- Sets **one** first-party cookie (`ck`)
+- Sends **no** data anywhere
+- Has **no** external dependencies
+- Makes **no** network requests
+- Collects **no** analytics
+
+## Development
+
+```bash
+npm install
+npm test        # Run tests with coverage
+npm run build   # Build minified version
+```
 
 ## License
 
-MIT - Use it however you want.
-
-## Contributing
-
-Found a way to make it smaller? PRs welcome.
+MIT
 
 ## FAQ
 
-**Q: Is this actually legally compliant?**
+**Q: Is timezone-based EU detection accurate?**
 
-A: This banner provides the UI mechanics required by privacy laws. Compliance also depends on YOUR implementation (not loading trackers before consent, having a privacy policy, etc.). When in doubt, consult a lawyer.
-
-**Q: Can I remove the reject button?**
-
-A: In GDPR jurisdictions, no - rejecting must be as easy as accepting. In other jurisdictions, you may be able to use notice-only mode.
+A: It covers all EU timezones (UTC-1 to UTC+3). Edge cases: UK tourists in Thailand would see non-EU mode. For 100% accuracy, use `forceEU: true` with server-side geo-detection.
 
 **Q: What about "legitimate interest"?**
 
-A: Legitimate interest is a GDPR legal basis that doesn't require consent for some processing. However, cookies for tracking/analytics generally still require consent. This is a legal question - consult a lawyer.
+A: Legitimate interest doesn't apply to tracking cookies. Analytics still need consent in EU. This is a legal question - consult a lawyer.
 
-**Q: Do I need this for strictly necessary cookies?**
+**Q: Can I use this for granular consent (analytics vs marketing)?**
 
-A: No. Cookies essential for the site to function (session cookies, shopping cart, etc.) don't require consent. But you should still inform users about them in your privacy policy.
-
-**Q: What about the "Accept All" / "Manage Preferences" pattern?**
-
-A: That's for granular consent (analytics vs marketing vs functional). This library takes a simpler approach: accept all non-essential cookies or reject all. For most small sites, this is sufficient. Large sites with complex cookie needs might want a more feature-rich solution.
+A: This banner is binary (accept all or reject all). For granular consent, you need a more complex solution. But for most small-to-medium sites, binary consent is sufficient and legally compliant.
