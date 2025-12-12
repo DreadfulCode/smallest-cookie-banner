@@ -1,0 +1,43 @@
+{
+  "name": "smallest-cookie-banner",
+  "version": "1.0.0",
+  "description": "The smallest legally compliant cookie consent banner. ~1KB minified + gzipped.",
+  "main": "dist/cookie-banner.min.js",
+  "module": "src/cookie-banner.js",
+  "unpkg": "dist/cookie-banner.min.js",
+  "jsdelivr": "dist/cookie-banner.min.js",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "terser src/cookie-banner.js -o dist/cookie-banner.min.js -c -m --comments false",
+    "prepublishOnly": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DreadfulCode/smallest-cookie-banner.git"
+  },
+  "keywords": [
+    "cookie",
+    "banner",
+    "consent",
+    "gdpr",
+    "ccpa",
+    "privacy",
+    "cookies",
+    "cookie-consent",
+    "cookie-banner",
+    "lgpd",
+    "compliance"
+  ],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/DreadfulCode/smallest-cookie-banner/issues"
+  },
+  "homepage": "https://github.com/DreadfulCode/smallest-cookie-banner#readme",
+  "devDependencies": {
+    "terser": "^5.27.0"
+  }
+}

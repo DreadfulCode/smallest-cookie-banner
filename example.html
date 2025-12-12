@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cookie Banner Example</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    button {
+      padding: 10px 20px;
+      margin: 5px;
+      cursor: pointer;
+    }
+    code {
+      background: #f1f5f9;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    pre {
+      background: #f1f5f9;
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+    }
+    #status {
+      padding: 16px;
+      background: #f1f5f9;
+      border-radius: 8px;
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>smallest-cookie-banner</h1>
+  <p>The smallest legally compliant cookie consent banner.</p>
+
+  <div id="status">
+    <strong>Current consent status:</strong> <span id="consent-value">checking...</span>
+  </div>
+
+  <h2>Controls</h2>
+  <button onclick="CookieBanner.reset()">Reset Consent (Show Banner)</button>
+  <button onclick="CookieBanner.accept()">Accept Programmatically</button>
+  <button onclick="CookieBanner.reject()">Reject Programmatically</button>
+  <button onclick="updateStatus()">Check Status</button>
+
+  <h2>Usage</h2>
+  <pre>&lt;script src="dist/cookie-banner.min.js"&gt;&lt;/script&gt;</pre>
+
+  <h2>With Configuration</h2>
+  <pre>&lt;script&gt;
+window.CookieBannerConfig = {
+  message: 'We use cookies to improve your experience.',
+  acceptText: 'Got it',
+  rejectText: 'No thanks',
+  onAccept: () =&gt; console.log('User accepted cookies'),
+  onReject: () =&gt; console.log('User rejected cookies')
+};
+&lt;/script&gt;
+&lt;script src="dist/cookie-banner.min.js"&gt;&lt;/script&gt;</pre>
+
+  <h2>API</h2>
+  <ul>
+    <li><code>CookieBanner.hasConsent()</code> - Returns true, false, or null</li>
+    <li><code>CookieBanner.accept()</code> - Programmatically accept</li>
+    <li><code>CookieBanner.reject()</code> - Programmatically reject</li>
+    <li><code>CookieBanner.reset()</code> - Clear consent and show banner</li>
+    <li><code>CookieBanner.show()</code> - Show banner</li>
+    <li><code>CookieBanner.hide()</code> - Hide banner</li>
+  </ul>
+
+  <!-- Configuration (optional) -->
+  <script>
+    window.CookieBannerConfig = {
+      message: 'This site uses cookies to enhance your experience.',
+      acceptText: 'Accept',
+      rejectText: 'Decline',
+      onAccept: function() {
+        console.log('User accepted cookies!');
+        updateStatus();
+      },
+      onReject: function() {
+        console.log('User rejected cookies!');
+        updateStatus();
+      }
+    };
+
+    function updateStatus() {
+      var status = CookieBanner.hasConsent();
+      var text = status === true ? '✅ Accepted' :
+                 status === false ? '❌ Rejected' :
+                 '⏳ Not yet decided';
+      document.getElementById('consent-value').textContent = text;
+    }
+  </script>
+
+  <!-- The cookie banner script -->
+  <script src="dist/cookie-banner.min.js"></script>
+
+  <script>
+    // Update status on load
+    updateStatus();
+  </script>
+</body>
+</html>
