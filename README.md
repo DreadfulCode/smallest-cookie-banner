@@ -4,6 +4,8 @@
 
 ~2KB minified + gzipped. Zero dependencies. TypeScript. Works with React, Vue, Angular, Svelte, or vanilla JS.
 
+**[Live Configurator](https://dreadfulcode.github.io/smallest-cookie-banner/)** | [npm](https://www.npmjs.com/package/smallest-cookie-banner) | [GitHub](https://github.com/DreadfulCode/smallest-cookie-banner)
+
 ## What Makes This Different
 
 - **Geo-aware**: Auto-detects EU users (via timezone) for GDPR compliance
