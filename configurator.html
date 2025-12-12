@@ -494,7 +494,7 @@
           <div class="preview-url">yourwebsite.com</div>
         </div>
         <div class="preview-content">
-          <iframe id="preview-iframe"></iframe>
+          <iframe id="preview-iframe" sandbox="allow-scripts"></iframe>
         </div>
       </div>
 
@@ -514,6 +514,35 @@
   </div>
 
   <script>
+    // Security: Escape functions for different contexts
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    function escapeJs(str) {
+      return str
+        .replace(/\\/g, '\\\\')
+        .replace(/'/g, "\\'")
+        .replace(/"/g, '\\"')
+        .replace(/\n/g, '\\n')
+        .replace(/\r/g, '\\r')
+        .replace(/</g, '\\x3C')
+        .replace(/>/g, '\\x3E');
+    }
+
+    function escapeCss(str) {
+      // Remove dangerous CSS patterns
+      return str
+        .replace(/<[^>]*>/g, '') // Remove HTML tags
+        .replace(/@\s*i\s*m\s*p\s*o\s*r\s*t\b[^;]*(;|$)/gi, '') // Remove @import
+        .replace(/e\s*x\s*p\s*r\s*e\s*s\s*s\s*i\s*o\s*n\s*\([^)]*\)/gi, '') // Remove expression()
+        .replace(/javascript\s*:/gi, '') // Remove javascript:
+        .replace(/behavior\s*:[^;]*(;|$)/gi, '') // Remove behavior:
+        .replace(/-moz-binding\s*:[^;]*(;|$)/gi, ''); // Remove -moz-binding
+    }
+
     // State
     let currentTab = 'html';
 
@@ -638,6 +667,14 @@
         `;
       }
 
+      // Sanitize all user inputs for the preview
+      const safeBgColor = escapeHtml(config.bgColor);
+      const safeTextColor = escapeHtml(config.textColor);
+      const safeBtnBg = escapeHtml(config.btnBg);
+      const safeBtnColor = escapeHtml(config.btnColor);
+      const safeFontFamily = escapeHtml(config.fontFamily);
+      const safeCustomCss = escapeCss(config.customCss);
+
       return `<!DOCTYPE html>
 <html>
 <head>
@@ -659,18 +696,18 @@
     h1 { margin-top: 0; }
     p { color: #666; line-height: 1.6; }
     :root {
-      --ckb-bg: ${config.bgColor};
-      --ckb-color: ${config.textColor};
-      --ckb-btn-bg: ${config.btnBg};
-      --ckb-btn-color: ${config.btnColor};
-      --ckb-font: ${config.fontSize}px ${config.fontFamily};
-      --ckb-padding: ${config.padding}px 16px;
-      --ckb-btn-radius: ${config.btnRadius}px;
-      --ckb-z: ${config.zIndex};
+      --ckb-bg: ${safeBgColor};
+      --ckb-color: ${safeTextColor};
+      --ckb-btn-bg: ${safeBtnBg};
+      --ckb-btn-color: ${safeBtnColor};
+      --ckb-font: ${parseInt(config.fontSize)}px ${safeFontFamily};
+      --ckb-padding: ${parseInt(config.padding)}px 16px;
+      --ckb-btn-radius: ${parseInt(config.btnRadius)}px;
+      --ckb-z: ${parseInt(config.zIndex)};
       ${getPositionCSS(config.position)}
     }
     ${extraCSS}
-    ${config.customCss}
+    ${safeCustomCss}
   </style>
 </head>
 <body>
@@ -686,8 +723,8 @@
       acceptText: ${JSON.stringify(config.acceptText)},
       rejectText: ${JSON.stringify(config.rejectText)},
       ${forceEU !== 'undefined' ? `forceEU: ${forceEU},` : ''}
-      autoAcceptDelay: ${config.autoAcceptDelay},
-      days: ${config.days},
+      autoAcceptDelay: ${parseInt(config.autoAcceptDelay)},
+      days: ${parseInt(config.days)},
       onYes: function() { console.log('Accepted!'); },
       onNo: function() { console.log('Rejected!'); }
     };
@@ -736,29 +773,37 @@
       }
 
       if (currentTab === 'css') {
+        // Sanitize values for CSS tab
+        const cssBgColor = escapeHtml(config.bgColor);
+        const cssTextColor = escapeHtml(config.textColor);
+        const cssBtnBg = escapeHtml(config.btnBg);
+        const cssBtnColor = escapeHtml(config.btnColor);
+        const cssFontFamily = escapeHtml(config.fontFamily);
+        const cssCustomCss = escapeCss(config.customCss);
+
         return `<span class="comment">/* Add to your CSS */</span>
 <span class="keyword">:root</span> {
-  <span class="property">--ckb-bg</span>: <span class="string">${config.bgColor}</span>;
-  <span class="property">--ckb-color</span>: <span class="string">${config.textColor}</span>;
-  <span class="property">--ckb-btn-bg</span>: <span class="string">${config.btnBg}</span>;
-  <span class="property">--ckb-btn-color</span>: <span class="string">${config.btnColor}</span>;
-  <span class="property">--ckb-font</span>: <span class="string">${config.fontSize}px ${config.fontFamily}</span>;
-  <span class="property">--ckb-padding</span>: <span class="string">${config.padding}px 16px</span>;
-  <span class="property">--ckb-btn-radius</span>: <span class="string">${config.btnRadius}px</span>;
-  <span class="property">--ckb-z</span>: <span class="string">${config.zIndex}</span>;${positionVars ? '\n  ' + positionVars.split(';').filter(s => s.trim()).join(';\n  ') + ';' : ''}
-}${extraCSS}${config.customCss ? '\n\n' + config.customCss : ''}`;
+  <span class="property">--ckb-bg</span>: <span class="string">${cssBgColor}</span>;
+  <span class="property">--ckb-color</span>: <span class="string">${cssTextColor}</span>;
+  <span class="property">--ckb-btn-bg</span>: <span class="string">${cssBtnBg}</span>;
+  <span class="property">--ckb-btn-color</span>: <span class="string">${cssBtnColor}</span>;
+  <span class="property">--ckb-font</span>: <span class="string">${parseInt(config.fontSize)}px ${cssFontFamily}</span>;
+  <span class="property">--ckb-padding</span>: <span class="string">${parseInt(config.padding)}px 16px</span>;
+  <span class="property">--ckb-btn-radius</span>: <span class="string">${parseInt(config.btnRadius)}px</span>;
+  <span class="property">--ckb-z</span>: <span class="string">${parseInt(config.zIndex)}</span>;${positionVars ? '\n  ' + positionVars.split(';').filter(s => s.trim()).join(';\n  ') + ';' : ''}
+}${extraCSS}${cssCustomCss ? '\n\n' + cssCustomCss : ''}`;
       }
 
-      // HTML tab
+      // HTML tab - use proper escaping for all user inputs
       let configObj = [];
       if (config.msg !== 'We use cookies to enhance your experience.') {
-        configObj.push(`  msg: '${config.msg.replace(/'/g, "\\'")}'`);
+        configObj.push(`  msg: '${escapeJs(config.msg)}'`);
       }
       if (config.acceptText !== 'Accept') {
-        configObj.push(`  acceptText: '${config.acceptText}'`);
+        configObj.push(`  acceptText: '${escapeJs(config.acceptText)}'`);
       }
       if (config.rejectText !== 'Decline') {
-        configObj.push(`  rejectText: '${config.rejectText}'`);
+        configObj.push(`  rejectText: '${escapeJs(config.rejectText)}'`);
       }
       if (forceEU !== null) {
         configObj.push(`  forceEU: ${forceEU}`);
@@ -770,20 +815,28 @@
         configObj.push(`  days: ${config.days}`);
       }
 
-      let cssVars = `  --ckb-bg: ${config.bgColor};
-  --ckb-color: ${config.textColor};
-  --ckb-btn-bg: ${config.btnBg};
-  --ckb-btn-color: ${config.btnColor};
-  --ckb-font: ${config.fontSize}px ${config.fontFamily};
-  --ckb-padding: ${config.padding}px 16px;
-  --ckb-btn-radius: ${config.btnRadius}px;
-  --ckb-z: ${config.zIndex};${positionVars ? '\n  ' + positionVars.split(';').filter(s => s.trim()).join(';\n  ') + ';' : ''}`;
+      // Sanitize CSS values for output
+      const safeBgColor = escapeHtml(config.bgColor);
+      const safeTextColor = escapeHtml(config.textColor);
+      const safeBtnBg = escapeHtml(config.btnBg);
+      const safeBtnColor = escapeHtml(config.btnColor);
+      const safeFontFamily = escapeHtml(config.fontFamily);
+      const safeCustomCss = escapeCss(config.customCss);
+
+      let cssVars = `  --ckb-bg: ${safeBgColor};
+  --ckb-color: ${safeTextColor};
+  --ckb-btn-bg: ${safeBtnBg};
+  --ckb-btn-color: ${safeBtnColor};
+  --ckb-font: ${parseInt(config.fontSize)}px ${safeFontFamily};
+  --ckb-padding: ${parseInt(config.padding)}px 16px;
+  --ckb-btn-radius: ${parseInt(config.btnRadius)}px;
+  --ckb-z: ${parseInt(config.zIndex)};${positionVars ? '\n  ' + positionVars.split(';').filter(s => s.trim()).join(';\n  ') + ';' : ''}`;
 
       return `<span class="comment">&lt;!-- Add to &lt;head&gt; --&gt;</span>
 <span class="keyword">&lt;style&gt;</span>
 :root {
 ${cssVars}
-}${extraCSS}${config.customCss ? '\n' + config.customCss : ''}
+}${extraCSS}${safeCustomCss ? '\n' + safeCustomCss : ''}
 <span class="keyword">&lt;/style&gt;</span>
 
 <span class="comment">&lt;!-- Add before &lt;/body&gt; --&gt;</span>
@@ -812,12 +865,8 @@ ${configObj.join(',\n')},
 
     // Reset banner in preview
     function resetBanner() {
-      const iframe = document.getElementById('preview-iframe');
-      if (iframe.contentWindow && iframe.contentWindow.CookieBanner) {
-        // Clear cookie and reload
-        iframe.contentDocument.cookie = 'ck=;expires=Thu,01 Jan 1970 00:00:00 GMT;path=/';
-        updatePreview();
-      }
+      // Simply reload the preview - the sandbox prevents direct access
+      updatePreview();
     }
 
     // Show tab
@@ -828,7 +877,7 @@ ${configObj.join(',\n')},
       document.getElementById('code-output').innerHTML = generateOutputCode(getConfig());
     }
 
-    // Copy code
+    // Copy code with fallback
     function copyCode() {
       const config = getConfig();
       let code = generateOutputCode(config)
@@ -837,11 +886,37 @@ ${configObj.join(',\n')},
         .replace(/&lt;/g, '<')
         .replace(/&gt;/g, '>');
 
-      navigator.clipboard.writeText(code).then(() => {
+      const showSuccess = () => {
         const btn = document.querySelector('.code-header button');
         btn.textContent = 'Copied!';
         setTimeout(() => btn.textContent = 'Copy', 2000);
-      });
+      };
+
+      // Try modern clipboard API first, fallback to execCommand
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(code).then(showSuccess).catch(() => {
+          // Fallback for older browsers or non-HTTPS
+          fallbackCopy(code, showSuccess);
+        });
+      } else {
+        fallbackCopy(code, showSuccess);
+      }
+    }
+
+    function fallbackCopy(text, onSuccess) {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand('copy');
+        onSuccess();
+      } catch (err) {
+        console.error('Copy failed:', err);
+      }
+      document.body.removeChild(textarea);
     }
 
     // Initial render
