@@ -332,6 +332,73 @@ describe('smallest-cookie-banner', () => {
       });
     });
 
+    describe('i18n / internationalization', () => {
+      it('supports Dutch localization', () => {
+        const banner = createCookieBanner({
+          msg: 'Wij gebruiken cookies om uw ervaring te verbeteren.',
+          acceptText: 'Accepteren',
+          rejectText: 'Weigeren',
+          forceEU: true
+        });
+        banner.show();
+        expect(document.getElementById('ckb')?.innerHTML).toContain('Wij gebruiken cookies');
+        expect(document.getElementById('cky')?.textContent).toBe('Accepteren');
+        expect(document.getElementById('ckn')?.textContent).toBe('Weigeren');
+      });
+
+      it('supports Japanese localization', () => {
+        const banner = createCookieBanner({
+          msg: 'このサイトはクッキーを使用しています。',
+          acceptText: '同意する',
+          rejectText: '拒否する',
+          forceEU: true
+        });
+        banner.show();
+        expect(document.getElementById('ckb')?.innerHTML).toContain('このサイトはクッキーを使用しています');
+        expect(document.getElementById('cky')?.textContent).toBe('同意する');
+        expect(document.getElementById('ckn')?.textContent).toBe('拒否する');
+      });
+
+      it('supports German localization', () => {
+        const banner = createCookieBanner({
+          msg: 'Diese Website verwendet Cookies.',
+          acceptText: 'Akzeptieren',
+          rejectText: 'Ablehnen',
+          forceEU: true
+        });
+        banner.show();
+        expect(document.getElementById('ckb')?.innerHTML).toContain('Diese Website verwendet Cookies');
+        expect(document.getElementById('cky')?.textContent).toBe('Akzeptieren');
+        expect(document.getElementById('ckn')?.textContent).toBe('Ablehnen');
+      });
+
+      it('supports Spanish localization', () => {
+        const banner = createCookieBanner({
+          msg: 'Usamos cookies para mejorar tu experiencia.',
+          acceptText: 'Aceptar',
+          rejectText: 'Rechazar',
+          forceEU: true
+        });
+        banner.show();
+        expect(document.getElementById('ckb')?.innerHTML).toContain('Usamos cookies');
+        expect(document.getElementById('cky')?.textContent).toBe('Aceptar');
+        expect(document.getElementById('ckn')?.textContent).toBe('Rechazar');
+      });
+
+      it('supports Chinese localization', () => {
+        const banner = createCookieBanner({
+          msg: '我们使用cookies来提升您的体验。',
+          acceptText: '接受',
+          rejectText: '拒绝',
+          forceEU: true
+        });
+        banner.show();
+        expect(document.getElementById('ckb')?.innerHTML).toContain('我们使用cookies');
+        expect(document.getElementById('cky')?.textContent).toBe('接受');
+        expect(document.getElementById('ckn')?.textContent).toBe('拒绝');
+      });
+    });
+
     describe('XSS prevention', () => {
       it('escapes HTML in message', () => {
         const banner = createCookieBanner({ msg: '<script>alert(1)</script>' });

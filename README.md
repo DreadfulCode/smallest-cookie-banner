@@ -125,6 +125,20 @@ interface CookieBannerConfig {
 ## i18n Examples
 
 ```typescript
+// English (default)
+window.CookieBannerConfig = {
+  msg: 'We use cookies to enhance your experience.',
+  acceptText: 'Accept',
+  rejectText: 'Decline'
+};
+
+// Dutch
+window.CookieBannerConfig = {
+  msg: 'Wij gebruiken cookies om uw ervaring te verbeteren.',
+  acceptText: 'Accepteren',
+  rejectText: 'Weigeren'
+};
+
 // German
 window.CookieBannerConfig = {
   msg: 'Diese Website verwendet Cookies.',
@@ -132,18 +146,25 @@ window.CookieBannerConfig = {
   rejectText: 'Ablehnen'
 };
 
+// Spanish
+window.CookieBannerConfig = {
+  msg: 'Usamos cookies para mejorar tu experiencia.',
+  acceptText: 'Aceptar',
+  rejectText: 'Rechazar'
+};
+
+// Chinese (Simplified)
+window.CookieBannerConfig = {
+  msg: '我们使用cookies来提升您的体验。',
+  acceptText: '接受',
+  rejectText: '拒绝'
+};
+
 // Japanese
 window.CookieBannerConfig = {
   msg: 'このサイトはクッキーを使用しています。',
   acceptText: '同意する',
   rejectText: '拒否する'
-};
-
-// French
-window.CookieBannerConfig = {
-  msg: 'Ce site utilise des cookies.',
-  acceptText: 'Accepter',
-  rejectText: 'Refuser'
 };
 ```
 
