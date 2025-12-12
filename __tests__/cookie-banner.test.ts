@@ -10,11 +10,15 @@ import {
   createCookieBanner,
   initLegacy,
   DEFAULT_CSS,
+  LegacyCookieBannerAPI,
 } from '../src/cookie-banner';
+
+// Store original location for restoration
+const originalLocation = window.location;
 
 describe('smallest-cookie-banner', () => {
   // Helper to reset state
-  function resetState() {
+  function resetState(): void {
     document.body.innerHTML = '';
     document.head.innerHTML = '';
     document.cookie.split(';').forEach((c) => {
@@ -23,16 +27,29 @@ describe('smallest-cookie-banner', () => {
         document.cookie = `${name}=;expires=Thu,01 Jan 1970 00:00:00 GMT;path=/`;
       }
     });
-    delete (window as any).CookieBanner;
-    delete (window as any).CookieBannerConfig;
+    window.CookieBanner = undefined;
+    window.CookieBannerConfig = undefined;
   }
 
   beforeEach(() => {
     resetState();
-    delete (window as any).location;
-    (window as any).location = { protocol: 'http:', reload: jest.fn() };
+    // Mock location with proper typing
+    Object.defineProperty(window, 'location', {
+      value: { protocol: 'http:', reload: jest.fn() },
+      writable: true,
+      configurable: true,
+    });
     Object.defineProperty(document, 'readyState', {
       value: 'complete',
+      writable: true,
+      configurable: true,
+    });
+  });
+
+  afterEach(() => {
+    // Restore original location
+    Object.defineProperty(window, 'location', {
+      value: originalLocation,
       writable: true,
       configurable: true,
     });
@@ -337,40 +354,42 @@ describe('smallest-cookie-banner', () => {
 
   describe('initLegacy()', () => {
     it('creates window.CookieBanner API', () => {
-      (window as any).CookieBannerConfig = {};
+      window.CookieBannerConfig = {};
       initLegacy();
-      expect((window as any).CookieBanner).toBeDefined();
-      expect(typeof (window as any).CookieBanner.yes).toBe('function');
-      expect(typeof (window as any).CookieBanner.no).toBe('function');
-      expect(typeof (window as any).CookieBanner.reset).toBe('function');
+      expect(window.CookieBanner).toBeDefined();
+      expect(typeof window.CookieBanner?.yes).toBe('function');
+      expect(typeof window.CookieBanner?.no).toBe('function');
+      expect(typeof window.CookieBanner?.reset).toBe('function');
     });
 
     it('shows banner automatically when no consent', () => {
-      (window as any).CookieBannerConfig = {};
+      window.CookieBannerConfig = {};
       initLegacy();
       expect(document.getElementById('ckb')).not.toBeNull();
     });
 
     it('does not show banner when consent exists', () => {
       document.cookie = 'ck=1;path=/';
-      (window as any).CookieBannerConfig = {};
+      window.CookieBannerConfig = {};
       initLegacy();
       expect(document.getElementById('ckb')).toBeNull();
     });
 
     it('legacy ok property reflects status', () => {
-      (window as any).CookieBannerConfig = {};
+      window.CookieBannerConfig = {};
       initLegacy();
-      expect((window as any).CookieBanner.ok).toBeNull();
-      (window as any).CookieBanner.yes();
-      expect((window as any).CookieBanner.ok).toBe(true);
+      const api = window.CookieBanner as LegacyCookieBannerAPI;
+      expect(api.ok).toBeNull();
+      api.yes();
+      expect(api.ok).toBe(true);
     });
 
     it('legacy reset clears cookie and reloads', () => {
-      (window as any).CookieBannerConfig = {};
+      window.CookieBannerConfig = {};
       initLegacy();
-      (window as any).CookieBanner.yes();
-      (window as any).CookieBanner.reset();
+      const api = window.CookieBanner as LegacyCookieBannerAPI;
+      api.yes();
+      api.reset();
       expect(window.location.reload).toHaveBeenCalled();
     });
   });

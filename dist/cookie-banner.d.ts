@@ -63,6 +63,12 @@ export interface LegacyCookieBannerAPI {
     reset(): void;
     destroy(): void;
 }
+declare global {
+    interface Window {
+        CookieBanner?: LegacyCookieBannerAPI;
+        CookieBannerConfig?: CookieBannerConfig;
+    }
+}
 /** Default CSS - uses CSS custom properties for easy overrides */
 export declare const DEFAULT_CSS = "#ckb{position:var(--ckb-position,fixed);bottom:var(--ckb-bottom,0);top:var(--ckb-top,auto);left:var(--ckb-left,0);right:var(--ckb-right,0);padding:var(--ckb-padding,8px 12px);background:var(--ckb-bg,#222);color:var(--ckb-color,#fff);font:var(--ckb-font,12px system-ui,sans-serif);display:flex;align-items:center;gap:var(--ckb-gap,8px);z-index:var(--ckb-z,9999);flex-wrap:wrap}#ckb p{margin:0;flex:1;min-width:200px}#ckb button{padding:var(--ckb-btn-padding,6px 12px);border:var(--ckb-btn-border,none);border-radius:var(--ckb-btn-radius,3px);background:var(--ckb-btn-bg,#fff);color:var(--ckb-btn-color,#222);font:inherit;cursor:pointer}#ckb #ckn{background:var(--ckb-reject-bg,transparent);color:var(--ckb-reject-color,inherit);border:var(--ckb-reject-border,1px solid currentColor)}";
 /**

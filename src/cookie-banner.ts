@@ -76,6 +76,14 @@ interface BannerElement extends HTMLDivElement {
   _cleanup?: () => void;
 }
 
+// Extend Window interface for global API
+declare global {
+  interface Window {
+    CookieBanner?: LegacyCookieBannerAPI;
+    CookieBannerConfig?: CookieBannerConfig;
+  }
+}
+
 // ============================================================================
 // Constants
 // ============================================================================
@@ -348,7 +356,7 @@ export function createCookieBanner(config: CookieBannerConfig = {}): CookieBanne
 export function initLegacy(): LegacyCookieBannerAPI | null {
   if (!isBrowser) return null;
 
-  const config = (window as any).CookieBannerConfig || {};
+  const config = window.CookieBannerConfig || {};
   const instance = createCookieBanner(config);
 
   // Show banner if no consent yet
@@ -381,7 +389,7 @@ export function initLegacy(): LegacyCookieBannerAPI | null {
     },
   };
 
-  (window as any).CookieBanner = legacyApi;
+  window.CookieBanner = legacyApi;
   return legacyApi;
 }
 
@@ -399,7 +407,7 @@ function autoInit(): void {
 }
 
 // Only auto-init if loaded as a script (not imported as module)
-if (isBrowser && typeof (window as any).CookieBannerConfig !== 'undefined') {
+if (isBrowser && typeof window.CookieBannerConfig !== 'undefined') {
   autoInit();
 }
 
