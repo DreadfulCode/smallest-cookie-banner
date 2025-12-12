@@ -27,6 +27,72 @@
       color: var(--text);
     }
 
+    /* Hero */
+    .hero {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      padding: 24px 20px;
+      text-align: center;
+      color: #fff;
+    }
+
+    .hero-content {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .hero-tagline {
+      font-size: 18px;
+      font-weight: 500;
+      margin-bottom: 16px;
+      opacity: 0.95;
+    }
+
+    .hero-stats {
+      display: flex;
+      justify-content: center;
+      gap: 32px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .hero-stats .stat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .hero-stats .stat strong {
+      font-size: 24px;
+      font-weight: 700;
+      color: #4ade80;
+    }
+
+    .hero-stats .stat span {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      opacity: 0.7;
+    }
+
+    .hero-features {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .hero-features span {
+      background: rgba(255,255,255,0.1);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+    }
+
+    @media (max-width: 600px) {
+      .hero-stats { gap: 20px; }
+      .hero-stats .stat strong { font-size: 20px; }
+    }
+
     /* Header */
     .header {
       background: var(--sidebar-bg);
@@ -622,7 +688,7 @@
   <header class="header">
     <h1><span>🍪</span> Cookie Banner Configurator</h1>
     <div class="header-links">
-      <a href="https://github.com/anthropics/smallest-cookie-banner" target="_blank">
+      <a href="https://github.com/DreadfulCode/smallest-cookie-banner" target="_blank">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
         GitHub
       </a>
@@ -632,6 +698,25 @@
       </a>
     </div>
   </header>
+
+  <!-- Hero Section -->
+  <div class="hero">
+    <div class="hero-content">
+      <p class="hero-tagline">The smallest legally compliant cookie consent banner in existence.</p>
+      <div class="hero-stats">
+        <div class="stat"><strong>~2KB</strong><span>gzipped</span></div>
+        <div class="stat"><strong>0</strong><span>dependencies</span></div>
+        <div class="stat"><strong>86</strong><span>tests</span></div>
+        <div class="stat"><strong>100%</strong><span>TypeScript</span></div>
+      </div>
+      <div class="hero-features">
+        <span>GDPR/CCPA Compliant</span>
+        <span>WCAG 2.1 AA</span>
+        <span>Full i18n</span>
+        <span>React/Vue/Angular/Vanilla</span>
+      </div>
+    </div>
+  </div>
 
   <div class="layout">
     <!-- Sidebar Controls -->
