@@ -96,6 +96,13 @@ const isBrowser = typeof window !== 'undefined' && typeof document !== 'undefine
 // ============================================================================
 
 /**
+ * Escape special regex characters to prevent ReDoS attacks
+ */
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
  * Detect if user is likely in EU based on timezone
  */
 export function isEU(): boolean {
@@ -109,7 +116,8 @@ export function isEU(): boolean {
  */
 export function getConsent(cookieName = 'ck'): string | null {
   if (!isBrowser) return null;
-  const match = document.cookie.match(new RegExp('(^|;)\\s*' + cookieName + '=([^;]*)'));
+  const escapedName = escapeRegex(cookieName);
+  const match = document.cookie.match(new RegExp('(^|;)\\s*' + escapedName + '=([^;]*)'));
   return match ? match[2] : null;
 }
 
@@ -132,7 +140,11 @@ export function setConsent(value: string, cookieName = 'ck', days = 365): void {
  */
 export function deleteConsent(cookieName = 'ck'): void {
   if (!isBrowser) return;
-  document.cookie = `${cookieName}=;expires=Thu,01 Jan 1970 00:00:00 GMT;path=/`;
+  let cookie = `${cookieName}=;expires=Thu,01 Jan 1970 00:00:00 GMT;path=/;SameSite=Lax`;
+  if (location.protocol === 'https:') {
+    cookie += ';Secure';
+  }
+  document.cookie = cookie;
 }
 
 /**
@@ -185,7 +197,7 @@ export function createCookieBanner(config: CookieBannerConfig = {}): CookieBanne
 
   let banner: BannerElement | null = null;
   let _status: boolean | null = null;
-  let styleId = `ckb-style-${Math.random().toString(36).slice(2, 8)}`;
+  const styleId = `ckb-style-${Math.random().toString(36).slice(2, 8)}`;
 
   // Check existing consent
   const existing = getConsent(cookieName);
@@ -377,12 +389,21 @@ export function initLegacy(): LegacyCookieBannerAPI | null {
 // Auto-initialization for script tag usage
 // ============================================================================
 
+// Track if already initialized to prevent double-init
+let _initialized = false;
+
+function autoInit(): void {
+  if (_initialized) return;
+  _initialized = true;
+  initLegacy();
+}
+
 // Only auto-init if loaded as a script (not imported as module)
 if (isBrowser && typeof (window as any).CookieBannerConfig !== 'undefined') {
-  initLegacy();
+  autoInit();
 }
 
 // Also check if script has no type="module" attribute
 if (isBrowser && document.currentScript && !document.currentScript.hasAttribute('type')) {
-  initLegacy();
+  autoInit();
 }

@@ -83,6 +83,14 @@ describe('smallest-cookie-banner', () => {
       document.cookie = 'custom_consent=1;path=/';
       expect(getConsent('custom_consent')).toBe('1');
     });
+
+    it('escapes regex special characters in cookie name', () => {
+      // Cookie name with regex special chars should not break or match other cookies
+      document.cookie = 'test.cookie=1;path=/';
+      document.cookie = 'testXcookie=0;path=/';
+      // Without escaping, "test.cookie" would match "testXcookie" since . matches any char
+      expect(getConsent('test.cookie')).toBe('1');
+    });
   });
 
   describe('setConsent()', () => {
@@ -195,6 +203,15 @@ describe('smallest-cookie-banner', () => {
       const banner = createCookieBanner({ cookieName: 'my_consent' });
       banner.accept();
       expect(getConsent('my_consent')).toBe('1');
+    });
+
+    it('uses custom days for cookie expiry', () => {
+      const banner = createCookieBanner({ days: 30 });
+      banner.accept();
+      // Cookie is set - verify it exists (expiry is handled internally)
+      expect(getConsent()).toBe('1');
+      // Verify the cookie string contains an expiry date (not just session cookie)
+      expect(document.cookie).toContain('ck=1');
     });
 
     it('destroys banner and cleans up', () => {

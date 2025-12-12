@@ -42,6 +42,12 @@
     // Utility Functions
     // ============================================================================
     /**
+     * Escape special regex characters to prevent ReDoS attacks
+     */
+    function escapeRegex(str) {
+        return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+    /**
      * Detect if user is likely in EU based on timezone
      */
     function isEU() {
@@ -57,7 +63,8 @@
         if (cookieName === void 0) { cookieName = 'ck'; }
         if (!isBrowser)
             return null;
-        var match = document.cookie.match(new RegExp('(^|;)\\s*' + cookieName + '=([^;]*)'));
+        var escapedName = escapeRegex(cookieName);
+        var match = document.cookie.match(new RegExp('(^|;)\\s*' + escapedName + '=([^;]*)'));
         return match ? match[2] : null;
     }
     /**
@@ -83,7 +90,11 @@
         if (cookieName === void 0) { cookieName = 'ck'; }
         if (!isBrowser)
             return;
-        document.cookie = "".concat(cookieName, "=;expires=Thu,01 Jan 1970 00:00:00 GMT;path=/");
+        var cookie = "".concat(cookieName, "=;expires=Thu,01 Jan 1970 00:00:00 GMT;path=/;SameSite=Lax");
+        if (location.protocol === 'https:') {
+            cookie += ';Secure';
+        }
+        document.cookie = cookie;
     }
     /**
      * Escape HTML to prevent XSS
@@ -295,12 +306,20 @@
     // ============================================================================
     // Auto-initialization for script tag usage
     // ============================================================================
+    // Track if already initialized to prevent double-init
+    var _initialized = false;
+    function autoInit() {
+        if (_initialized)
+            return;
+        _initialized = true;
+        initLegacy();
+    }
     // Only auto-init if loaded as a script (not imported as module)
     if (isBrowser && typeof window.CookieBannerConfig !== 'undefined') {
-        initLegacy();
+        autoInit();
     }
     // Also check if script has no type="module" attribute
     if (isBrowser && document.currentScript && !document.currentScript.hasAttribute('type')) {
-        initLegacy();
+        autoInit();
     }
 });
