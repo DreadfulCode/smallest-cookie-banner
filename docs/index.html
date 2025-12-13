@@ -850,10 +850,6 @@
             <div class="preset-preview" style="background:#fff;border:1px solid #ddd"></div>
             Light
           </div>
-          <div class="preset" data-preset="gradient" onclick="applyPreset('gradient')">
-            <div class="preset-preview" style="background:linear-gradient(135deg,#667eea,#764ba2)"></div>
-            Gradient
-          </div>
           <div class="preset" data-preset="minimal" onclick="applyPreset('minimal')">
             <div class="preset-preview" style="background:#f8f8f8;border:1px solid #e0e0e0"></div>
             Minimal
@@ -898,6 +894,24 @@
             <div class="field">
               <label>Reject Button</label>
               <input type="text" id="rejectText" value="Decline">
+            </div>
+          </div>
+          <!-- GDPR-specific text options -->
+          <div id="gdpr-text-options" style="display:none;margin-top:12px;padding-top:12px;border-top:1px dashed #ddd;">
+            <div class="help-text" style="margin-bottom:8px;color:#0369a1;font-weight:500;">GDPR Mode Text Options:</div>
+            <div class="field-row">
+              <div class="field">
+                <label>Customize Button</label>
+                <input type="text" id="settingsText" value="Customize">
+              </div>
+              <div class="field">
+                <label>Save Button</label>
+                <input type="text" id="saveText" value="Save Preferences">
+              </div>
+            </div>
+            <div class="field">
+              <label>Privacy Link Text</label>
+              <input type="text" id="privacyPolicyText" value="Privacy Policy">
             </div>
           </div>
         </div>
@@ -1288,14 +1302,6 @@
         rejectBg: 'transparent',
         focusColor: '#2563eb'
       },
-      gradient: {
-        bgColor: '#667eea',
-        textColor: '#ffffff',
-        btnBg: '#ffffff',
-        btnColor: '#667eea',
-        rejectBg: 'transparent',
-        focusColor: '#ffffff'
-      },
       minimal: {
         bgColor: '#f8f8f8',
         textColor: '#333333',
@@ -1342,7 +1348,18 @@
       customCss: document.getElementById('customCss'),
       privacyUrl: document.getElementById('privacyUrl'),
       termsUrl: document.getElementById('termsUrl'),
+      settingsText: document.getElementById('settingsText'),
+      saveText: document.getElementById('saveText'),
+      privacyPolicyText: document.getElementById('privacyPolicyText'),
     };
+
+    // Show/hide GDPR text options based on banner mode
+    const gdprTextOptions = document.getElementById('gdpr-text-options');
+    inputs.bannerMode?.addEventListener('change', () => {
+      const isGdpr = inputs.bannerMode.value === 'gdpr';
+      if (gdprTextOptions) gdprTextOptions.style.display = isGdpr ? 'block' : 'none';
+      updatePreview();
+    });
 
     // Sync color inputs
     ['bgColor', 'textColor', 'btnBg', 'btnColor', 'rejectBg', 'focusColor'].forEach(name => {
@@ -1432,6 +1449,9 @@
         customCss: inputs.customCss.value,
         privacyUrl: inputs.privacyUrl.value.trim(),
         termsUrl: inputs.termsUrl.value.trim(),
+        settingsText: inputs.settingsText.value,
+        saveText: inputs.saveText.value,
+        privacyPolicyText: inputs.privacyPolicyText.value,
       };
     }
 
@@ -1604,11 +1624,21 @@
       if (config.days !== 365) {
         configObj.push(`  days: ${config.days}`);
       }
+      // Privacy policy URL (library uses privacyPolicyUrl)
       if (config.privacyUrl) {
-        configObj.push(`  privacyUrl: '${escapeJs(config.privacyUrl)}'`);
+        configObj.push(`  privacyPolicyUrl: '${escapeJs(config.privacyUrl)}'`);
       }
-      if (config.termsUrl) {
-        configObj.push(`  termsUrl: '${escapeJs(config.termsUrl)}'`);
+      // GDPR-specific options
+      if (config.bannerMode === 'gdpr') {
+        if (config.settingsText !== 'Customize') {
+          configObj.push(`  settingsText: '${escapeJs(config.settingsText)}'`);
+        }
+        if (config.saveText !== 'Save Preferences') {
+          configObj.push(`  saveText: '${escapeJs(config.saveText)}'`);
+        }
+      }
+      if (config.privacyUrl && config.privacyPolicyText !== 'Privacy Policy') {
+        configObj.push(`  privacyPolicyText: '${escapeJs(config.privacyPolicyText)}'`);
       }
 
       let cssVars = `  --ckb-bg: ${escapeHtml(config.bgColor)};
@@ -1675,7 +1705,7 @@ ${config.bannerMode === 'gdpr' ? `  onConsent: function(consent) {
       // Update privacy/terms links
       const linksSpan = document.getElementById('preview-links');
       let linksHtml = [];
-      if (config.privacyUrl) linksHtml.push(`<a href="#" style="color:inherit;text-decoration:underline;">Privacy Policy</a>`);
+      if (config.privacyUrl) linksHtml.push(`<a href="#" style="color:inherit;text-decoration:underline;">${config.privacyPolicyText || 'Privacy Policy'}</a>`);
       if (config.termsUrl) linksHtml.push(`<a href="#" style="color:inherit;text-decoration:underline;">Terms</a>`);
       if (linksHtml.length > 0) {
         linksSpan.innerHTML = 'See our ' + linksHtml.join(' and ') + '.';
@@ -1696,18 +1726,14 @@ ${config.bannerMode === 'gdpr' ? `  onConsent: function(consent) {
       document.getElementById('preview-categories').style.display = (isGdpr && previewCategoriesExpanded) ? 'block' : 'none';
       document.getElementById('preview-settings').style.display = isGdpr ? 'inline-block' : 'none';
       document.getElementById('preview-save').style.display = (isGdpr && previewCategoriesExpanded) ? 'inline-block' : 'none';
-      document.getElementById('preview-settings').textContent = previewCategoriesExpanded ? 'Hide Options' : 'Customize';
+      // Use custom settings text
+      const hideText = 'Hide Options';
+      document.getElementById('preview-settings').textContent = previewCategoriesExpanded ? hideText : config.settingsText;
+      document.getElementById('preview-save').textContent = config.saveText;
 
-      // Update button text for GDPR mode
-      if (isGdpr) {
-        document.getElementById('preview-accept').textContent = 'Accept All';
-        if (config.mode !== 'non-eu') {
-          document.getElementById('preview-reject').textContent = 'Reject All';
-        }
-      } else {
-        document.getElementById('preview-accept').textContent = config.acceptText;
-        document.getElementById('preview-reject').textContent = config.rejectText;
-      }
+      // Update button text - use custom text for both modes
+      document.getElementById('preview-accept').textContent = config.acceptText;
+      document.getElementById('preview-reject').textContent = config.rejectText;
 
       // Update code output
       document.getElementById('code-output').innerHTML = generateOutputCode(config);
