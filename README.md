@@ -2,9 +2,9 @@
 
 **The smallest legally compliant cookie consent banner in existence.**
 
-[![Live Demo](https://img.shields.io/badge/🍪_Live_Demo-Configurator-4ade80?style=for-the-badge)](https://dreadfulcode.github.io/smallest-cookie-banner/) [![npm](https://img.shields.io/badge/npm-smallest--cookie--banner-cb3837?style=for-the-badge&logo=npm)](https://www.npmjs.com/package/smallest-cookie-banner) [![Size](https://img.shields.io/badge/size-~2KB_gzip-blue?style=for-the-badge)](https://github.com/DreadfulCode/smallest-cookie-banner) [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-3178c6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/) [![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)](LICENSE)
+[![Live Demo](https://img.shields.io/badge/🍪_Live_Demo-Configurator-4ade80?style=for-the-badge)](https://dreadfulcode.github.io/smallest-cookie-banner/) [![npm](https://img.shields.io/badge/npm-smallest--cookie--banner-cb3837?style=for-the-badge&logo=npm)](https://www.npmjs.com/package/smallest-cookie-banner) [![Size](https://img.shields.io/badge/size-~6KB_gzip-blue?style=for-the-badge)](https://github.com/DreadfulCode/smallest-cookie-banner) [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-3178c6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/) [![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)](LICENSE)
 
-~2KB minified + gzipped. Zero dependencies. TypeScript. Works with React, Vue, Angular, Svelte, or vanilla JS.
+~6KB minified + gzipped. Zero dependencies. TypeScript. Works with React, Vue, Angular, Svelte, or vanilla JS.
 
 **[Read more about the library and see it in action on my blog](https://vibecodingwithfred.com/blog/gdpr-cookie-banner-cdn/)**
 
@@ -15,7 +15,7 @@ If you use this library and want a mention here, send me your URL!
 ## Features
 
 ### Minimal
-- **~2KB gzipped** — smaller than a favicon
+- **~6KB gzipped** — still smaller than most images
 - **Zero dependencies** — no bloat, no supply chain risk
 - **No external requests** — works offline, no tracking
 
@@ -29,7 +29,7 @@ If you use this library and want a mention here, send me your URL!
 - **Geo-aware** — auto-detects EU users via timezone for GDPR
 - **Implied consent** — auto-accepts in regions where it's legal (USA, Asia, etc.)
 - **TypeScript** — full type definitions included
-- **Well-tested** — 91 tests, TDD approach
+- **Well-tested** — 260+ tests, TDD approach
 
 ### Compliant & Accessible
 - **GDPR, CCPA, LGPD** — legally compliant worldwide
@@ -252,7 +252,7 @@ const banner: CookieBannerInstance = createCookieBanner(config);
 
 | Library | Size |
 |---------|------|
-| **smallest-cookie-banner** | **~2KB** |
+| **smallest-cookie-banner** | **~6KB** |
 | cookie-consent | ~15KB |
 | cookieconsent | ~25KB |
 | tarteaucitron | ~45KB |
