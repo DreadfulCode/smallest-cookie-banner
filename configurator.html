@@ -732,6 +732,9 @@
   </div>
 
   <script>
+    // Clear any existing cookie so banner always shows in preview
+    document.cookie = "ck=;expires=Thu,01 Jan 1970 00:00:00 GMT;path=/";
+
     window.CookieBannerConfig = {
       msg: ${JSON.stringify(config.msg)},
       acceptText: ${JSON.stringify(config.acceptText)},
