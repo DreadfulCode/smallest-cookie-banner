@@ -30,6 +30,7 @@ var __assign = (this && this.__assign) || function () {
     }
     else if (typeof define === "function" && define.amd) {
         define(["require", "exports"], factory);
+    } else { factory(null, window);
     }
 })(function (require, exports) {
     "use strict";
