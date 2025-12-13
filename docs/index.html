@@ -852,6 +852,24 @@
             Minimal
           </div>
         </div>
+        <div class="quick-colors" style="display:flex;gap:12px;margin-top:16px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:80px;">
+            <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Background</label>
+            <input type="color" id="quickBgColor" value="#222222" style="width:100%;height:36px;border:1px solid #ddd;border-radius:6px;padding:2px;cursor:pointer;">
+          </div>
+          <div style="flex:1;min-width:80px;">
+            <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Text</label>
+            <input type="color" id="quickTextColor" value="#ffffff" style="width:100%;height:36px;border:1px solid #ddd;border-radius:6px;padding:2px;cursor:pointer;">
+          </div>
+          <div style="flex:1;min-width:80px;">
+            <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Button BG</label>
+            <input type="color" id="quickBtnBg" value="#ffffff" style="width:100%;height:36px;border:1px solid #ddd;border-radius:6px;padding:2px;cursor:pointer;">
+          </div>
+          <div style="flex:1;min-width:80px;">
+            <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Button Text</label>
+            <input type="color" id="quickBtnColor" value="#222222" style="width:100%;height:36px;border:1px solid #ddd;border-radius:6px;padding:2px;cursor:pointer;">
+          </div>
+        </div>
       </div>
 
       <!-- Text Content -->
@@ -1348,6 +1366,37 @@
       });
     });
 
+    // Quick color pickers - sync with main color inputs
+    const quickColors = {
+      quickBgColor: ['bgColor', 'bgColorText'],
+      quickTextColor: ['textColor', 'textColorText'],
+      quickBtnBg: ['btnBg', 'btnBgText'],
+      quickBtnColor: ['btnColor', 'btnColorText']
+    };
+
+    Object.entries(quickColors).forEach(([quickId, [colorId, textId]]) => {
+      const quickInput = document.getElementById(quickId);
+      const colorInput = inputs[colorId];
+      const textInput = inputs[textId];
+
+      // Quick picker changes main inputs
+      quickInput?.addEventListener('input', () => {
+        if (colorInput) colorInput.value = quickInput.value;
+        if (textInput) textInput.value = quickInput.value;
+        updatePreview();
+      });
+
+      // Main inputs change quick picker
+      colorInput?.addEventListener('input', () => {
+        if (quickInput) quickInput.value = colorInput.value;
+      });
+      textInput?.addEventListener('input', () => {
+        if (quickInput && /^#[0-9a-f]{6}$/i.test(textInput.value)) {
+          quickInput.value = textInput.value;
+        }
+      });
+    });
+
     // Add listeners to all inputs
     Object.values(inputs).forEach(input => {
       if (input) {
@@ -1408,6 +1457,16 @@
       setColor(inputs.btnColorText, inputs.btnColor, preset.btnColor);
       setColor(inputs.rejectBgText, inputs.rejectBg, preset.rejectBg);
       setColor(inputs.focusColorText, inputs.focusColor, preset.focusColor);
+
+      // Update quick color pickers
+      const quickBg = document.getElementById('quickBgColor');
+      const quickText = document.getElementById('quickTextColor');
+      const quickBtnBg = document.getElementById('quickBtnBg');
+      const quickBtnColor = document.getElementById('quickBtnColor');
+      if (quickBg && preset.bgColor.startsWith('#')) quickBg.value = preset.bgColor;
+      if (quickText && preset.textColor.startsWith('#')) quickText.value = preset.textColor;
+      if (quickBtnBg && preset.btnBg.startsWith('#')) quickBtnBg.value = preset.btnBg;
+      if (quickBtnColor && preset.btnColor.startsWith('#')) quickBtnColor.value = preset.btnColor;
 
       updatePreview();
     }
