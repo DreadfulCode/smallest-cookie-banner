@@ -889,6 +889,27 @@
         </h2>
         <div class="section-content">
           <div class="field">
+            <label>Language Preset</label>
+            <select id="languagePreset" onchange="applyLanguage(this.value)">
+              <option value="en">English</option>
+              <option value="nl">Nederlands (Dutch)</option>
+              <option value="de">Deutsch (German)</option>
+              <option value="fr">Français (French)</option>
+              <option value="es">Español (Spanish)</option>
+              <option value="it">Italiano (Italian)</option>
+              <option value="pt">Português (Portuguese)</option>
+              <option value="pl">Polski (Polish)</option>
+              <option value="ru">Русский (Russian)</option>
+              <option value="uk">Українська (Ukrainian)</option>
+              <option value="zh">中文 (Chinese)</option>
+              <option value="ja">日本語 (Japanese)</option>
+              <option value="ko">한국어 (Korean)</option>
+              <option value="ar">العربية (Arabic) ← RTL</option>
+              <option value="he">עברית (Hebrew) ← RTL</option>
+              <option value="custom">Custom</option>
+            </select>
+          </div>
+          <div class="field">
             <label>Message</label>
             <textarea id="msg">We use cookies to enhance your experience.</textarea>
           </div>
@@ -1507,6 +1528,185 @@
       updatePreview();
     }
 
+    // Language presets
+    const languages = {
+      en: {
+        msg: 'We use cookies to enhance your experience.',
+        acceptText: 'Accept',
+        rejectText: 'Decline',
+        settingsText: 'Customize',
+        saveText: 'Save Preferences',
+        privacyPolicyText: 'Privacy Policy',
+        requiredLabel: '(Required)',
+        dir: 'ltr'
+      },
+      nl: {
+        msg: 'Wij gebruiken cookies om uw ervaring te verbeteren.',
+        acceptText: 'Accepteren',
+        rejectText: 'Weigeren',
+        settingsText: 'Aanpassen',
+        saveText: 'Voorkeuren opslaan',
+        privacyPolicyText: 'Privacybeleid',
+        requiredLabel: '(Vereist)',
+        dir: 'ltr'
+      },
+      de: {
+        msg: 'Wir verwenden Cookies, um Ihre Erfahrung zu verbessern.',
+        acceptText: 'Akzeptieren',
+        rejectText: 'Ablehnen',
+        settingsText: 'Anpassen',
+        saveText: 'Einstellungen speichern',
+        privacyPolicyText: 'Datenschutz',
+        requiredLabel: '(Erforderlich)',
+        dir: 'ltr'
+      },
+      fr: {
+        msg: 'Nous utilisons des cookies pour améliorer votre expérience.',
+        acceptText: 'Accepter',
+        rejectText: 'Refuser',
+        settingsText: 'Personnaliser',
+        saveText: 'Enregistrer',
+        privacyPolicyText: 'Politique de confidentialité',
+        requiredLabel: '(Requis)',
+        dir: 'ltr'
+      },
+      es: {
+        msg: 'Usamos cookies para mejorar tu experiencia.',
+        acceptText: 'Aceptar',
+        rejectText: 'Rechazar',
+        settingsText: 'Personalizar',
+        saveText: 'Guardar preferencias',
+        privacyPolicyText: 'Política de privacidad',
+        requiredLabel: '(Requerido)',
+        dir: 'ltr'
+      },
+      it: {
+        msg: 'Utilizziamo i cookie per migliorare la tua esperienza.',
+        acceptText: 'Accetta',
+        rejectText: 'Rifiuta',
+        settingsText: 'Personalizza',
+        saveText: 'Salva preferenze',
+        privacyPolicyText: 'Privacy Policy',
+        requiredLabel: '(Obbligatorio)',
+        dir: 'ltr'
+      },
+      pt: {
+        msg: 'Usamos cookies para melhorar sua experiência.',
+        acceptText: 'Aceitar',
+        rejectText: 'Recusar',
+        settingsText: 'Personalizar',
+        saveText: 'Salvar preferências',
+        privacyPolicyText: 'Política de Privacidade',
+        requiredLabel: '(Obrigatório)',
+        dir: 'ltr'
+      },
+      pl: {
+        msg: 'Używamy plików cookie, aby poprawić Twoje wrażenia.',
+        acceptText: 'Akceptuj',
+        rejectText: 'Odrzuć',
+        settingsText: 'Dostosuj',
+        saveText: 'Zapisz preferencje',
+        privacyPolicyText: 'Polityka prywatności',
+        requiredLabel: '(Wymagane)',
+        dir: 'ltr'
+      },
+      ru: {
+        msg: 'Мы используем файлы cookie для улучшения вашего опыта.',
+        acceptText: 'Принять',
+        rejectText: 'Отклонить',
+        settingsText: 'Настроить',
+        saveText: 'Сохранить настройки',
+        privacyPolicyText: 'Политика конфиденциальности',
+        requiredLabel: '(Обязательно)',
+        dir: 'ltr'
+      },
+      uk: {
+        msg: 'Ми використовуємо файли cookie для покращення вашого досвіду.',
+        acceptText: 'Прийняти',
+        rejectText: 'Відхилити',
+        settingsText: 'Налаштувати',
+        saveText: 'Зберегти налаштування',
+        privacyPolicyText: 'Політика конфіденційності',
+        requiredLabel: '(Обов\'язково)',
+        dir: 'ltr'
+      },
+      zh: {
+        msg: '我们使用cookies来提升您的体验。',
+        acceptText: '接受',
+        rejectText: '拒绝',
+        settingsText: '自定义',
+        saveText: '保存设置',
+        privacyPolicyText: '隐私政策',
+        requiredLabel: '(必需)',
+        dir: 'ltr'
+      },
+      ja: {
+        msg: 'このサイトはクッキーを使用しています。',
+        acceptText: '同意する',
+        rejectText: '拒否する',
+        settingsText: 'カスタマイズ',
+        saveText: '設定を保存',
+        privacyPolicyText: 'プライバシーポリシー',
+        requiredLabel: '(必須)',
+        dir: 'ltr'
+      },
+      ko: {
+        msg: '저희는 경험을 향상시키기 위해 쿠키를 사용합니다.',
+        acceptText: '동의',
+        rejectText: '거부',
+        settingsText: '사용자 정의',
+        saveText: '설정 저장',
+        privacyPolicyText: '개인정보처리방침',
+        requiredLabel: '(필수)',
+        dir: 'ltr'
+      },
+      ar: {
+        msg: 'نستخدم ملفات تعريف الارتباط لتحسين تجربتك.',
+        acceptText: 'قبول',
+        rejectText: 'رفض',
+        settingsText: 'تخصيص',
+        saveText: 'حفظ التفضيلات',
+        privacyPolicyText: 'سياسة الخصوصية',
+        requiredLabel: '(مطلوب)',
+        dir: 'rtl'
+      },
+      he: {
+        msg: 'אנחנו משתמשים בעוגיות כדי לשפר את החוויה שלך.',
+        acceptText: 'אישור',
+        rejectText: 'דחייה',
+        settingsText: 'התאמה אישית',
+        saveText: 'שמור העדפות',
+        privacyPolicyText: 'מדיניות פרטיות',
+        requiredLabel: '(נדרש)',
+        dir: 'rtl'
+      }
+    };
+
+    // Apply language preset
+    function applyLanguage(lang) {
+      if (lang === 'custom') return;
+      const l = languages[lang];
+      if (!l) return;
+
+      if (inputs.msg) inputs.msg.value = l.msg;
+      if (inputs.acceptText) inputs.acceptText.value = l.acceptText;
+      if (inputs.rejectText) inputs.rejectText.value = l.rejectText;
+
+      const settingsText = document.getElementById('settingsText');
+      const saveText = document.getElementById('saveText');
+      const privacyPolicyText = document.getElementById('privacyPolicyText');
+
+      if (settingsText) settingsText.value = l.settingsText;
+      if (saveText) saveText.value = l.saveText;
+      if (privacyPolicyText) privacyPolicyText.value = l.privacyPolicyText;
+
+      // Store required label and direction for code generation
+      window._langRequiredLabel = l.requiredLabel;
+      window._langDir = l.dir;
+
+      updatePreview();
+    }
+
     // Toggle section collapse
     function toggleSection(header) {
       header.closest('.section').classList.toggle('collapsed');
@@ -1645,6 +1845,13 @@
       }
       if (config.privacyUrl && config.privacyPolicyText !== 'Privacy Policy') {
         configObj.push(`  privacyPolicyText: '${escapeJs(config.privacyPolicyText)}'`);
+      }
+      // Language-specific options
+      if (window._langRequiredLabel && window._langRequiredLabel !== '(Required)') {
+        configObj.push(`  requiredLabel: '${escapeJs(window._langRequiredLabel)}'`);
+      }
+      if (window._langDir === 'rtl') {
+        configObj.push(`  dir: 'rtl'`);
       }
 
       let cssVars = `  --ckb-bg: ${escapeHtml(config.bgColor)};
