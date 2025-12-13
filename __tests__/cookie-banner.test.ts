@@ -1975,6 +1975,79 @@ describe('smallest-cookie-banner', () => {
   });
 
   // ============================================================================
+  // RTL (RIGHT-TO-LEFT) SUPPORT TESTS
+  // ============================================================================
+  describe('RTL Support', () => {
+    it('sets dir="rtl" when configured', () => {
+      const banner = createCookieBanner({
+        dir: 'rtl',
+        forceEU: true,
+      });
+      banner.show();
+      expect(document.getElementById('ckb')?.getAttribute('dir')).toBe('rtl');
+    });
+
+    it('sets dir="ltr" when configured', () => {
+      const banner = createCookieBanner({
+        dir: 'ltr',
+        forceEU: true,
+      });
+      banner.show();
+      expect(document.getElementById('ckb')?.getAttribute('dir')).toBe('ltr');
+    });
+
+    it('sets dir="auto" when configured', () => {
+      const banner = createCookieBanner({
+        dir: 'auto',
+        forceEU: true,
+      });
+      banner.show();
+      expect(document.getElementById('ckb')?.getAttribute('dir')).toBe('auto');
+    });
+
+    it('does not set dir attribute when not configured', () => {
+      const banner = createCookieBanner({ forceEU: true });
+      banner.show();
+      expect(document.getElementById('ckb')?.hasAttribute('dir')).toBe(false);
+    });
+
+    it('supports full Arabic localization with RTL', () => {
+      const banner = createCookieBanner({
+        mode: 'gdpr',
+        dir: 'rtl',
+        msg: 'نستخدم ملفات تعريف الارتباط.',
+        acceptText: 'قبول الكل',
+        rejectText: 'رفض الكل',
+        settingsText: 'تخصيص',
+        saveText: 'حفظ التفضيلات',
+        privacyPolicyText: 'سياسة الخصوصية',
+        bannerAriaLabel: 'موافقة ملفات تعريف الارتباط',
+        requiredLabel: '(مطلوب)',
+        privacyPolicyUrl: '/privacy',
+        forceEU: true,
+      });
+      banner.show();
+      expect(document.getElementById('ckb')?.getAttribute('dir')).toBe('rtl');
+      expect(document.getElementById('ckb')?.innerHTML).toContain('نستخدم ملفات تعريف الارتباط');
+      expect(document.getElementById('cky')?.textContent).toBe('قبول الكل');
+      expect(document.getElementById('ckn')?.textContent).toBe('رفض الكل');
+    });
+
+    it('supports Hebrew localization with RTL', () => {
+      const banner = createCookieBanner({
+        dir: 'rtl',
+        msg: 'אנחנו משתמשים בעוגיות.',
+        acceptText: 'קבל',
+        rejectText: 'דחה',
+        forceEU: true,
+      });
+      banner.show();
+      expect(document.getElementById('ckb')?.getAttribute('dir')).toBe('rtl');
+      expect(document.getElementById('ckb')?.innerHTML).toContain('אנחנו משתמשים בעוגיות');
+    });
+  });
+
+  // ============================================================================
   // MODE SWITCHING TESTS
   // ============================================================================
   describe('Mode Switching', () => {

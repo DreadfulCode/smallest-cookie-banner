@@ -94,6 +94,8 @@ export interface CookieBannerConfig {
   bannerAriaLabel?: string;
   /** Label for required categories (default: "(Required)") */
   requiredLabel?: string;
+  /** Text direction for RTL languages: 'ltr' | 'rtl' | 'auto' (default: inherits from page) */
+  dir?: 'ltr' | 'rtl' | 'auto';
   /** Cookie name (default: "ck") */
   cookieName?: string;
   /** Cookie expiry in days (default: 365, max: 3650) */
@@ -774,6 +776,11 @@ export function createCookieBanner(config: CookieBannerConfig = {}): CookieBanne
     el.setAttribute('aria-label', config.bannerAriaLabel || 'Cookie consent');
     el.setAttribute('aria-modal', 'true');
     el.setAttribute('tabindex', '-1');
+
+    // RTL support - set dir attribute if specified
+    if (config.dir) {
+      el.setAttribute('dir', config.dir);
+    }
 
     // Apply sanitized inline styles
     if (config.style) {
