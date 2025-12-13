@@ -201,7 +201,7 @@ var __assign = (this && this.__assign) || function () {
      * @throws Error if cookieName contains invalid characters
      */
     function validateConfig(config) {
-        var validated = __assign(__assign({}, config), { cookieName: 'ck', days: DEFAULT_DAYS, autoAcceptDelay: DEFAULT_AUTO_ACCEPT_DELAY });
+        var validated = __assign(__assign({}, config), { cookieName: 'cookie_consent', days: DEFAULT_DAYS, autoAcceptDelay: DEFAULT_AUTO_ACCEPT_DELAY });
         // Validate cookie name (required to be safe - RFC 6265)
         if (config.cookieName !== undefined) {
             if (!config.cookieName || config.cookieName.length === 0) {
@@ -272,7 +272,7 @@ var __assign = (this && this.__assign) || function () {
      * Get consent value from cookie
      */
     function getConsent(cookieName) {
-        if (cookieName === void 0) { cookieName = 'ck'; }
+        if (cookieName === void 0) { cookieName = 'cookie_consent'; }
         if (!isBrowser)
             return null;
         var escapedName = escapeRegex(cookieName);
@@ -283,7 +283,7 @@ var __assign = (this && this.__assign) || function () {
      * Set consent cookie
      */
     function setConsent(value, cookieName, days, domain) {
-        if (cookieName === void 0) { cookieName = 'ck'; }
+        if (cookieName === void 0) { cookieName = 'cookie_consent'; }
         if (days === void 0) { days = DEFAULT_DAYS; }
         if (!isBrowser)
             return;
@@ -306,7 +306,7 @@ var __assign = (this && this.__assign) || function () {
      * Delete consent cookie
      */
     function deleteConsent(cookieName, domain) {
-        if (cookieName === void 0) { cookieName = 'ck'; }
+        if (cookieName === void 0) { cookieName = 'cookie_consent'; }
         if (!isBrowser)
             return;
         var cookie = "".concat(cookieName, "=;expires=Thu,01 Jan 1970 00:00:00 GMT;path=/;SameSite=Lax");

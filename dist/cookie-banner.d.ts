@@ -80,7 +80,7 @@ export interface CookieBannerConfig {
     requiredLabel?: string;
     /** Text direction for RTL languages: 'ltr' | 'rtl' | 'auto' (default: inherits from page) */
     dir?: 'ltr' | 'rtl' | 'auto';
-    /** Cookie name (default: "ck") */
+    /** Cookie name (default: "cookie_consent") */
     cookieName?: string;
     /** Cookie expiry in days (default: 365, max: 3650) */
     days?: number;

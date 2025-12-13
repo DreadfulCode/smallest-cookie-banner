@@ -96,7 +96,7 @@ export interface CookieBannerConfig {
   requiredLabel?: string;
   /** Text direction for RTL languages: 'ltr' | 'rtl' | 'auto' (default: inherits from page) */
   dir?: 'ltr' | 'rtl' | 'auto';
-  /** Cookie name (default: "ck") */
+  /** Cookie name (default: "cookie_consent") */
   cookieName?: string;
   /** Cookie expiry in days (default: 365, max: 3650) */
   days?: number;
@@ -352,7 +352,7 @@ export function sanitizeInlineStyle(style: string): string {
 export function validateConfig(config: CookieBannerConfig): ValidatedConfig {
   const validated: ValidatedConfig = {
     ...config,
-    cookieName: 'ck',
+    cookieName: 'cookie_consent',
     days: DEFAULT_DAYS,
     autoAcceptDelay: DEFAULT_AUTO_ACCEPT_DELAY,
   };
@@ -432,7 +432,7 @@ export function isEU(): boolean {
 /**
  * Get consent value from cookie
  */
-export function getConsent(cookieName = 'ck'): string | null {
+export function getConsent(cookieName = 'cookie_consent'): string | null {
   if (!isBrowser) return null;
   const escapedName = escapeRegex(cookieName);
   const match = document.cookie.match(new RegExp('(^|;)\\s*' + escapedName + '=([^;]*)'));
@@ -444,7 +444,7 @@ export function getConsent(cookieName = 'ck'): string | null {
  */
 export function setConsent(
   value: string,
-  cookieName = 'ck',
+  cookieName = 'cookie_consent',
   days = DEFAULT_DAYS,
   domain?: string
 ): void {
@@ -474,7 +474,7 @@ export function setConsent(
 /**
  * Delete consent cookie
  */
-export function deleteConsent(cookieName = 'ck', domain?: string): void {
+export function deleteConsent(cookieName = 'cookie_consent', domain?: string): void {
   if (!isBrowser) return;
 
   let cookie = `${cookieName}=;expires=Thu,01 Jan 1970 00:00:00 GMT;path=/;SameSite=Lax`;

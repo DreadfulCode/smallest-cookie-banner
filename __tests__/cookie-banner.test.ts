@@ -99,12 +99,12 @@ describe('smallest-cookie-banner', () => {
     });
 
     it('returns "1" when consent cookie is accepted', () => {
-      document.cookie = 'ck=1;path=/';
+      document.cookie = 'cookie_consent=1;path=/';
       expect(getConsent()).toBe('1');
     });
 
     it('returns "0" when consent cookie is rejected', () => {
-      document.cookie = 'ck=0;path=/';
+      document.cookie = 'cookie_consent=0;path=/';
       expect(getConsent()).toBe('0');
     });
 
@@ -125,7 +125,7 @@ describe('smallest-cookie-banner', () => {
   describe('setConsent()', () => {
     it('sets consent cookie', () => {
       setConsent('1');
-      expect(document.cookie).toContain('ck=1');
+      expect(document.cookie).toContain('cookie_consent=1');
     });
 
     it('supports custom cookie name', () => {
@@ -134,14 +134,14 @@ describe('smallest-cookie-banner', () => {
     });
 
     it('supports custom days', () => {
-      setConsent('1', 'ck', 30);
-      expect(document.cookie).toContain('ck=1');
+      setConsent('1', 'cookie_consent', 30);
+      expect(document.cookie).toContain('cookie_consent=1');
     });
   });
 
   describe('deleteConsent()', () => {
     it('deletes consent cookie', () => {
-      document.cookie = 'ck=1;path=/';
+      document.cookie = 'cookie_consent=1;path=/';
       deleteConsent();
       expect(getConsent()).toBeNull();
     });
@@ -161,7 +161,7 @@ describe('smallest-cookie-banner', () => {
     });
 
     it('reads existing consent from cookie', () => {
-      document.cookie = 'ck=1;path=/';
+      document.cookie = 'cookie_consent=1;path=/';
       const banner = createCookieBanner();
       expect(banner.status).toBe(true);
     });
@@ -174,7 +174,7 @@ describe('smallest-cookie-banner', () => {
     });
 
     it('does not show banner if consent exists', () => {
-      document.cookie = 'ck=1;path=/';
+      document.cookie = 'cookie_consent=1;path=/';
       const banner = createCookieBanner();
       banner.show();
       expect(document.getElementById('ckb')).toBeNull();
@@ -240,7 +240,7 @@ describe('smallest-cookie-banner', () => {
       // Cookie is set - verify it exists (expiry is handled internally)
       expect(getConsent()).toBe('1');
       // Verify the cookie string contains an expiry date (not just session cookie)
-      expect(document.cookie).toContain('ck=1');
+      expect(document.cookie).toContain('cookie_consent=1');
     });
 
     it('destroys banner and cleans up', () => {
@@ -498,7 +498,7 @@ describe('smallest-cookie-banner', () => {
     });
 
     it('does not show banner when consent exists', () => {
-      document.cookie = 'ck=1;path=/';
+      document.cookie = 'cookie_consent=1;path=/';
       window.CookieBannerConfig = {};
       setup();
       expect(document.getElementById('ckb')).toBeNull();
@@ -1335,7 +1335,7 @@ describe('smallest-cookie-banner', () => {
 
     describe('GDPR with existing consent', () => {
       it('reads granular consent from cookie on init', () => {
-        document.cookie = 'ck=essential:1,analytics:0,marketing:1,functional:0;path=/';
+        document.cookie = 'cookie_consent=essential:1,analytics:0,marketing:1,functional:0;path=/';
         const banner = createCookieBanner({ mode: 'gdpr', forceEU: true });
 
         const consent = banner.getConsent();
@@ -1346,7 +1346,7 @@ describe('smallest-cookie-banner', () => {
       });
 
       it('reads legacy consent "1" as all accepted', () => {
-        document.cookie = 'ck=1;path=/';
+        document.cookie = 'cookie_consent=1;path=/';
         const banner = createCookieBanner({ mode: 'gdpr', forceEU: true });
 
         expect(banner.hasConsent('analytics')).toBe(true);
@@ -1672,7 +1672,7 @@ describe('smallest-cookie-banner', () => {
 
     describe('widget with existing consent', () => {
       it('shows widget on init when consent exists and widget enabled', () => {
-        document.cookie = 'ck=essential:1,analytics:1;path=/';
+        document.cookie = 'cookie_consent=essential:1,analytics:1;path=/';
         createCookieBanner({
           mode: 'gdpr',
           forceEU: true,
@@ -2274,7 +2274,7 @@ describe('smallest-cookie-banner', () => {
       });
 
       it('setup does not show banner when consent already exists', () => {
-        document.cookie = 'ck=1;path=/';
+        document.cookie = 'cookie_consent=1;path=/';
         window.CookieBannerConfig = { forceEU: true };
         setup();
         expect(document.getElementById('ckb')).toBeNull();
@@ -2600,12 +2600,12 @@ describe('smallest-cookie-banner', () => {
       it('setConsent adds domain when valid domain provided', () => {
         // jsdom doesn't properly handle domain-scoped cookies
         // Just verify it doesn't throw
-        expect(() => setConsent('1', 'ck', 365, '.example.com')).not.toThrow();
+        expect(() => setConsent('1', 'cookie_consent', 365, '.example.com')).not.toThrow();
       });
 
       it('deleteConsent works with domain', () => {
-        setConsent('1', 'ck', 365, '.example.com');
-        deleteConsent('ck', '.example.com');
+        setConsent('1', 'cookie_consent', 365, '.example.com');
+        deleteConsent('cookie_consent', '.example.com');
         expect(getConsent()).toBeNull();
       });
 
@@ -2619,7 +2619,7 @@ describe('smallest-cookie-banner', () => {
 
         // jsdom may not properly handle Secure cookies
         // Just verify it doesn't throw
-        expect(() => setConsent('1', 'ck', 365)).not.toThrow();
+        expect(() => setConsent('1', 'cookie_consent', 365)).not.toThrow();
 
         // Restore
         Object.defineProperty(window, 'location', {
@@ -2633,7 +2633,7 @@ describe('smallest-cookie-banner', () => {
     describe('Granular Consent Status Edge Cases', () => {
       it('sets status correctly when only required categories enabled', () => {
         // Set granular consent where only essential (required) is true
-        document.cookie = 'ck=e:1,a:0,m:0,f:0;path=/';
+        document.cookie = 'cookie_consent=e:1,a:0,m:0,f:0;path=/';
 
         const banner = createCookieBanner({
           mode: 'gdpr',
@@ -2652,7 +2652,7 @@ describe('smallest-cookie-banner', () => {
 
       it('sets status true when at least one non-required category enabled', () => {
         // Set granular consent where analytics is also enabled
-        document.cookie = 'ck=e:1,a:1,m:0,f:0;path=/';
+        document.cookie = 'cookie_consent=e:1,a:1,m:0,f:0;path=/';
 
         const banner = createCookieBanner({
           mode: 'gdpr',
