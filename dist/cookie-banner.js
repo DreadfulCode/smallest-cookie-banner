@@ -61,6 +61,7 @@ var __assign = (this && this.__assign) || function () {
     exports.deleteConsent = deleteConsent;
     exports.parseGranularConsent = parseGranularConsent;
     exports.encodeGranularConsent = encodeGranularConsent;
+    exports._resetSingleton = _resetSingleton;
     exports.createCookieBanner = createCookieBanner;
     exports.setup = setup;
     /** Default categories for GDPR mode */
@@ -391,6 +392,13 @@ var __assign = (this && this.__assign) || function () {
     // ============================================================================
     // Track active instance for singleton behavior
     var _activeInstance = null;
+    /**
+     * Reset singleton state (for testing only)
+     * @internal
+     */
+    function _resetSingleton() {
+        _activeInstance = null;
+    }
     /**
      * Create a new cookie banner instance
      * Framework-friendly: no global state, proper cleanup, SSR-safe

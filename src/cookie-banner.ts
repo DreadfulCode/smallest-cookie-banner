@@ -568,6 +568,14 @@ function injectStyles(id: string, css: string, nonce?: string): void {
 let _activeInstance: CookieBannerInstance | null = null;
 
 /**
+ * Reset singleton state (for testing only)
+ * @internal
+ */
+export function _resetSingleton(): void {
+  _activeInstance = null;
+}
+
+/**
  * Create a new cookie banner instance
  * Framework-friendly: no global state, proper cleanup, SSR-safe
  *

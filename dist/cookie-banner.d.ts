@@ -211,6 +211,11 @@ export declare function parseGranularConsent(value: string | null, categories?: 
  */
 export declare function encodeGranularConsent(state: ConsentState): string;
 /**
+ * Reset singleton state (for testing only)
+ * @internal
+ */
+export declare function _resetSingleton(): void;
+/**
  * Create a new cookie banner instance
  * Framework-friendly: no global state, proper cleanup, SSR-safe
  *
