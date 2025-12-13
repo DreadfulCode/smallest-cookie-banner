@@ -10,10 +10,15 @@ import {
   createCookieBanner,
   initLegacy,
   DEFAULT_CSS,
+  DEFAULT_CATEGORIES,
   LegacyCookieBannerAPI,
   sanitizeCss,
   sanitizeInlineStyle,
   validateConfig,
+  parseGranularConsent,
+  encodeGranularConsent,
+  CookieCategory,
+  ConsentState,
 } from '../src/cookie-banner';
 
 // Store original location for restoration
@@ -892,6 +897,402 @@ describe('smallest-cookie-banner', () => {
       expect(consoleSpy).toHaveBeenCalled();
 
       consoleSpy.mockRestore();
+    });
+  });
+
+  // ============================================================================
+  // GDPR MODE TESTS (Granular Consent)
+  // ============================================================================
+  describe('GDPR Mode (Granular Consent)', () => {
+    describe('DEFAULT_CATEGORIES', () => {
+      it('contains essential category marked as required', () => {
+        const essential = DEFAULT_CATEGORIES.find(c => c.id === 'essential');
+        expect(essential).toBeDefined();
+        expect(essential?.required).toBe(true);
+      });
+
+      it('contains analytics, marketing, and functional categories', () => {
+        const ids = DEFAULT_CATEGORIES.map(c => c.id);
+        expect(ids).toContain('essential');
+        expect(ids).toContain('analytics');
+        expect(ids).toContain('marketing');
+        expect(ids).toContain('functional');
+      });
+
+      it('all categories have name and description', () => {
+        for (const cat of DEFAULT_CATEGORIES) {
+          expect(cat.name).toBeDefined();
+          expect(cat.description).toBeDefined();
+        }
+      });
+    });
+
+    describe('parseGranularConsent()', () => {
+      it('returns null for null input', () => {
+        expect(parseGranularConsent(null)).toBeNull();
+      });
+
+      it('parses legacy "1" as all accepted', () => {
+        const result = parseGranularConsent('1');
+        expect(result).toEqual({ all: true });
+      });
+
+      it('parses legacy "0" as all rejected', () => {
+        const result = parseGranularConsent('0');
+        expect(result).toEqual({ all: false });
+      });
+
+      it('parses legacy "1" with categories as all enabled (except required)', () => {
+        const categories: CookieCategory[] = [
+          { id: 'essential', name: 'Essential', required: true },
+          { id: 'analytics', name: 'Analytics' },
+        ];
+        const result = parseGranularConsent('1', categories);
+        expect(result).toEqual({ essential: true, analytics: true });
+      });
+
+      it('parses legacy "0" with categories - required stays true', () => {
+        const categories: CookieCategory[] = [
+          { id: 'essential', name: 'Essential', required: true },
+          { id: 'analytics', name: 'Analytics' },
+        ];
+        const result = parseGranularConsent('0', categories);
+        expect(result).toEqual({ essential: true, analytics: false });
+      });
+
+      it('parses granular format correctly', () => {
+        const result = parseGranularConsent('essential:1,analytics:0,marketing:1');
+        expect(result).toEqual({ essential: true, analytics: false, marketing: true });
+      });
+    });
+
+    describe('encodeGranularConsent()', () => {
+      it('encodes consent state to string', () => {
+        const state: ConsentState = { essential: true, analytics: false, marketing: true };
+        const result = encodeGranularConsent(state);
+        expect(result).toContain('essential:1');
+        expect(result).toContain('analytics:0');
+        expect(result).toContain('marketing:1');
+      });
+    });
+
+    describe('GDPR banner rendering', () => {
+      it('shows categories panel in GDPR mode', () => {
+        const banner = createCookieBanner({ mode: 'gdpr', forceEU: true });
+        banner.show();
+        expect(document.getElementById('ckb-cats')).not.toBeNull();
+      });
+
+      it('shows categories when categories array is provided', () => {
+        const banner = createCookieBanner({
+          categories: DEFAULT_CATEGORIES,
+          forceEU: true,
+        });
+        banner.show();
+        expect(document.getElementById('ckb-cats')).not.toBeNull();
+      });
+
+      it('shows settings button in GDPR mode', () => {
+        const banner = createCookieBanner({ mode: 'gdpr', forceEU: true });
+        banner.show();
+        expect(document.getElementById('cks')).not.toBeNull();
+      });
+
+      it('shows save button (hidden initially) in GDPR mode', () => {
+        const banner = createCookieBanner({ mode: 'gdpr', forceEU: true });
+        banner.show();
+        const saveBtn = document.getElementById('cksv');
+        expect(saveBtn).not.toBeNull();
+        expect(saveBtn?.style.display).toBe('none');
+      });
+
+      it('uses Accept All and Reject All text in GDPR mode', () => {
+        const banner = createCookieBanner({ mode: 'gdpr', forceEU: true });
+        banner.show();
+        expect(document.getElementById('cky')?.textContent).toBe('Accept All');
+        expect(document.getElementById('ckn')?.textContent).toBe('Reject All');
+      });
+
+      it('renders checkboxes for each category', () => {
+        const banner = createCookieBanner({ mode: 'gdpr', forceEU: true });
+        banner.show();
+        const checkboxes = document.querySelectorAll('input[name="ckb-cat"]');
+        expect(checkboxes.length).toBe(DEFAULT_CATEGORIES.length);
+      });
+
+      it('disables required category checkboxes', () => {
+        const banner = createCookieBanner({ mode: 'gdpr', forceEU: true });
+        banner.show();
+        const essentialCheckbox = document.querySelector('input[value="essential"]') as HTMLInputElement;
+        expect(essentialCheckbox?.disabled).toBe(true);
+        expect(essentialCheckbox?.checked).toBe(true);
+      });
+
+      it('shows privacy policy link when URL provided', () => {
+        const banner = createCookieBanner({
+          mode: 'gdpr',
+          forceEU: true,
+          privacyPolicyUrl: 'https://example.com/privacy',
+        });
+        banner.show();
+        const link = document.querySelector('#ckb a[href="https://example.com/privacy"]');
+        expect(link).not.toBeNull();
+      });
+    });
+
+    describe('GDPR settings toggle', () => {
+      it('toggles expanded class on settings click', () => {
+        const banner = createCookieBanner({ mode: 'gdpr', forceEU: true });
+        banner.show();
+        const settingsBtn = document.getElementById('cks');
+        const el = document.getElementById('ckb');
+
+        expect(el?.classList.contains('expanded')).toBe(false);
+        settingsBtn?.click();
+        expect(el?.classList.contains('expanded')).toBe(true);
+      });
+
+      it('shows save button and hides settings when expanded', () => {
+        const banner = createCookieBanner({ mode: 'gdpr', forceEU: true });
+        banner.show();
+        const settingsBtn = document.getElementById('cks');
+        const saveBtn = document.getElementById('cksv');
+
+        settingsBtn?.click();
+        expect(saveBtn?.style.display).not.toBe('none');
+        expect(settingsBtn?.style.display).toBe('none');
+      });
+    });
+
+    describe('GDPR consent handling', () => {
+      it('Accept All sets all categories to true', () => {
+        const onConsent = jest.fn();
+        const banner = createCookieBanner({ mode: 'gdpr', forceEU: true, onConsent });
+        banner.show();
+        document.getElementById('cky')?.click();
+
+        expect(onConsent).toHaveBeenCalled();
+        const consent = onConsent.mock.calls[0][0] as ConsentState;
+        expect(consent.essential).toBe(true);
+        expect(consent.analytics).toBe(true);
+        expect(consent.marketing).toBe(true);
+        expect(consent.functional).toBe(true);
+      });
+
+      it('Reject All sets non-required categories to false', () => {
+        const onConsent = jest.fn();
+        const banner = createCookieBanner({ mode: 'gdpr', forceEU: true, onConsent });
+        banner.show();
+        document.getElementById('ckn')?.click();
+
+        expect(onConsent).toHaveBeenCalled();
+        const consent = onConsent.mock.calls[0][0] as ConsentState;
+        expect(consent.essential).toBe(true); // Required stays true
+        expect(consent.analytics).toBe(false);
+        expect(consent.marketing).toBe(false);
+        expect(consent.functional).toBe(false);
+      });
+
+      it('Save Preferences saves checkbox states', () => {
+        const onConsent = jest.fn();
+        const banner = createCookieBanner({ mode: 'gdpr', forceEU: true, onConsent });
+        banner.show();
+
+        // Expand settings
+        document.getElementById('cks')?.click();
+
+        // Check only analytics
+        const analyticsCheckbox = document.querySelector('input[value="analytics"]') as HTMLInputElement;
+        analyticsCheckbox.checked = true;
+
+        // Uncheck marketing
+        const marketingCheckbox = document.querySelector('input[value="marketing"]') as HTMLInputElement;
+        marketingCheckbox.checked = false;
+
+        // Save
+        document.getElementById('cksv')?.click();
+
+        expect(onConsent).toHaveBeenCalled();
+        const consent = onConsent.mock.calls[0][0] as ConsentState;
+        expect(consent.analytics).toBe(true);
+        expect(consent.marketing).toBe(false);
+      });
+
+      it('stores granular consent in cookie', () => {
+        const banner = createCookieBanner({ mode: 'gdpr', forceEU: true });
+        banner.show();
+        document.getElementById('cky')?.click();
+
+        const cookieValue = getConsent();
+        expect(cookieValue).toContain('essential:1');
+        expect(cookieValue).toContain('analytics:1');
+      });
+    });
+
+    describe('getConsent() and hasConsent()', () => {
+      it('getConsent returns null before consent given', () => {
+        const banner = createCookieBanner({ mode: 'gdpr', forceEU: true });
+        expect(banner.getConsent()).toBeNull();
+      });
+
+      it('getConsent returns consent state after accepting', () => {
+        const banner = createCookieBanner({ mode: 'gdpr', forceEU: true });
+        banner.show();
+        banner.accept();
+
+        const consent = banner.getConsent();
+        expect(consent).not.toBeNull();
+        expect(consent?.essential).toBe(true);
+        expect(consent?.analytics).toBe(true);
+      });
+
+      it('hasConsent returns false before consent given', () => {
+        const banner = createCookieBanner({ mode: 'gdpr', forceEU: true });
+        expect(banner.hasConsent('analytics')).toBe(false);
+      });
+
+      it('hasConsent returns correct value for category', () => {
+        const banner = createCookieBanner({ mode: 'gdpr', forceEU: true });
+        banner.show();
+        banner.reject(); // Reject all
+
+        expect(banner.hasConsent('essential')).toBe(true); // Required always true
+        expect(banner.hasConsent('analytics')).toBe(false);
+      });
+    });
+
+    describe('manage()', () => {
+      it('shows banner even when consent exists', () => {
+        const banner = createCookieBanner({ mode: 'gdpr', forceEU: true });
+        banner.accept();
+        expect(document.getElementById('ckb')).toBeNull();
+
+        banner.manage();
+        expect(document.getElementById('ckb')).not.toBeNull();
+      });
+
+      it('starts in expanded mode', () => {
+        const banner = createCookieBanner({ mode: 'gdpr', forceEU: true });
+        banner.accept();
+        banner.manage();
+
+        const el = document.getElementById('ckb');
+        expect(el?.classList.contains('expanded')).toBe(true);
+      });
+
+      it('preserves previous consent state in checkboxes', () => {
+        const banner = createCookieBanner({ mode: 'gdpr', forceEU: true });
+        banner.show();
+
+        // Expand and set specific consent
+        document.getElementById('cks')?.click();
+        const analyticsCheckbox = document.querySelector('input[value="analytics"]') as HTMLInputElement;
+        analyticsCheckbox.checked = false;
+        document.getElementById('cksv')?.click();
+
+        // Reopen via manage()
+        banner.manage();
+
+        // Check that previous state is preserved
+        const analyticsCheckbox2 = document.querySelector('input[value="analytics"]') as HTMLInputElement;
+        expect(analyticsCheckbox2.checked).toBe(false);
+      });
+    });
+
+    describe('GDPR with existing consent', () => {
+      it('reads granular consent from cookie on init', () => {
+        document.cookie = 'ck=essential:1,analytics:0,marketing:1,functional:0;path=/';
+        const banner = createCookieBanner({ mode: 'gdpr', forceEU: true });
+
+        const consent = banner.getConsent();
+        expect(consent?.essential).toBe(true);
+        expect(consent?.analytics).toBe(false);
+        expect(consent?.marketing).toBe(true);
+        expect(consent?.functional).toBe(false);
+      });
+
+      it('reads legacy consent "1" as all accepted', () => {
+        document.cookie = 'ck=1;path=/';
+        const banner = createCookieBanner({ mode: 'gdpr', forceEU: true });
+
+        expect(banner.hasConsent('analytics')).toBe(true);
+        expect(banner.hasConsent('marketing')).toBe(true);
+      });
+    });
+
+    describe('onConsent callback error handling', () => {
+      it('catches errors in onConsent callback', () => {
+        const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+        const banner = createCookieBanner({
+          mode: 'gdpr',
+          forceEU: true,
+          onConsent: () => {
+            throw new Error('onConsent error');
+          },
+        });
+        banner.show();
+
+        expect(() => banner.accept()).not.toThrow();
+        expect(consoleSpy).toHaveBeenCalled();
+
+        consoleSpy.mockRestore();
+      });
+    });
+
+    describe('GDPR without auto-accept', () => {
+      beforeEach(() => {
+        jest.useFakeTimers();
+      });
+
+      it('does not auto-accept in GDPR mode even for non-EU', () => {
+        const banner = createCookieBanner({ mode: 'gdpr', forceEU: false, autoAcceptDelay: 1000 });
+        banner.show();
+        jest.advanceTimersByTime(5000);
+        expect(banner.status).toBeNull(); // No auto-accept in GDPR mode
+      });
+
+      it('does not auto-accept on scroll in GDPR mode', () => {
+        const banner = createCookieBanner({ mode: 'gdpr', forceEU: false });
+        banner.show();
+        document.dispatchEvent(new Event('scroll'));
+        expect(banner.status).toBeNull(); // No auto-accept in GDPR mode
+      });
+    });
+
+    describe('Custom categories', () => {
+      it('uses custom categories when provided', () => {
+        const customCategories: CookieCategory[] = [
+          { id: 'necessary', name: 'Necessary', required: true },
+          { id: 'preferences', name: 'Preferences' },
+          { id: 'statistics', name: 'Statistics' },
+        ];
+        const banner = createCookieBanner({ categories: customCategories, forceEU: true });
+        banner.show();
+
+        const checkboxes = document.querySelectorAll('input[name="ckb-cat"]');
+        expect(checkboxes.length).toBe(3);
+
+        const values = Array.from(checkboxes).map(c => (c as HTMLInputElement).value);
+        expect(values).toContain('necessary');
+        expect(values).toContain('preferences');
+        expect(values).toContain('statistics');
+      });
+
+      it('respects defaultEnabled for categories', () => {
+        const customCategories: CookieCategory[] = [
+          { id: 'essential', name: 'Essential', required: true },
+          { id: 'analytics', name: 'Analytics', defaultEnabled: true },
+          { id: 'marketing', name: 'Marketing', defaultEnabled: false },
+        ];
+        const banner = createCookieBanner({ categories: customCategories, forceEU: true });
+        banner.show();
+
+        const analyticsCheckbox = document.querySelector('input[value="analytics"]') as HTMLInputElement;
+        const marketingCheckbox = document.querySelector('input[value="marketing"]') as HTMLInputElement;
+
+        expect(analyticsCheckbox.checked).toBe(true);
+        expect(marketingCheckbox.checked).toBe(false);
+      });
     });
   });
 });
