@@ -211,6 +211,12 @@ export declare function parseGranularConsent(value: string | null, categories?: 
  */
 export declare function encodeGranularConsent(state: ConsentState): string;
 /**
+ * Inject styles (once per ID) - kept for backwards compatibility
+ * @internal In v2.0, styles are injected into Shadow DOM instead
+ */
+declare function _injectStyles(id: string, css: string, nonce?: string): void;
+export { _injectStyles as injectStyles };
+/**
  * Reset singleton state (for testing only)
  * @internal
  */
@@ -227,4 +233,3 @@ export declare function createCookieBanner(config?: CookieBannerConfig): CookieB
  * Called automatically when loaded via script tag
  */
 export declare function setup(): LegacyCookieBannerAPI | null;
-export {};

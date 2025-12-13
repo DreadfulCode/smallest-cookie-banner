@@ -29,7 +29,8 @@ If you use this library and want a mention here, send me your URL!
 - **Geo-aware** — auto-detects EU users via timezone for GDPR
 - **Implied consent** — auto-accepts in regions where it's legal (USA, Asia, etc.)
 - **TypeScript** — full type definitions included
-- **Well-tested** — 260+ tests, TDD approach
+- **Well-tested** — 264 tests, TDD approach
+- **CSS Encapsulation** — Web Components with Shadow DOM (v2.0)
 
 ### Compliant & Accessible
 - **GDPR, CCPA, LGPD** — legally compliant worldwide

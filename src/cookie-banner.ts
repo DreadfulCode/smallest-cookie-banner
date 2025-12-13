@@ -172,7 +172,7 @@ export interface LegacyCookieBannerAPI {
   destroy(): void;
 }
 
-interface BannerElement extends HTMLDivElement {
+interface BannerElement extends HTMLElement {
   _cleanup?: () => void;
 }
 
@@ -212,6 +212,32 @@ export const DEFAULT_CSS = `#ckb{position:var(--ckb-position,fixed);bottom:var(-
 // ============================================================================
 
 const isBrowser = typeof window !== 'undefined' && typeof document !== 'undefined';
+
+// ============================================================================
+// Web Component Definition
+// ============================================================================
+
+const COMPONENT_NAME = 'cookie-banner-element';
+
+/** Custom element for cookie banner with Shadow DOM encapsulation */
+class CookieBannerWebComponent extends HTMLElement {
+  private _shadow: ShadowRoot;
+  _cleanup?: () => void;
+
+  constructor() {
+    super();
+    this._shadow = this.attachShadow({ mode: 'open' });
+  }
+
+  get shadowRoot(): ShadowRoot {
+    return this._shadow;
+  }
+}
+
+// Register custom element (only once, only in browser)
+if (isBrowser && typeof customElements !== 'undefined' && !customElements.get(COMPONENT_NAME)) {
+  customElements.define(COMPONENT_NAME, CookieBannerWebComponent);
+}
 
 // ============================================================================
 // CSS Sanitization (Security)
@@ -547,9 +573,10 @@ function escapeHtml(str: string): string {
 }
 
 /**
- * Inject styles (once per ID)
+ * Inject styles (once per ID) - kept for backwards compatibility
+ * @internal In v2.0, styles are injected into Shadow DOM instead
  */
-function injectStyles(id: string, css: string, nonce?: string): void {
+function _injectStyles(id: string, css: string, nonce?: string): void {
   if (!isBrowser || document.getElementById(id)) return;
   const style = document.createElement('style');
   style.id = id;
@@ -559,6 +586,9 @@ function injectStyles(id: string, css: string, nonce?: string): void {
   style.textContent = css;
   document.head.appendChild(style);
 }
+
+// Export for testing
+export { _injectStyles as injectStyles };
 
 // ============================================================================
 // Cookie Banner Class (Framework-Friendly)
@@ -787,37 +817,48 @@ export function createCookieBanner(config: CookieBannerConfig = {}): CookieBanne
 
   function createBannerElement(startExpanded = false): BannerElement {
     // Failsafe: remove any existing banner to prevent duplicates
-    const existing = document.getElementById('ckb');
+    const existing = document.querySelector(COMPONENT_NAME);
     if (existing) {
       existing.remove();
     }
 
-    // Inject sanitized styles
-    const customCss = config.css ? sanitizeCss(config.css) : '';
-    injectStyles(styleId, DEFAULT_CSS + customCss, config.cspNonce);
-
-    const el = document.createElement('div') as BannerElement;
+    // Create Web Component with Shadow DOM
+    const el = document.createElement(COMPONENT_NAME) as CookieBannerWebComponent & BannerElement;
     el.id = 'ckb';
+    const shadow = el.shadowRoot!;
+
+    // Inject styles into Shadow DOM (encapsulated)
+    const customCss = config.css ? sanitizeCss(config.css) : '';
+    const styleEl = document.createElement('style');
+    if (config.cspNonce) {
+      styleEl.setAttribute('nonce', config.cspNonce);
+    }
+    styleEl.textContent = DEFAULT_CSS + customCss;
+    shadow.appendChild(styleEl);
+
+    // Create wrapper div inside shadow DOM
+    const wrapper = document.createElement('div');
+    wrapper.id = 'ckb';
 
     // ARIA attributes for accessibility
-    el.setAttribute('role', 'dialog');
-    el.setAttribute('aria-label', config.bannerAriaLabel || 'Cookie consent');
-    el.setAttribute('aria-modal', 'true');
-    el.setAttribute('tabindex', '-1');
+    wrapper.setAttribute('role', 'dialog');
+    wrapper.setAttribute('aria-label', config.bannerAriaLabel || 'Cookie consent');
+    wrapper.setAttribute('aria-modal', 'true');
+    wrapper.setAttribute('tabindex', '-1');
 
     // RTL support - set dir attribute if specified
     if (config.dir) {
-      el.setAttribute('dir', config.dir);
+      wrapper.setAttribute('dir', config.dir);
     }
 
     // Apply sanitized inline styles
     if (config.style) {
-      el.style.cssText = sanitizeInlineStyle(config.style);
+      wrapper.style.cssText = sanitizeInlineStyle(config.style);
     }
 
     // Generate unique ID for message
     const msgId = `ckb-msg-${Math.random().toString(36).slice(2, 8)}`;
-    el.setAttribute('aria-describedby', msgId);
+    wrapper.setAttribute('aria-describedby', msgId);
 
     const msg = escapeHtml(config.msg || 'Cookies help us deliver our services.');
     const acceptText = escapeHtml(config.acceptText || 'Accept All');
@@ -877,37 +918,38 @@ export function createCookieBanner(config: CookieBannerConfig = {}): CookieBanne
       html += `<button type="button" id="cky">${escapeHtml(config.acceptText || 'OK')}</button>`;
     }
 
-    // Set innerHTML BEFORE appending to DOM to prevent reflow
-    el.innerHTML = html;
+    // Set innerHTML on wrapper inside shadow DOM
+    wrapper.innerHTML = html;
 
     // Start expanded if requested (for manage())
     if (startExpanded && hasCategories) {
-      el.classList.add('expanded');
-      const saveBtn = el.querySelector('#cksv') as HTMLButtonElement | null;
-      const settingsBtn = el.querySelector('#cks') as HTMLButtonElement | null;
+      wrapper.classList.add('expanded');
+      const saveBtn = shadow.querySelector('#cksv') as HTMLButtonElement | null;
+      const settingsBtn = shadow.querySelector('#cks') as HTMLButtonElement | null;
       if (saveBtn) saveBtn.style.display = '';
       if (settingsBtn) settingsBtn.style.display = 'none';
     }
 
-    // NOW append to container (after innerHTML is set)
+    // Append wrapper to shadow DOM, then element to container
+    shadow.appendChild(wrapper);
     container.appendChild(el);
 
-    // Store previous focus and move focus to banner
+    // Store previous focus and move focus to banner wrapper
     previousActiveElement = document.activeElement;
-    el.focus();
+    wrapper.focus();
 
-    // Event handlers
-    const acceptEl = el.querySelector('#cky') as HTMLButtonElement | null;
-    const rejectEl = el.querySelector('#ckn') as HTMLButtonElement | null;
-    const settingsEl = el.querySelector('#cks') as HTMLButtonElement | null;
-    const saveEl = el.querySelector('#cksv') as HTMLButtonElement | null;
+    // Event handlers (query inside shadow DOM)
+    const acceptEl = shadow.querySelector('#cky') as HTMLButtonElement | null;
+    const rejectEl = shadow.querySelector('#ckn') as HTMLButtonElement | null;
+    const settingsEl = shadow.querySelector('#cks') as HTMLButtonElement | null;
+    const saveEl = shadow.querySelector('#cksv') as HTMLButtonElement | null;
 
     const handleAcceptClick = (): void => handleConsent(true);
     const handleRejectClick = (): void => handleConsent(false);
 
     const handleSettingsClick = (): void => {
-      el.classList.toggle('expanded');
-      const isExpanded = el.classList.contains('expanded');
+      wrapper.classList.toggle('expanded');
+      const isExpanded = wrapper.classList.contains('expanded');
       if (saveEl) saveEl.style.display = isExpanded ? '' : 'none';
       if (settingsEl) settingsEl.style.display = isExpanded ? 'none' : '';
     };
@@ -916,7 +958,7 @@ export function createCookieBanner(config: CookieBannerConfig = {}): CookieBanne
       // Gather checkbox states
       const state: ConsentState = {};
       const cats = categories.length > 0 ? categories : DEFAULT_CATEGORIES;
-      const checkboxes = el.querySelectorAll('input[name="ckb-cat"]');
+      const checkboxes = shadow.querySelectorAll('input[name="ckb-cat"]');
 
       for (let c = 0; c < checkboxes.length; c++) {
         const checkbox = checkboxes[c] as HTMLInputElement;
@@ -952,16 +994,19 @@ export function createCookieBanner(config: CookieBannerConfig = {}): CookieBanne
         // ESC dismisses - reject in EU mode, accept in non-EU mode
         handleConsent(!inEU);
       } else if (e.key === 'Tab') {
-        // Focus trap
-        const focusableElements = el.querySelectorAll('button:not([style*="display: none"]):not([style*="display:none"]), input, a');
+        // Focus trap (query inside shadow DOM)
+        const focusableElements = shadow.querySelectorAll('button:not([style*="display: none"]):not([style*="display:none"]), input, a');
         const firstElement = focusableElements[0] as HTMLElement | undefined;
         const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement | undefined;
 
+        // Get active element inside shadow DOM
+        const activeEl = shadow.activeElement || document.activeElement;
+
         if (firstElement && lastElement) {
-          if (e.shiftKey && document.activeElement === firstElement) {
+          if (e.shiftKey && activeEl === firstElement) {
             e.preventDefault();
             lastElement.focus();
-          } else if (!e.shiftKey && document.activeElement === lastElement) {
+          } else if (!e.shiftKey && activeEl === lastElement) {
             e.preventDefault();
             firstElement.focus();
           }

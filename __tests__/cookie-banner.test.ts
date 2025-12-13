@@ -22,10 +22,36 @@ import {
   ConsentState,
   ConsentRecord,
   _resetSingleton,
+  injectStyles,
 } from '../src/cookie-banner';
 
 // Store original location for restoration
 const originalLocation = window.location;
+
+// Component name for Web Component
+const COMPONENT_NAME = 'cookie-banner-element';
+
+// Helper functions to query inside Shadow DOM
+function getBannerElement(): HTMLElement | null {
+  return document.querySelector(COMPONENT_NAME);
+}
+
+function getShadowRoot(): ShadowRoot | null {
+  const el = getBannerElement();
+  return el?.shadowRoot ?? null;
+}
+
+// Query inside shadow DOM - returns element from shadow root
+function shadowQuery(selector: string): HTMLElement | null {
+  const shadow = getShadowRoot();
+  return shadow?.querySelector(selector) as HTMLElement | null;
+}
+
+// Query all inside shadow DOM
+function shadowQueryAll(selector: string): NodeListOf<Element> {
+  const shadow = getShadowRoot();
+  return shadow?.querySelectorAll(selector) ?? document.querySelectorAll('nonexistent');
+}
 
 describe('smallest-cookie-banner', () => {
   // Helper to reset state
@@ -145,6 +171,47 @@ describe('smallest-cookie-banner', () => {
       deleteConsent();
       expect(getConsent()).toBeNull();
     });
+
+    it('deletes consent cookie on HTTPS', () => {
+      Object.defineProperty(window, 'location', {
+        value: { protocol: 'https:' },
+        writable: true,
+        configurable: true,
+      });
+      document.cookie = 'cookie_consent=1;path=/';
+      deleteConsent();
+      expect(getConsent()).toBeNull();
+    });
+  });
+
+  describe('injectStyles() (deprecated, for backwards compatibility)', () => {
+    it('injects styles into document head', () => {
+      const testId = 'test-inject-style';
+      injectStyles(testId, '.test { color: red; }');
+      const style = document.getElementById(testId);
+      expect(style).not.toBeNull();
+      expect(style?.textContent).toContain('.test');
+      style?.remove();
+    });
+
+    it('does not duplicate styles with same ID', () => {
+      const testId = 'test-inject-style-dup';
+      injectStyles(testId, '.test1 { color: red; }');
+      injectStyles(testId, '.test2 { color: blue; }');
+      const styles = document.querySelectorAll(`#${testId}`);
+      expect(styles.length).toBe(1);
+      // Should still have original content
+      expect(styles[0]?.textContent).toContain('.test1');
+      document.getElementById(testId)?.remove();
+    });
+
+    it('adds nonce attribute when provided', () => {
+      const testId = 'test-inject-style-nonce';
+      injectStyles(testId, '.test { color: red; }', 'test-nonce-123');
+      const style = document.getElementById(testId);
+      expect(style?.getAttribute('nonce')).toBe('test-nonce-123');
+      style?.remove();
+    });
   });
 
   describe('DEFAULT_CSS', () => {
@@ -169,7 +236,7 @@ describe('smallest-cookie-banner', () => {
     it('shows banner on show()', () => {
       const banner = createCookieBanner();
       banner.show();
-      expect(document.getElementById('ckb')).not.toBeNull();
+      expect(getBannerElement()).not.toBeNull();
       expect(banner.isVisible()).toBe(true);
     });
 
@@ -177,14 +244,14 @@ describe('smallest-cookie-banner', () => {
       document.cookie = 'cookie_consent=1;path=/';
       const banner = createCookieBanner();
       banner.show();
-      expect(document.getElementById('ckb')).toBeNull();
+      expect(getBannerElement()).toBeNull();
     });
 
     it('hides banner on hide()', () => {
       const banner = createCookieBanner();
       banner.show();
       banner.hide();
-      expect(document.getElementById('ckb')).toBeNull();
+      expect(getBannerElement()).toBeNull();
       expect(banner.isVisible()).toBe(false);
     });
 
@@ -246,12 +313,12 @@ describe('smallest-cookie-banner', () => {
     it('destroys banner and cleans up', () => {
       const banner = createCookieBanner();
       banner.show();
-      const styleId = document.querySelector('style[id^="ckb-style"]')?.id;
+      // Style is now inside Shadow DOM, not document head
+      // Verify banner element exists before destroy
+      expect(getBannerElement()).not.toBeNull();
       banner.destroy();
-      expect(document.getElementById('ckb')).toBeNull();
-      if (styleId) {
-        expect(document.getElementById(styleId)).toBeNull();
-      }
+      // Banner element should be removed
+      expect(getBannerElement()).toBeNull();
     });
 
     it('destroys with clearCookie option', () => {
@@ -266,13 +333,13 @@ describe('smallest-cookie-banner', () => {
       it('shows reject button when forceEU is true', () => {
         const banner = createCookieBanner({ forceEU: true });
         banner.show();
-        expect(document.getElementById('ckn')).not.toBeNull();
+        expect(shadowQuery('#ckn')).not.toBeNull();
       });
 
       it('hides reject button when forceEU is false', () => {
         const banner = createCookieBanner({ forceEU: false });
         banner.show();
-        expect(document.getElementById('ckn')).toBeNull();
+        expect(shadowQuery('#ckn')).toBeNull();
       });
     });
 
@@ -315,26 +382,27 @@ describe('smallest-cookie-banner', () => {
       it('uses custom message', () => {
         const banner = createCookieBanner({ msg: 'Custom message' });
         banner.show();
-        expect(document.getElementById('ckb')?.innerHTML).toContain('Custom message');
+        expect(shadowQuery('#ckb')?.innerHTML).toContain('Custom message');
       });
 
       it('uses custom button text', () => {
         const banner = createCookieBanner({ acceptText: 'OK!', rejectText: 'No', forceEU: true });
         banner.show();
-        expect(document.getElementById('cky')?.textContent).toBe('OK!');
-        expect(document.getElementById('ckn')?.textContent).toBe('No');
+        expect(shadowQuery('#cky')?.textContent).toBe('OK!');
+        expect(shadowQuery('#ckn')?.textContent).toBe('No');
       });
 
       it('applies custom style', () => {
         const banner = createCookieBanner({ style: 'background: red' });
         banner.show();
-        expect(document.getElementById('ckb')?.style.background).toBe('red');
+        expect(shadowQuery('#ckb')?.style.background).toBe('red');
       });
 
       it('injects custom CSS', () => {
         const banner = createCookieBanner({ css: '.test{color:blue}' });
         banner.show();
-        const style = document.querySelector('style[id^="ckb-style"]');
+        // Style is now inside Shadow DOM
+        const style = getShadowRoot()?.querySelector('style');
         expect(style?.textContent).toContain('.test{color:blue}');
       });
 
@@ -344,7 +412,8 @@ describe('smallest-cookie-banner', () => {
         document.body.appendChild(container);
         const banner = createCookieBanner({ container });
         banner.show();
-        expect(container.querySelector('#ckb')).not.toBeNull();
+        // Web Component is appended to custom container
+        expect(container.querySelector(COMPONENT_NAME)).not.toBeNull();
       });
     });
 
@@ -357,9 +426,9 @@ describe('smallest-cookie-banner', () => {
           forceEU: true
         });
         banner.show();
-        expect(document.getElementById('ckb')?.innerHTML).toContain('Wij gebruiken cookies');
-        expect(document.getElementById('cky')?.textContent).toBe('Accepteren');
-        expect(document.getElementById('ckn')?.textContent).toBe('Weigeren');
+        expect(shadowQuery('#ckb')?.innerHTML).toContain('Wij gebruiken cookies');
+        expect(shadowQuery('#cky')?.textContent).toBe('Accepteren');
+        expect(shadowQuery('#ckn')?.textContent).toBe('Weigeren');
       });
 
       it('supports Japanese localization', () => {
@@ -370,9 +439,9 @@ describe('smallest-cookie-banner', () => {
           forceEU: true
         });
         banner.show();
-        expect(document.getElementById('ckb')?.innerHTML).toContain('このサイトはクッキーを使用しています');
-        expect(document.getElementById('cky')?.textContent).toBe('同意する');
-        expect(document.getElementById('ckn')?.textContent).toBe('拒否する');
+        expect(shadowQuery('#ckb')?.innerHTML).toContain('このサイトはクッキーを使用しています');
+        expect(shadowQuery('#cky')?.textContent).toBe('同意する');
+        expect(shadowQuery('#ckn')?.textContent).toBe('拒否する');
       });
 
       it('supports German localization', () => {
@@ -383,9 +452,9 @@ describe('smallest-cookie-banner', () => {
           forceEU: true
         });
         banner.show();
-        expect(document.getElementById('ckb')?.innerHTML).toContain('Diese Website verwendet Cookies');
-        expect(document.getElementById('cky')?.textContent).toBe('Akzeptieren');
-        expect(document.getElementById('ckn')?.textContent).toBe('Ablehnen');
+        expect(shadowQuery('#ckb')?.innerHTML).toContain('Diese Website verwendet Cookies');
+        expect(shadowQuery('#cky')?.textContent).toBe('Akzeptieren');
+        expect(shadowQuery('#ckn')?.textContent).toBe('Ablehnen');
       });
 
       it('supports Spanish localization', () => {
@@ -396,9 +465,9 @@ describe('smallest-cookie-banner', () => {
           forceEU: true
         });
         banner.show();
-        expect(document.getElementById('ckb')?.innerHTML).toContain('Usamos cookies');
-        expect(document.getElementById('cky')?.textContent).toBe('Aceptar');
-        expect(document.getElementById('ckn')?.textContent).toBe('Rechazar');
+        expect(shadowQuery('#ckb')?.innerHTML).toContain('Usamos cookies');
+        expect(shadowQuery('#cky')?.textContent).toBe('Aceptar');
+        expect(shadowQuery('#ckn')?.textContent).toBe('Rechazar');
       });
 
       it('supports Chinese localization', () => {
@@ -409,9 +478,9 @@ describe('smallest-cookie-banner', () => {
           forceEU: true
         });
         banner.show();
-        expect(document.getElementById('ckb')?.innerHTML).toContain('我们使用cookies');
-        expect(document.getElementById('cky')?.textContent).toBe('接受');
-        expect(document.getElementById('ckn')?.textContent).toBe('拒绝');
+        expect(shadowQuery('#ckb')?.innerHTML).toContain('我们使用cookies');
+        expect(shadowQuery('#cky')?.textContent).toBe('接受');
+        expect(shadowQuery('#ckn')?.textContent).toBe('拒绝');
       });
 
       it('supports custom bannerAriaLabel', () => {
@@ -420,7 +489,7 @@ describe('smallest-cookie-banner', () => {
           forceEU: true,
         });
         banner.show();
-        expect(document.getElementById('ckb')?.getAttribute('aria-label')).toBe('Consentement aux cookies');
+        expect(shadowQuery('#ckb')?.getAttribute('aria-label')).toBe('Consentement aux cookies');
       });
 
       it('supports custom requiredLabel in GDPR mode', () => {
@@ -430,7 +499,7 @@ describe('smallest-cookie-banner', () => {
           forceEU: true,
         });
         banner.show();
-        const requiredSpan = document.querySelector('.cat-req');
+        const requiredSpan = shadowQuery('.cat-req');
         expect(requiredSpan?.textContent).toBe('(Obligatoire)');
       });
 
@@ -449,12 +518,12 @@ describe('smallest-cookie-banner', () => {
           forceEU: true,
         });
         banner.show();
-        expect(document.getElementById('ckb')?.innerHTML).toContain('Nous utilisons des cookies');
-        expect(document.getElementById('cky')?.textContent).toBe('Tout accepter');
-        expect(document.getElementById('ckn')?.textContent).toBe('Tout refuser');
-        expect(document.getElementById('cks')?.textContent).toBe('Personnaliser');
-        expect(document.querySelector('.cat-req')?.textContent).toBe('(Obligatoire)');
-        expect(document.getElementById('ckb')?.getAttribute('aria-label')).toBe('Consentement aux cookies');
+        expect(shadowQuery('#ckb')?.innerHTML).toContain('Nous utilisons des cookies');
+        expect(shadowQuery('#cky')?.textContent).toBe('Tout accepter');
+        expect(shadowQuery('#ckn')?.textContent).toBe('Tout refuser');
+        expect(shadowQuery('#cks')?.textContent).toBe('Personnaliser');
+        expect(shadowQuery('.cat-req')?.textContent).toBe('(Obligatoire)');
+        expect(shadowQuery('#ckb')?.getAttribute('aria-label')).toBe('Consentement aux cookies');
       });
     });
 
@@ -462,7 +531,7 @@ describe('smallest-cookie-banner', () => {
       it('escapes HTML in message', () => {
         const banner = createCookieBanner({ msg: '<script>alert(1)</script>' });
         banner.show();
-        const content = document.getElementById('ckb')?.innerHTML || '';
+        const content = shadowQuery('#ckb')?.innerHTML || '';
         expect(content).not.toContain('<script>');
         expect(content).toContain('&lt;script&gt;');
       });
@@ -494,14 +563,14 @@ describe('smallest-cookie-banner', () => {
     it('shows banner automatically when no consent', () => {
       window.CookieBannerConfig = {};
       setup();
-      expect(document.getElementById('ckb')).not.toBeNull();
+      expect(getBannerElement()).not.toBeNull();
     });
 
     it('does not show banner when consent exists', () => {
       document.cookie = 'cookie_consent=1;path=/';
       window.CookieBannerConfig = {};
       setup();
-      expect(document.getElementById('ckb')).toBeNull();
+      expect(getBannerElement()).toBeNull();
     });
 
     it('legacy ok property reflects status', () => {
@@ -527,14 +596,14 @@ describe('smallest-cookie-banner', () => {
     it('accept button sets consent', () => {
       const banner = createCookieBanner({ forceEU: true });
       banner.show();
-      document.getElementById('cky')?.click();
+      shadowQuery('#cky')?.click();
       expect(banner.status).toBe(true);
     });
 
     it('reject button sets consent', () => {
       const banner = createCookieBanner({ forceEU: true });
       banner.show();
-      document.getElementById('ckn')?.click();
+      shadowQuery('#ckn')?.click();
       expect(banner.status).toBe(false);
     });
   });
@@ -726,7 +795,8 @@ describe('smallest-cookie-banner', () => {
           css: '@import url(https://evil.com); body { background: url(https://track.com); }',
         });
         banner.show();
-        const style = document.querySelector('style[id^="ckb-style"]');
+        // Style is now inside Shadow DOM
+        const style = getShadowRoot()?.querySelector('style');
         expect(style?.textContent).not.toContain('@import');
         expect(style?.textContent).not.toContain('evil.com');
         expect(style?.textContent).not.toContain('track.com');
@@ -737,7 +807,7 @@ describe('smallest-cookie-banner', () => {
           style: 'background: url(https://evil.com/steal)',
         });
         banner.show();
-        const el = document.getElementById('ckb');
+        const el = shadowQuery('#ckb');
         expect(el?.style.cssText).not.toContain('evil.com');
       });
     });
@@ -809,21 +879,21 @@ describe('smallest-cookie-banner', () => {
       it('has role="dialog" on banner', () => {
         const banner = createCookieBanner({ forceEU: true });
         banner.show();
-        const el = document.getElementById('ckb');
+        const el = shadowQuery('#ckb');
         expect(el?.getAttribute('role')).toBe('dialog');
       });
 
       it('has aria-label on banner', () => {
         const banner = createCookieBanner({ forceEU: true });
         banner.show();
-        const el = document.getElementById('ckb');
+        const el = shadowQuery('#ckb');
         expect(el?.getAttribute('aria-label')).toBe('Cookie consent');
       });
 
       it('has aria-describedby linking to message', () => {
         const banner = createCookieBanner({ forceEU: true });
         banner.show();
-        const el = document.getElementById('ckb');
+        const el = shadowQuery('#ckb');
         const msgId = el?.querySelector('p')?.id;
         expect(el?.getAttribute('aria-describedby')).toBe(msgId);
       });
@@ -831,15 +901,15 @@ describe('smallest-cookie-banner', () => {
       it('has aria-modal="true" for modal behavior', () => {
         const banner = createCookieBanner({ forceEU: true });
         banner.show();
-        const el = document.getElementById('ckb');
+        const el = shadowQuery('#ckb');
         expect(el?.getAttribute('aria-modal')).toBe('true');
       });
 
       it('buttons have type="button"', () => {
         const banner = createCookieBanner({ forceEU: true });
         banner.show();
-        const acceptBtn = document.getElementById('cky');
-        const rejectBtn = document.getElementById('ckn');
+        const acceptBtn = shadowQuery('#cky');
+        const rejectBtn = shadowQuery('#ckn');
         expect(acceptBtn?.getAttribute('type')).toBe('button');
         expect(rejectBtn?.getAttribute('type')).toBe('button');
       });
@@ -874,7 +944,7 @@ describe('smallest-cookie-banner', () => {
         const banner = createCookieBanner({ forceEU: true });
         banner.show();
 
-        const el = document.getElementById('ckb');
+        const el = shadowQuery('#ckb');
         const buttons = el?.querySelectorAll('button');
 
         // Focus on last button and tab should go to first
@@ -891,8 +961,10 @@ describe('smallest-cookie-banner', () => {
         const banner = createCookieBanner({ forceEU: true });
         banner.show();
 
-        const el = document.getElementById('ckb');
-        expect(document.activeElement).toBe(el);
+        // With Shadow DOM, document.activeElement is the host element
+        // The inner wrapper has focus inside the shadow root
+        const bannerEl = getBannerElement();
+        expect(document.activeElement).toBe(bannerEl);
       });
 
       it('restores focus on hide', () => {
@@ -914,7 +986,8 @@ describe('smallest-cookie-banner', () => {
         const banner = createCookieBanner({ forceEU: true });
         banner.show();
 
-        const style = document.querySelector('style[id^="ckb-style"]');
+        // Style is now inside Shadow DOM
+        const style = getShadowRoot()?.querySelector('style');
         // Check that CSS includes min-height and min-width for buttons
         expect(style?.textContent).toContain('min-height:44px');
         expect(style?.textContent).toContain('min-width:44px');
@@ -925,7 +998,8 @@ describe('smallest-cookie-banner', () => {
       it('includes prefers-reduced-motion media query', () => {
         const banner = createCookieBanner();
         banner.show();
-        const style = document.querySelector('style[id^="ckb-style"]');
+        // Style is now inside Shadow DOM
+        const style = getShadowRoot()?.querySelector('style');
         expect(style?.textContent).toContain('prefers-reduced-motion');
       });
     });
@@ -938,14 +1012,16 @@ describe('smallest-cookie-banner', () => {
     it('adds nonce attribute to style tag when provided', () => {
       const banner = createCookieBanner({ cspNonce: 'abc123' });
       banner.show();
-      const style = document.querySelector('style[id^="ckb-style"]');
+      // Style is now inside Shadow DOM
+      const style = getShadowRoot()?.querySelector('style');
       expect(style?.getAttribute('nonce')).toBe('abc123');
     });
 
     it('does not add nonce attribute when not provided', () => {
       const banner = createCookieBanner();
       banner.show();
-      const style = document.querySelector('style[id^="ckb-style"]');
+      // Style is now inside Shadow DOM
+      const style = getShadowRoot()?.querySelector('style');
       expect(style?.hasAttribute('nonce')).toBe(false);
     });
   });
@@ -987,10 +1063,13 @@ describe('smallest-cookie-banner', () => {
       const banner = createCookieBanner();
       banner.show();
 
-      // Verify appendChild was called with an element that already has innerHTML
+      // Verify appendChild was called with a Web Component
+      // Content is inside Shadow DOM, not innerHTML of the element
       expect(appendChildSpy).toHaveBeenCalled();
       const appendedEl = appendChildSpy.mock.calls[0]?.[0] as HTMLElement;
-      expect(appendedEl.innerHTML).toContain('button');
+      // With Shadow DOM, check shadowRoot has content
+      const shadowRoot = (appendedEl as unknown as { shadowRoot: ShadowRoot }).shadowRoot;
+      expect(shadowRoot?.innerHTML).toContain('button');
 
       appendChildSpy.mockRestore();
     });
@@ -1114,7 +1193,7 @@ describe('smallest-cookie-banner', () => {
       it('shows categories panel in GDPR mode', () => {
         const banner = createCookieBanner({ mode: 'gdpr', forceEU: true });
         banner.show();
-        expect(document.getElementById('ckb-cats')).not.toBeNull();
+        expect(shadowQuery('#ckb-cats')).not.toBeNull();
       });
 
       it('shows categories when categories array is provided', () => {
@@ -1123,19 +1202,19 @@ describe('smallest-cookie-banner', () => {
           forceEU: true,
         });
         banner.show();
-        expect(document.getElementById('ckb-cats')).not.toBeNull();
+        expect(shadowQuery('#ckb-cats')).not.toBeNull();
       });
 
       it('shows settings button in GDPR mode', () => {
         const banner = createCookieBanner({ mode: 'gdpr', forceEU: true });
         banner.show();
-        expect(document.getElementById('cks')).not.toBeNull();
+        expect(shadowQuery('#cks')).not.toBeNull();
       });
 
       it('shows save button (hidden initially) in GDPR mode', () => {
         const banner = createCookieBanner({ mode: 'gdpr', forceEU: true });
         banner.show();
-        const saveBtn = document.getElementById('cksv');
+        const saveBtn = shadowQuery('#cksv');
         expect(saveBtn).not.toBeNull();
         expect(saveBtn?.style.display).toBe('none');
       });
@@ -1143,21 +1222,21 @@ describe('smallest-cookie-banner', () => {
       it('uses Accept All and Reject All text in GDPR mode', () => {
         const banner = createCookieBanner({ mode: 'gdpr', forceEU: true });
         banner.show();
-        expect(document.getElementById('cky')?.textContent).toBe('Accept All');
-        expect(document.getElementById('ckn')?.textContent).toBe('Reject All');
+        expect(shadowQuery('#cky')?.textContent).toBe('Accept All');
+        expect(shadowQuery('#ckn')?.textContent).toBe('Reject All');
       });
 
       it('renders checkboxes for each category', () => {
         const banner = createCookieBanner({ mode: 'gdpr', forceEU: true });
         banner.show();
-        const checkboxes = document.querySelectorAll('input[name="ckb-cat"]');
+        const checkboxes = shadowQueryAll('input[name="ckb-cat"]');
         expect(checkboxes.length).toBe(DEFAULT_CATEGORIES.length);
       });
 
       it('disables required category checkboxes', () => {
         const banner = createCookieBanner({ mode: 'gdpr', forceEU: true });
         banner.show();
-        const essentialCheckbox = document.querySelector('input[value="essential"]') as HTMLInputElement;
+        const essentialCheckbox = shadowQuery('input[value="essential"]') as HTMLInputElement;
         expect(essentialCheckbox?.disabled).toBe(true);
         expect(essentialCheckbox?.checked).toBe(true);
       });
@@ -1169,7 +1248,7 @@ describe('smallest-cookie-banner', () => {
           privacyPolicyUrl: 'https://example.com/privacy',
         });
         banner.show();
-        const link = document.querySelector('#ckb a[href="https://example.com/privacy"]');
+        const link = shadowQuery('#ckb a[href="https://example.com/privacy"]');
         expect(link).not.toBeNull();
       });
     });
@@ -1178,8 +1257,8 @@ describe('smallest-cookie-banner', () => {
       it('toggles expanded class on settings click', () => {
         const banner = createCookieBanner({ mode: 'gdpr', forceEU: true });
         banner.show();
-        const settingsBtn = document.getElementById('cks');
-        const el = document.getElementById('ckb');
+        const settingsBtn = shadowQuery('#cks');
+        const el = shadowQuery('#ckb');
 
         expect(el?.classList.contains('expanded')).toBe(false);
         settingsBtn?.click();
@@ -1189,8 +1268,8 @@ describe('smallest-cookie-banner', () => {
       it('shows save button and hides settings when expanded', () => {
         const banner = createCookieBanner({ mode: 'gdpr', forceEU: true });
         banner.show();
-        const settingsBtn = document.getElementById('cks');
-        const saveBtn = document.getElementById('cksv');
+        const settingsBtn = shadowQuery('#cks');
+        const saveBtn = shadowQuery('#cksv');
 
         settingsBtn?.click();
         expect(saveBtn?.style.display).not.toBe('none');
@@ -1203,7 +1282,7 @@ describe('smallest-cookie-banner', () => {
         const onConsent = jest.fn();
         const banner = createCookieBanner({ mode: 'gdpr', forceEU: true, onConsent });
         banner.show();
-        document.getElementById('cky')?.click();
+        shadowQuery('#cky')?.click();
 
         expect(onConsent).toHaveBeenCalled();
         const consent = onConsent.mock.calls[0][0] as ConsentState;
@@ -1217,7 +1296,7 @@ describe('smallest-cookie-banner', () => {
         const onConsent = jest.fn();
         const banner = createCookieBanner({ mode: 'gdpr', forceEU: true, onConsent });
         banner.show();
-        document.getElementById('ckn')?.click();
+        shadowQuery('#ckn')?.click();
 
         expect(onConsent).toHaveBeenCalled();
         const consent = onConsent.mock.calls[0][0] as ConsentState;
@@ -1233,18 +1312,18 @@ describe('smallest-cookie-banner', () => {
         banner.show();
 
         // Expand settings
-        document.getElementById('cks')?.click();
+        shadowQuery('#cks')?.click();
 
         // Check only analytics
-        const analyticsCheckbox = document.querySelector('input[value="analytics"]') as HTMLInputElement;
+        const analyticsCheckbox = shadowQuery('input[value="analytics"]') as HTMLInputElement;
         analyticsCheckbox.checked = true;
 
         // Uncheck marketing
-        const marketingCheckbox = document.querySelector('input[value="marketing"]') as HTMLInputElement;
+        const marketingCheckbox = shadowQuery('input[value="marketing"]') as HTMLInputElement;
         marketingCheckbox.checked = false;
 
         // Save
-        document.getElementById('cksv')?.click();
+        shadowQuery('#cksv')?.click();
 
         expect(onConsent).toHaveBeenCalled();
         const consent = onConsent.mock.calls[0][0] as ConsentState;
@@ -1255,7 +1334,7 @@ describe('smallest-cookie-banner', () => {
       it('stores granular consent in cookie', () => {
         const banner = createCookieBanner({ mode: 'gdpr', forceEU: true });
         banner.show();
-        document.getElementById('cky')?.click();
+        shadowQuery('#cky')?.click();
 
         const cookieValue = getConsent();
         expect(cookieValue).toContain('essential:1');
@@ -1299,10 +1378,10 @@ describe('smallest-cookie-banner', () => {
       it('shows banner even when consent exists', () => {
         const banner = createCookieBanner({ mode: 'gdpr', forceEU: true });
         banner.accept();
-        expect(document.getElementById('ckb')).toBeNull();
+        expect(getBannerElement()).toBeNull();
 
         banner.manage();
-        expect(document.getElementById('ckb')).not.toBeNull();
+        expect(getBannerElement()).not.toBeNull();
       });
 
       it('starts in expanded mode', () => {
@@ -1310,7 +1389,7 @@ describe('smallest-cookie-banner', () => {
         banner.accept();
         banner.manage();
 
-        const el = document.getElementById('ckb');
+        const el = shadowQuery('#ckb');
         expect(el?.classList.contains('expanded')).toBe(true);
       });
 
@@ -1319,16 +1398,16 @@ describe('smallest-cookie-banner', () => {
         banner.show();
 
         // Expand and set specific consent
-        document.getElementById('cks')?.click();
-        const analyticsCheckbox = document.querySelector('input[value="analytics"]') as HTMLInputElement;
+        shadowQuery('#cks')?.click();
+        const analyticsCheckbox = shadowQuery('input[value="analytics"]') as HTMLInputElement;
         analyticsCheckbox.checked = false;
-        document.getElementById('cksv')?.click();
+        shadowQuery('#cksv')?.click();
 
         // Reopen via manage()
         banner.manage();
 
         // Check that previous state is preserved
-        const analyticsCheckbox2 = document.querySelector('input[value="analytics"]') as HTMLInputElement;
+        const analyticsCheckbox2 = shadowQuery('input[value="analytics"]') as HTMLInputElement;
         expect(analyticsCheckbox2.checked).toBe(false);
       });
     });
@@ -1403,7 +1482,7 @@ describe('smallest-cookie-banner', () => {
         const banner = createCookieBanner({ categories: customCategories, forceEU: true });
         banner.show();
 
-        const checkboxes = document.querySelectorAll('input[name="ckb-cat"]');
+        const checkboxes = shadowQueryAll('input[name="ckb-cat"]');
         expect(checkboxes.length).toBe(3);
 
         const values = Array.from(checkboxes).map(c => (c as HTMLInputElement).value);
@@ -1421,8 +1500,8 @@ describe('smallest-cookie-banner', () => {
         const banner = createCookieBanner({ categories: customCategories, forceEU: true });
         banner.show();
 
-        const analyticsCheckbox = document.querySelector('input[value="analytics"]') as HTMLInputElement;
-        const marketingCheckbox = document.querySelector('input[value="marketing"]') as HTMLInputElement;
+        const analyticsCheckbox = shadowQuery('input[value="analytics"]') as HTMLInputElement;
+        const marketingCheckbox = shadowQuery('input[value="marketing"]') as HTMLInputElement;
 
         expect(analyticsCheckbox.checked).toBe(true);
         expect(marketingCheckbox.checked).toBe(false);
@@ -1636,13 +1715,13 @@ describe('smallest-cookie-banner', () => {
         banner.show();
         banner.accept();
 
-        expect(document.getElementById('ckb')).toBeNull();
+        expect(getBannerElement()).toBeNull();
 
         const widget = document.querySelector('[id^="ckb-widget"]') as HTMLButtonElement;
         widget?.click();
 
-        expect(document.getElementById('ckb')).not.toBeNull();
-        expect(document.getElementById('ckb')?.classList.contains('expanded')).toBe(true);
+        expect(getBannerElement()).not.toBeNull();
+        expect(shadowQuery('#ckb')?.classList.contains('expanded')).toBe(true);
       });
 
       it('records method as "widget" when consent changed via widget', () => {
@@ -1661,7 +1740,7 @@ describe('smallest-cookie-banner', () => {
         widget?.click();
 
         // Save new preferences
-        document.getElementById('cksv')?.click();
+        shadowQuery('#cksv')?.click();
 
         // Second call should have method 'widget'
         expect(onConsent).toHaveBeenCalledTimes(2);
@@ -1698,7 +1777,7 @@ describe('smallest-cookie-banner', () => {
       });
       banner.show();
 
-      const link = document.querySelector('#ckb a');
+      const link = shadowQuery('#ckb a');
       // Link should not be rendered since URL is blocked
       expect(link).toBeNull();
     });
@@ -1711,7 +1790,7 @@ describe('smallest-cookie-banner', () => {
       });
       banner.show();
 
-      const link = document.querySelector('#ckb a[href="https://example.com/privacy"]');
+      const link = shadowQuery('#ckb a[href="https://example.com/privacy"]');
       expect(link).not.toBeNull();
     });
 
@@ -1723,7 +1802,7 @@ describe('smallest-cookie-banner', () => {
       });
       banner.show();
 
-      const link = document.querySelector('#ckb a[href="/privacy-policy"]');
+      const link = shadowQuery('#ckb a[href="/privacy-policy"]');
       expect(link).not.toBeNull();
     });
   });
@@ -1736,8 +1815,8 @@ describe('smallest-cookie-banner', () => {
       const banner = createCookieBanner({ forceEU: true });
       banner.show();
       // Minimal mode defaults: "OK" for accept, "✗" for reject
-      expect(document.getElementById('cky')?.textContent).toBe('OK');
-      expect(document.getElementById('ckn')?.textContent).toBe('✗');
+      expect(shadowQuery('#cky')?.textContent).toBe('OK');
+      expect(shadowQuery('#ckn')?.textContent).toBe('✗');
     });
 
     it('supports custom acceptText in minimal mode', () => {
@@ -1746,7 +1825,7 @@ describe('smallest-cookie-banner', () => {
         forceEU: true,
       });
       banner.show();
-      expect(document.getElementById('cky')?.textContent).toBe('Got it');
+      expect(shadowQuery('#cky')?.textContent).toBe('Got it');
     });
 
     it('supports custom rejectText in minimal mode', () => {
@@ -1755,7 +1834,7 @@ describe('smallest-cookie-banner', () => {
         forceEU: true,
       });
       banner.show();
-      expect(document.getElementById('ckn')?.textContent).toBe('No thanks');
+      expect(shadowQuery('#ckn')?.textContent).toBe('No thanks');
     });
 
     it('supports privacyPolicyUrl in minimal mode', () => {
@@ -1764,7 +1843,7 @@ describe('smallest-cookie-banner', () => {
         forceEU: true,
       });
       banner.show();
-      const link = document.querySelector('#ckb a[href="https://example.com/privacy"]');
+      const link = shadowQuery('#ckb a[href="https://example.com/privacy"]');
       expect(link).not.toBeNull();
     });
 
@@ -1775,7 +1854,7 @@ describe('smallest-cookie-banner', () => {
         forceEU: true,
       });
       banner.show();
-      const link = document.querySelector('#ckb a');
+      const link = shadowQuery('#ckb a');
       expect(link?.textContent).toBe('Read our policy');
     });
 
@@ -1785,20 +1864,20 @@ describe('smallest-cookie-banner', () => {
         forceEU: true,
       });
       banner.show();
-      expect(document.getElementById('ckb')?.getAttribute('aria-label')).toBe('Cookie Notice');
+      expect(shadowQuery('#ckb')?.getAttribute('aria-label')).toBe('Cookie Notice');
     });
 
     it('does not show settings/save buttons in minimal mode', () => {
       const banner = createCookieBanner({ forceEU: true });
       banner.show();
-      expect(document.getElementById('cks')).toBeNull();
-      expect(document.getElementById('cksv')).toBeNull();
+      expect(shadowQuery('#cks')).toBeNull();
+      expect(shadowQuery('#cksv')).toBeNull();
     });
 
     it('does not show categories panel in minimal mode', () => {
       const banner = createCookieBanner({ forceEU: true });
       banner.show();
-      expect(document.getElementById('ckb-cats')).toBeNull();
+      expect(shadowQuery('#ckb-cats')).toBeNull();
     });
 
     it('stores consent state in minimal mode', () => {
@@ -1835,11 +1914,11 @@ describe('smallest-cookie-banner', () => {
         forceEU: true,
       });
       banner.show();
-      expect(document.getElementById('ckb')?.innerHTML).toContain('Utilizamos cookies');
-      expect(document.getElementById('cky')?.textContent).toBe('Aceptar');
-      expect(document.getElementById('ckn')?.textContent).toBe('Rechazar');
-      expect(document.querySelector('#ckb a')?.textContent).toBe('Política de privacidad');
-      expect(document.getElementById('ckb')?.getAttribute('aria-label')).toBe('Aviso de cookies');
+      expect(shadowQuery('#ckb')?.innerHTML).toContain('Utilizamos cookies');
+      expect(shadowQuery('#cky')?.textContent).toBe('Aceptar');
+      expect(shadowQuery('#ckn')?.textContent).toBe('Rechazar');
+      expect(shadowQuery('#ckb a')?.textContent).toBe('Política de privacidad');
+      expect(shadowQuery('#ckb')?.getAttribute('aria-label')).toBe('Aviso de cookies');
     });
   });
 
@@ -1850,9 +1929,9 @@ describe('smallest-cookie-banner', () => {
     it('uses default button text in GDPR mode', () => {
       const banner = createCookieBanner({ mode: 'gdpr', forceEU: true });
       banner.show();
-      expect(document.getElementById('cky')?.textContent).toBe('Accept All');
-      expect(document.getElementById('ckn')?.textContent).toBe('Reject All');
-      expect(document.getElementById('cks')?.textContent).toBe('Customize');
+      expect(shadowQuery('#cky')?.textContent).toBe('Accept All');
+      expect(shadowQuery('#ckn')?.textContent).toBe('Reject All');
+      expect(shadowQuery('#cks')?.textContent).toBe('Customize');
     });
 
     it('supports custom acceptText in GDPR mode', () => {
@@ -1862,7 +1941,7 @@ describe('smallest-cookie-banner', () => {
         forceEU: true,
       });
       banner.show();
-      expect(document.getElementById('cky')?.textContent).toBe('Allow All');
+      expect(shadowQuery('#cky')?.textContent).toBe('Allow All');
     });
 
     it('supports custom rejectText in GDPR mode', () => {
@@ -1872,7 +1951,7 @@ describe('smallest-cookie-banner', () => {
         forceEU: true,
       });
       banner.show();
-      expect(document.getElementById('ckn')?.textContent).toBe('Deny All');
+      expect(shadowQuery('#ckn')?.textContent).toBe('Deny All');
     });
 
     it('supports custom settingsText in GDPR mode', () => {
@@ -1882,7 +1961,7 @@ describe('smallest-cookie-banner', () => {
         forceEU: true,
       });
       banner.show();
-      expect(document.getElementById('cks')?.textContent).toBe('Manage Preferences');
+      expect(shadowQuery('#cks')?.textContent).toBe('Manage Preferences');
     });
 
     it('supports custom saveText in GDPR mode', () => {
@@ -1893,8 +1972,8 @@ describe('smallest-cookie-banner', () => {
       });
       banner.show();
       // Expand to see save button
-      document.getElementById('cks')?.click();
-      expect(document.getElementById('cksv')?.textContent).toBe('Confirm Selection');
+      shadowQuery('#cks')?.click();
+      expect(shadowQuery('#cksv')?.textContent).toBe('Confirm Selection');
     });
 
     it('supports privacyPolicyUrl in GDPR mode', () => {
@@ -1904,7 +1983,7 @@ describe('smallest-cookie-banner', () => {
         forceEU: true,
       });
       banner.show();
-      const link = document.querySelector('#ckb a[href="https://example.com/privacy"]');
+      const link = shadowQuery('#ckb a[href="https://example.com/privacy"]');
       expect(link).not.toBeNull();
     });
 
@@ -1916,7 +1995,7 @@ describe('smallest-cookie-banner', () => {
         forceEU: true,
       });
       banner.show();
-      const link = document.querySelector('#ckb a');
+      const link = shadowQuery('#ckb a');
       expect(link?.textContent).toBe('View Privacy Policy');
     });
 
@@ -1927,7 +2006,7 @@ describe('smallest-cookie-banner', () => {
         forceEU: true,
       });
       banner.show();
-      expect(document.getElementById('ckb')?.getAttribute('aria-label')).toBe('Cookie Preferences');
+      expect(shadowQuery('#ckb')?.getAttribute('aria-label')).toBe('Cookie Preferences');
     });
 
     it('supports requiredLabel in GDPR mode', () => {
@@ -1937,20 +2016,20 @@ describe('smallest-cookie-banner', () => {
         forceEU: true,
       });
       banner.show();
-      expect(document.querySelector('.cat-req')?.textContent).toBe('(Mandatory)');
+      expect(shadowQuery('.cat-req')?.textContent).toBe('(Mandatory)');
     });
 
     it('shows categories panel in GDPR mode', () => {
       const banner = createCookieBanner({ mode: 'gdpr', forceEU: true });
       banner.show();
-      expect(document.getElementById('ckb-cats')).not.toBeNull();
+      expect(shadowQuery('#ckb-cats')).not.toBeNull();
     });
 
     it('shows settings and save buttons in GDPR mode', () => {
       const banner = createCookieBanner({ mode: 'gdpr', forceEU: true });
       banner.show();
-      expect(document.getElementById('cks')).not.toBeNull();
-      expect(document.getElementById('cksv')).not.toBeNull();
+      expect(shadowQuery('#cks')).not.toBeNull();
+      expect(shadowQuery('#cksv')).not.toBeNull();
     });
 
     it('supports full GDPR mode localization (German)', () => {
@@ -1972,14 +2051,14 @@ describe('smallest-cookie-banner', () => {
         forceEU: true,
       });
       banner.show();
-      expect(document.getElementById('ckb')?.innerHTML).toContain('Wir verwenden Cookies');
-      expect(document.getElementById('cky')?.textContent).toBe('Alle akzeptieren');
-      expect(document.getElementById('ckn')?.textContent).toBe('Alle ablehnen');
-      expect(document.getElementById('cks')?.textContent).toBe('Anpassen');
-      expect(document.querySelector('#ckb a')?.textContent).toBe('Datenschutzerklärung');
-      expect(document.getElementById('ckb')?.getAttribute('aria-label')).toBe('Cookie-Einwilligung');
-      expect(document.querySelector('.cat-req')?.textContent).toBe('(Erforderlich)');
-      expect(document.querySelector('.cat-name')?.textContent).toContain('Notwendig');
+      expect(shadowQuery('#ckb')?.innerHTML).toContain('Wir verwenden Cookies');
+      expect(shadowQuery('#cky')?.textContent).toBe('Alle akzeptieren');
+      expect(shadowQuery('#ckn')?.textContent).toBe('Alle ablehnen');
+      expect(shadowQuery('#cks')?.textContent).toBe('Anpassen');
+      expect(shadowQuery('#ckb a')?.textContent).toBe('Datenschutzerklärung');
+      expect(shadowQuery('#ckb')?.getAttribute('aria-label')).toBe('Cookie-Einwilligung');
+      expect(shadowQuery('.cat-req')?.textContent).toBe('(Erforderlich)');
+      expect(shadowQuery('.cat-name')?.textContent).toContain('Notwendig');
     });
   });
 
@@ -1993,7 +2072,7 @@ describe('smallest-cookie-banner', () => {
         forceEU: true,
       });
       banner.show();
-      expect(document.getElementById('ckb')?.getAttribute('dir')).toBe('rtl');
+      expect(shadowQuery('#ckb')?.getAttribute('dir')).toBe('rtl');
     });
 
     it('sets dir="ltr" when configured', () => {
@@ -2002,7 +2081,7 @@ describe('smallest-cookie-banner', () => {
         forceEU: true,
       });
       banner.show();
-      expect(document.getElementById('ckb')?.getAttribute('dir')).toBe('ltr');
+      expect(shadowQuery('#ckb')?.getAttribute('dir')).toBe('ltr');
     });
 
     it('sets dir="auto" when configured', () => {
@@ -2011,13 +2090,13 @@ describe('smallest-cookie-banner', () => {
         forceEU: true,
       });
       banner.show();
-      expect(document.getElementById('ckb')?.getAttribute('dir')).toBe('auto');
+      expect(shadowQuery('#ckb')?.getAttribute('dir')).toBe('auto');
     });
 
     it('does not set dir attribute when not configured', () => {
       const banner = createCookieBanner({ forceEU: true });
       banner.show();
-      expect(document.getElementById('ckb')?.hasAttribute('dir')).toBe(false);
+      expect(shadowQuery('#ckb')?.hasAttribute('dir')).toBe(false);
     });
 
     it('supports full Arabic localization with RTL', () => {
@@ -2036,10 +2115,10 @@ describe('smallest-cookie-banner', () => {
         forceEU: true,
       });
       banner.show();
-      expect(document.getElementById('ckb')?.getAttribute('dir')).toBe('rtl');
-      expect(document.getElementById('ckb')?.innerHTML).toContain('نستخدم ملفات تعريف الارتباط');
-      expect(document.getElementById('cky')?.textContent).toBe('قبول الكل');
-      expect(document.getElementById('ckn')?.textContent).toBe('رفض الكل');
+      expect(shadowQuery('#ckb')?.getAttribute('dir')).toBe('rtl');
+      expect(shadowQuery('#ckb')?.innerHTML).toContain('نستخدم ملفات تعريف الارتباط');
+      expect(shadowQuery('#cky')?.textContent).toBe('قبول الكل');
+      expect(shadowQuery('#ckn')?.textContent).toBe('رفض الكل');
     });
 
     it('supports Hebrew localization with RTL', () => {
@@ -2051,8 +2130,8 @@ describe('smallest-cookie-banner', () => {
         forceEU: true,
       });
       banner.show();
-      expect(document.getElementById('ckb')?.getAttribute('dir')).toBe('rtl');
-      expect(document.getElementById('ckb')?.innerHTML).toContain('אנחנו משתמשים בעוגיות');
+      expect(shadowQuery('#ckb')?.getAttribute('dir')).toBe('rtl');
+      expect(shadowQuery('#ckb')?.innerHTML).toContain('אנחנו משתמשים בעוגיות');
     });
   });
 
@@ -2067,10 +2146,10 @@ describe('smallest-cookie-banner', () => {
       });
       banner.show();
       // No categories panel, no settings button
-      expect(document.getElementById('ckb-cats')).toBeNull();
-      expect(document.getElementById('cks')).toBeNull();
+      expect(shadowQuery('#ckb-cats')).toBeNull();
+      expect(shadowQuery('#cks')).toBeNull();
       // Simple OK/X buttons
-      expect(document.getElementById('cky')?.textContent).toBe('OK');
+      expect(shadowQuery('#cky')?.textContent).toBe('OK');
     });
 
     it('passing categories shows categories even without mode:gdpr', () => {
@@ -2084,8 +2163,8 @@ describe('smallest-cookie-banner', () => {
       });
       banner.show();
       // Categories panel shows because categories were provided
-      expect(document.getElementById('ckb-cats')).not.toBeNull();
-      const checkboxes = document.querySelectorAll('input[name="ckb-cat"]');
+      expect(shadowQuery('#ckb-cats')).not.toBeNull();
+      const checkboxes = shadowQueryAll('input[name="ckb-cat"]');
       expect(checkboxes.length).toBe(2);
     });
 
@@ -2095,7 +2174,7 @@ describe('smallest-cookie-banner', () => {
         forceEU: true,
       });
       banner.show();
-      const checkboxes = document.querySelectorAll('input[name="ckb-cat"]');
+      const checkboxes = shadowQueryAll('input[name="ckb-cat"]');
       expect(checkboxes.length).toBe(4); // DEFAULT_CATEGORIES has 4 items
     });
 
@@ -2109,7 +2188,7 @@ describe('smallest-cookie-banner', () => {
         forceEU: true,
       });
       banner.show();
-      const checkboxes = document.querySelectorAll('input[name="ckb-cat"]');
+      const checkboxes = shadowQueryAll('input[name="ckb-cat"]');
       expect(checkboxes.length).toBe(2);
     });
 
@@ -2120,9 +2199,9 @@ describe('smallest-cookie-banner', () => {
         forceEU: false,
       });
       banner.show();
-      expect(document.getElementById('ckb-cats')).not.toBeNull();
+      expect(shadowQuery('#ckb-cats')).not.toBeNull();
       // But reject button hidden for non-EU
-      expect(document.getElementById('ckn')).toBeNull();
+      expect(shadowQuery('#ckn')).toBeNull();
     });
   });
 
@@ -2164,7 +2243,7 @@ describe('smallest-cookie-banner', () => {
         // When imported as ES module, auto-init should NOT run
         // The banner should not appear until explicitly created
         resetState();
-        expect(document.getElementById('ckb')).toBeNull();
+        expect(getBannerElement()).toBeNull();
         expect(window.CookieBanner).toBeUndefined();
       });
 
@@ -2198,7 +2277,7 @@ describe('smallest-cookie-banner', () => {
           forceEU: true,
         };
         setup();
-        expect(document.getElementById('ckb')?.innerHTML).toContain('Test message from config');
+        expect(shadowQuery('#ckb')?.innerHTML).toContain('Test message from config');
       });
 
       it('setup works with empty config', () => {
@@ -2270,14 +2349,14 @@ describe('smallest-cookie-banner', () => {
       it('setup shows banner when no consent exists', () => {
         window.CookieBannerConfig = { forceEU: true };
         setup();
-        expect(document.getElementById('ckb')).not.toBeNull();
+        expect(getBannerElement()).not.toBeNull();
       });
 
       it('setup does not show banner when consent already exists', () => {
         document.cookie = 'cookie_consent=1;path=/';
         window.CookieBannerConfig = { forceEU: true };
         setup();
-        expect(document.getElementById('ckb')).toBeNull();
+        expect(getBannerElement()).toBeNull();
       });
 
       it('legacy reset() clears cookie and reloads page', () => {
@@ -2293,10 +2372,10 @@ describe('smallest-cookie-banner', () => {
       it('legacy destroy() removes banner without clearing cookie', () => {
         window.CookieBannerConfig = { forceEU: true };
         setup();
-        expect(document.getElementById('ckb')).not.toBeNull();
+        expect(getBannerElement()).not.toBeNull();
 
         window.CookieBanner?.destroy();
-        expect(document.getElementById('ckb')).toBeNull();
+        expect(getBannerElement()).toBeNull();
       });
 
       it('legacy no() calls instance.reject()', () => {
@@ -2324,7 +2403,7 @@ describe('smallest-cookie-banner', () => {
 
         // Call destroy directly on the returned API
         api!.destroy();
-        expect(document.getElementById('ckb')).toBeNull();
+        expect(getBannerElement()).toBeNull();
       });
     });
 
@@ -2349,10 +2428,10 @@ describe('smallest-cookie-banner', () => {
         };
         setup();
 
-        const el = document.getElementById('ckb');
+        const el = shadowQuery('#ckb');
         expect(el?.innerHTML).toContain('Custom message');
-        expect(document.getElementById('cky')?.textContent).toBe('Accept All Cookies');
-        expect(document.getElementById('ckn')?.textContent).toBe('Reject All Cookies');
+        expect(shadowQuery('#cky')?.textContent).toBe('Accept All Cookies');
+        expect(shadowQuery('#ckn')?.textContent).toBe('Reject All Cookies');
       });
 
       it('supports GDPR mode via config', () => {
@@ -2362,8 +2441,8 @@ describe('smallest-cookie-banner', () => {
         };
         setup();
 
-        expect(document.getElementById('ckb-cats')).not.toBeNull();
-        expect(document.getElementById('cks')).not.toBeNull();
+        expect(shadowQuery('#ckb-cats')).not.toBeNull();
+        expect(shadowQuery('#cks')).not.toBeNull();
       });
 
       it('supports custom categories via config', () => {
@@ -2377,7 +2456,7 @@ describe('smallest-cookie-banner', () => {
         };
         setup();
 
-        const checkboxes = document.querySelectorAll('input[name="ckb-cat"]');
+        const checkboxes = shadowQueryAll('input[name="ckb-cat"]');
         expect(checkboxes.length).toBe(2);
       });
 
@@ -2425,7 +2504,7 @@ describe('smallest-cookie-banner', () => {
 
         banner.show();
         expect(banner.isVisible()).toBe(true);
-        expect(document.getElementById('ckb')).not.toBeNull();
+        expect(getBannerElement()).not.toBeNull();
 
         banner.hide();
         expect(banner.isVisible()).toBe(false);
@@ -2437,7 +2516,7 @@ describe('smallest-cookie-banner', () => {
         setup();
 
         expect(window.CookieBanner).toBeDefined();
-        expect(document.getElementById('ckb')).not.toBeNull();
+        expect(getBannerElement()).not.toBeNull();
       });
 
       it('multiple createCookieBanner instances can coexist', () => {
@@ -2466,7 +2545,7 @@ describe('smallest-cookie-banner', () => {
         expect(banner).toBeDefined();
         expect(banner.status).toBeNull();
         banner.show();
-        expect(document.getElementById('ckb')).not.toBeNull();
+        expect(getBannerElement()).not.toBeNull();
       });
 
       it('createCookieBanner with container option', () => {
@@ -2523,7 +2602,7 @@ describe('smallest-cookie-banner', () => {
         window.CookieBannerConfig = { forceEU: true };
         setup();
 
-        expect(document.getElementById('ckb')).not.toBeNull();
+        expect(getBannerElement()).not.toBeNull();
       });
 
       it('waits for DOMContentLoaded when document is loading', () => {
@@ -2546,7 +2625,7 @@ describe('smallest-cookie-banner', () => {
 
         // Simulate DOMContentLoaded
         document.dispatchEvent(new Event('DOMContentLoaded'));
-        expect(document.getElementById('ckb')).not.toBeNull();
+        expect(getBannerElement()).not.toBeNull();
 
         addEventListenerSpy.mockRestore();
       });
@@ -2675,25 +2754,28 @@ describe('smallest-cookie-banner', () => {
         const banner = createCookieBanner({ forceEU: true });
         banner.show();
 
-        const bannerEl = document.getElementById('ckb');
-        const buttons = bannerEl?.querySelectorAll('button');
-        const firstButton = buttons?.[0];
-        const lastButton = buttons?.[buttons.length - 1];
+        const shadow = getShadowRoot();
+        const buttons = shadow?.querySelectorAll('button:not([style*="display: none"]):not([style*="display:none"])');
+        const firstButton = buttons?.[0] as HTMLElement;
+        const lastButton = buttons?.[buttons!.length - 1] as HTMLElement;
 
         // Focus first button
         firstButton?.focus();
-        expect(document.activeElement).toBe(firstButton);
+        // With Shadow DOM, the host element is document.activeElement
+        // and shadowRoot.activeElement is the actual focused element
+        expect(getBannerElement()).not.toBeNull();
 
-        // Simulate shift+tab
+        // Simulate shift+tab by dispatching keydown on document (where the listener is attached)
         const event = new KeyboardEvent('keydown', {
           key: 'Tab',
           shiftKey: true,
           bubbles: true,
         });
-        bannerEl?.dispatchEvent(event);
+        document.dispatchEvent(event);
 
-        // Focus should wrap to last button
-        expect(document.activeElement).toBe(lastButton);
+        // Focus should wrap to last button (note: jsdom has limited shadow DOM focus support)
+        // Check that focus handling code was triggered without error
+        expect(shadow?.activeElement).toBe(lastButton);
       });
     });
 
@@ -2725,13 +2807,13 @@ describe('smallest-cookie-banner', () => {
           forceEU: true,
         });
         banner.show();
-        expect(document.getElementById('ckb')).not.toBeNull();
+        expect(getBannerElement()).not.toBeNull();
 
         // Call manage while banner is visible
         banner.manage();
 
         // Banner should still exist (recreated)
-        expect(document.getElementById('ckb')).not.toBeNull();
+        expect(getBannerElement()).not.toBeNull();
       });
 
       it('cleans up previous banner when manage called multiple times', () => {
@@ -2745,7 +2827,7 @@ describe('smallest-cookie-banner', () => {
         banner.manage();
 
         // Should only have one banner
-        const banners = document.querySelectorAll('#ckb');
+        const banners = document.querySelectorAll(COMPONENT_NAME);
         expect(banners.length).toBe(1);
       });
     });
@@ -2769,7 +2851,7 @@ describe('smallest-cookie-banner', () => {
         expect(banner2).toBe(banner1);
 
         // Only one banner in DOM
-        const banners = document.querySelectorAll('#ckb');
+        const banners = document.querySelectorAll(COMPONENT_NAME);
         expect(banners.length).toBe(1);
       });
 
@@ -2779,12 +2861,12 @@ describe('smallest-cookie-banner', () => {
         banner.show();
 
         // Click accept once
-        const acceptBtn = document.getElementById('cky');
+        const acceptBtn = shadowQuery('#cky');
         expect(acceptBtn).not.toBeNull();
         acceptBtn!.click();
 
         // Banner should be gone after single click
-        expect(document.getElementById('ckb')).toBeNull();
+        expect(getBannerElement()).toBeNull();
         expect(onAccept).toHaveBeenCalledTimes(1);
         expect(banner.status).toBe(true);
       });
@@ -2818,7 +2900,7 @@ describe('smallest-cookie-banner', () => {
         banner2.show();
 
         expect(banner2).not.toBe(banner1);
-        expect(document.getElementById('ckb')).not.toBeNull();
+        expect(getBannerElement()).not.toBeNull();
       });
 
       it('removes orphaned DOM element when no instance reference', () => {
@@ -2832,7 +2914,7 @@ describe('smallest-cookie-banner', () => {
         banner.show();
 
         // Should still only have one banner
-        const banners = document.querySelectorAll('#ckb');
+        const banners = document.querySelectorAll(COMPONENT_NAME);
         expect(banners.length).toBe(1);
       });
     });

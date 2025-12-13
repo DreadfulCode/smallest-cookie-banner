@@ -1,7 +1,7 @@
 {
   "name": "smallest-cookie-banner",
-  "version": "1.0.6",
-  "description": "The smallest legally compliant cookie consent banner. ~1.5KB gzipped. Auto-detects EU for GDPR, implied consent elsewhere.",
+  "version": "2.0.0",
+  "description": "The smallest legally compliant cookie consent banner. ~6KB gzipped. Auto-detects EU for GDPR, implied consent elsewhere. Web Components with Shadow DOM.",
   "main": "dist/cookie-banner.js",
   "module": "dist/cookie-banner.js",
   "types": "dist/cookie-banner.d.ts",
