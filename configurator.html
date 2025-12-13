@@ -189,6 +189,63 @@
       background: #f5f5f5;
     }
 
+    /* Live Banner Preview */
+    .banner-preview-container {
+      background: #f0f0f0;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      min-height: 100px;
+      display: flex;
+      align-items: flex-end;
+      position: relative;
+    }
+
+    .banner-preview-container h3 {
+      position: absolute;
+      top: 8px;
+      left: 12px;
+      font-size: 11px;
+      text-transform: uppercase;
+      color: #888;
+      margin: 0;
+    }
+
+    .banner-preview {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: var(--preview-gap, 8px);
+      padding: var(--preview-padding, 8px 12px);
+      background: var(--preview-bg, #222);
+      color: var(--preview-color, #fff);
+      font: var(--preview-font, 14px system-ui, sans-serif);
+      border-radius: var(--preview-radius, 0);
+      flex-wrap: wrap;
+    }
+
+    .banner-preview p {
+      margin: 0;
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .banner-preview button {
+      padding: var(--preview-btn-padding, 6px 12px);
+      border: none;
+      border-radius: var(--preview-btn-radius, 4px);
+      background: var(--preview-btn-bg, #fff);
+      color: var(--preview-btn-color, #222);
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .banner-preview .reject-btn {
+      background: transparent;
+      color: inherit;
+      border: 1px solid currentColor;
+    }
+
     /* Code output */
     .code-output {
       margin-top: 20px;
@@ -432,6 +489,16 @@
         <h2>Generated Code</h2>
         <div class="preview-actions">
           <button class="btn btn-primary" onclick="copyCode()">Copy Code</button>
+        </div>
+      </div>
+
+      <!-- Live Banner Preview -->
+      <div class="banner-preview-container" id="banner-preview-container">
+        <h3>Live Preview</h3>
+        <div class="banner-preview" id="banner-preview">
+          <p id="preview-msg">We use cookies to enhance your experience.</p>
+          <button class="reject-btn" id="preview-reject">Decline</button>
+          <button id="preview-accept">Accept</button>
         </div>
       </div>
 
@@ -681,6 +748,31 @@ ${configObj.join(',\n')},
     // Update code output
     function updatePreview() {
       const config = getConfig();
+
+      // Update live banner preview
+      const container = document.getElementById('banner-preview-container');
+
+      container.style.setProperty('--preview-bg', config.bgColor);
+      container.style.setProperty('--preview-color', config.textColor);
+      container.style.setProperty('--preview-btn-bg', config.btnBg);
+      container.style.setProperty('--preview-btn-color', config.btnColor);
+      container.style.setProperty('--preview-font', `${config.fontSize}px ${config.fontFamily}`);
+      container.style.setProperty('--preview-padding', `${config.padding}px 16px`);
+      container.style.setProperty('--preview-gap', '8px');
+      container.style.setProperty('--preview-btn-padding', '6px 12px');
+      container.style.setProperty('--preview-btn-radius', `${config.btnRadius}px`);
+      container.style.setProperty('--preview-radius', `${config.borderRadius}px`);
+
+      // Update text content
+      document.getElementById('preview-msg').textContent = config.msg;
+      document.getElementById('preview-accept').textContent = config.acceptText;
+      document.getElementById('preview-reject').textContent = config.rejectText;
+
+      // Show/hide reject button based on mode
+      const rejectBtn = document.getElementById('preview-reject');
+      rejectBtn.style.display = config.mode === 'non-eu' ? 'none' : 'inline-block';
+
+      // Update code output
       document.getElementById('code-output').innerHTML = generateOutputCode(config);
     }
 
