@@ -1734,14 +1734,7 @@ body {
   rejectText: '${config.rejectText.replace(/'/g, "\\'")}'`;
       if (forceEU !== null) jsConfig += `,\n  forceEU: ${forceEU}`;
       if (config.bannerMode === 'gdpr') jsConfig += `,\n  mode: 'gdpr'`;
-      jsConfig += `\n};
-
-// Dynamically load the banner library (CodePen sandbox blocks external script tags)
-(function() {
-  var script = document.createElement('script');
-  script.src = 'https://unpkg.com/smallest-cookie-banner@latest/dist/cookie-banner.min.js';
-  document.body.appendChild(script);
-})();`;
+      jsConfig += `\n};`;
 
       const html = `<div class="content">
   <h1>Cookie Banner Demo</h1>
@@ -1755,6 +1748,7 @@ body {
         html: html,
         css: css,
         js: jsConfig,
+        js_external: 'https://unpkg.com/smallest-cookie-banner@latest/dist/cookie-banner.min.js',
         editors: '111'
       };
 
