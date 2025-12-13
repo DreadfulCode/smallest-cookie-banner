@@ -404,6 +404,49 @@ describe('smallest-cookie-banner', () => {
         expect(document.getElementById('cky')?.textContent).toBe('接受');
         expect(document.getElementById('ckn')?.textContent).toBe('拒绝');
       });
+
+      it('supports custom bannerAriaLabel', () => {
+        const banner = createCookieBanner({
+          bannerAriaLabel: 'Consentement aux cookies',
+          forceEU: true,
+        });
+        banner.show();
+        expect(document.getElementById('ckb')?.getAttribute('aria-label')).toBe('Consentement aux cookies');
+      });
+
+      it('supports custom requiredLabel in GDPR mode', () => {
+        const banner = createCookieBanner({
+          mode: 'gdpr',
+          requiredLabel: '(Obligatoire)',
+          forceEU: true,
+        });
+        banner.show();
+        const requiredSpan = document.querySelector('.cat-req');
+        expect(requiredSpan?.textContent).toBe('(Obligatoire)');
+      });
+
+      it('supports full French localization', () => {
+        const banner = createCookieBanner({
+          mode: 'gdpr',
+          msg: 'Nous utilisons des cookies pour améliorer votre expérience.',
+          acceptText: 'Tout accepter',
+          rejectText: 'Tout refuser',
+          settingsText: 'Personnaliser',
+          saveText: 'Enregistrer les préférences',
+          privacyPolicyText: 'Politique de confidentialité',
+          bannerAriaLabel: 'Consentement aux cookies',
+          requiredLabel: '(Obligatoire)',
+          privacyPolicyUrl: '/politique-confidentialite',
+          forceEU: true,
+        });
+        banner.show();
+        expect(document.getElementById('ckb')?.innerHTML).toContain('Nous utilisons des cookies');
+        expect(document.getElementById('cky')?.textContent).toBe('Tout accepter');
+        expect(document.getElementById('ckn')?.textContent).toBe('Tout refuser');
+        expect(document.getElementById('cks')?.textContent).toBe('Personnaliser');
+        expect(document.querySelector('.cat-req')?.textContent).toBe('(Obligatoire)');
+        expect(document.getElementById('ckb')?.getAttribute('aria-label')).toBe('Consentement aux cookies');
+      });
     });
 
     describe('XSS prevention', () => {

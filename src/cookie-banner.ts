@@ -90,6 +90,10 @@ export interface CookieBannerConfig {
   privacyPolicyUrl?: string;
   /** Privacy policy link text (default: "Privacy Policy") */
   privacyPolicyText?: string;
+  /** Banner ARIA label for accessibility (default: "Cookie consent") */
+  bannerAriaLabel?: string;
+  /** Label for required categories (default: "(Required)") */
+  requiredLabel?: string;
   /** Cookie name (default: "ck") */
   cookieName?: string;
   /** Cookie expiry in days (default: 365, max: 3650) */
@@ -767,7 +771,7 @@ export function createCookieBanner(config: CookieBannerConfig = {}): CookieBanne
 
     // ARIA attributes for accessibility
     el.setAttribute('role', 'dialog');
-    el.setAttribute('aria-label', 'Cookie consent');
+    el.setAttribute('aria-label', config.bannerAriaLabel || 'Cookie consent');
     el.setAttribute('aria-modal', 'true');
     el.setAttribute('tabindex', '-1');
 
@@ -810,7 +814,8 @@ export function createCookieBanner(config: CookieBannerConfig = {}): CookieBanne
           : (isRequired || cat.defaultEnabled === true);
         const checkedAttr = isChecked ? ' checked' : '';
         const disabledAttr = isRequired ? ' disabled' : '';
-        const requiredLabel = isRequired ? '<span class="cat-req">(Required)</span>' : '';
+        const requiredLabelText = escapeHtml(config.requiredLabel || '(Required)');
+        const requiredLabel = isRequired ? '<span class="cat-req">' + requiredLabelText + '</span>' : '';
         const desc = cat.description ? '<div class="cat-desc">' + escapeHtml(cat.description) + '</div>' : '';
 
         catsHtml += '<label>' +
