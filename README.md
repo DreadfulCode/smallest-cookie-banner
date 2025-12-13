@@ -284,12 +284,30 @@ const banner: CookieBannerInstance = createCookieBanner(config);
 - `SameSite=Lax` cookies
 - `Secure` flag on HTTPS
 
+## Contributing
+
+Contributions welcome! Please:
+
+1. Fork the repo and create a feature branch
+2. Write tests for new functionality
+3. Ensure all tests pass: `npm test`
+4. Maintain **90%+ code coverage** (enforced by CI)
+5. Run linting: `npm run lint`
+6. Submit a PR with a clear description
+
+All PRs are automatically checked for:
+- Linting (ESLint)
+- Tests (Jest)
+- Coverage threshold (90% minimum)
+- Build verification
+
 ## Development
 
 ```bash
 npm install
-npm test        # 86 tests
-npm run build   # Build
+npm test        # Run tests with coverage
+npm run build   # Build for production
+npm run lint    # Check code style
 ```
 
 ## Browser Support

@@ -66,12 +66,13 @@
     "transform": {
       "^.+\\.ts$": "ts-jest"
     },
+    "coverageReporters": ["text", "lcov", "json-summary"],
     "coverageThreshold": {
       "global": {
-        "branches": 80,
-        "functions": 70,
+        "branches": 90,
+        "functions": 80,
         "lines": 90,
-        "statements": 85
+        "statements": 90
       }
     },
     "collectCoverageFrom": [
