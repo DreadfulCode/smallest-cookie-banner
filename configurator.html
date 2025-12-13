@@ -189,56 +189,6 @@
       background: #f5f5f5;
     }
 
-    /* Preview frame */
-    .preview-frame {
-      background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      overflow: hidden;
-      position: relative;
-    }
-
-    .preview-toolbar {
-      background: #f8f8f8;
-      padding: 8px 12px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      border-bottom: 1px solid #e0e0e0;
-    }
-
-    .preview-dot {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-    }
-
-    .preview-dot.red { background: #ff5f57; }
-    .preview-dot.yellow { background: #febc2e; }
-    .preview-dot.green { background: #28c840; }
-
-    .preview-url {
-      flex: 1;
-      margin-left: 10px;
-      padding: 4px 12px;
-      background: #fff;
-      border-radius: 4px;
-      font-size: 12px;
-      color: #666;
-    }
-
-    .preview-content {
-      height: 500px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .preview-content iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
-    }
-
     /* Code output */
     .code-output {
       margin-top: 20px;
@@ -479,22 +429,9 @@
     <!-- Preview Area -->
     <div class="preview-area">
       <div class="preview-header">
-        <h2>Live Preview</h2>
+        <h2>Generated Code</h2>
         <div class="preview-actions">
-          <button class="btn btn-secondary" onclick="resetBanner()">Reset Banner</button>
           <button class="btn btn-primary" onclick="copyCode()">Copy Code</button>
-        </div>
-      </div>
-
-      <div class="preview-frame">
-        <div class="preview-toolbar">
-          <div class="preview-dot red"></div>
-          <div class="preview-dot yellow"></div>
-          <div class="preview-dot green"></div>
-          <div class="preview-url">yourwebsite.com</div>
-        </div>
-        <div class="preview-content">
-          <iframe id="preview-iframe" sandbox="allow-scripts"></iframe>
         </div>
       </div>
 
@@ -632,132 +569,6 @@
       return positions[position] || '';
     }
 
-    // Generate preview HTML
-    function generatePreviewHTML(config) {
-      const forceEU = config.mode === 'eu' ? 'true' : config.mode === 'non-eu' ? 'false' : 'undefined';
-
-      let positionCSS = '';
-      let extraCSS = '';
-
-      if (config.position === 'bottom-left' || config.position === 'bottom-right') {
-        extraCSS = `
-          #ckb {
-            width: 340px;
-            border-radius: ${config.borderRadius}px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-            flex-direction: column;
-            align-items: stretch;
-          }
-          #ckb p { min-width: auto; margin-bottom: 10px; }
-        `;
-      }
-
-      if (config.position === 'center') {
-        extraCSS = `
-          #ckb {
-            width: 400px;
-            border-radius: ${config.borderRadius}px;
-            box-shadow: 0 4px 40px rgba(0,0,0,0.3);
-            flex-direction: column;
-            align-items: stretch;
-            text-align: center;
-            transform: translate(-50%, -50%);
-          }
-          #ckb p { min-width: auto; margin-bottom: 12px; }
-        `;
-      }
-
-      // Sanitize all user inputs for the preview
-      const safeBgColor = escapeHtml(config.bgColor);
-      const safeTextColor = escapeHtml(config.textColor);
-      const safeBtnBg = escapeHtml(config.btnBg);
-      const safeBtnColor = escapeHtml(config.btnColor);
-      const safeFontFamily = escapeHtml(config.fontFamily);
-      const safeCustomCss = escapeCss(config.customCss);
-
-      return `<!DOCTYPE html>
-<html>
-<head>
-  <style>
-    body {
-      font-family: system-ui, sans-serif;
-      padding: 40px;
-      background: #f5f5f5;
-      min-height: 100vh;
-      margin: 0;
-    }
-    .demo-content {
-      background: white;
-      padding: 30px;
-      border-radius: 12px;
-      max-width: 600px;
-      margin: 0 auto;
-      border: 1px solid #e0e0e0;
-    }
-    h1 { margin-top: 0; font-size: 24px; }
-    h2 { font-size: 16px; margin: 20px 0 10px; color: #333; }
-    p { color: #666; line-height: 1.6; }
-    code { background: #f0f0f0; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
-    pre { background: #1e1e1e; color: #d4d4d4; padding: 16px; border-radius: 8px; overflow-x: auto; font-size: 13px; }
-    .badge { display: inline-block; background: #e7f5e7; color: #2e7d32; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; margin-right: 6px; }
-    .size { color: #2563eb; font-weight: 600; }
-    :root {
-      --ckb-bg: ${safeBgColor};
-      --ckb-color: ${safeTextColor};
-      --ckb-btn-bg: ${safeBtnBg};
-      --ckb-btn-color: ${safeBtnColor};
-      --ckb-font: ${parseInt(config.fontSize)}px ${safeFontFamily};
-      --ckb-padding: ${parseInt(config.padding)}px 16px;
-      --ckb-btn-radius: ${parseInt(config.btnRadius)}px;
-      --ckb-z: ${parseInt(config.zIndex)};
-      ${getPositionCSS(config.position)}
-    }
-    ${extraCSS}
-    ${safeCustomCss}
-  </style>
-</head>
-<body>
-  <div class="demo-content">
-    <h1>smallest-cookie-banner</h1>
-    <p><span class="badge">~1KB gzipped</span><span class="badge">No dependencies</span><span class="badge">GDPR compliant</span></p>
-
-    <h2>Install</h2>
-    <pre>npm install smallest-cookie-banner</pre>
-
-    <h2>Quick Start</h2>
-    <p>Add the script to your page and it works automatically. Customize with CSS variables or the configurator on the left.</p>
-
-    <h2>Features</h2>
-    <p>• Auto-detects EU visitors via timezone<br>• Shows reject button only when required<br>• Fully customizable via CSS variables<br>• Works with any framework</p>
-  </div>
-
-  <script>
-    // Clear any existing cookie so banner always shows in preview
-    document.cookie = "ck=;expires=Thu,01 Jan 1970 00:00:00 GMT;path=/";
-
-    window.CookieBannerConfig = {
-      msg: ${JSON.stringify(config.msg)},
-      acceptText: ${JSON.stringify(config.acceptText)},
-      rejectText: ${JSON.stringify(config.rejectText)},
-      ${forceEU !== 'undefined' ? `forceEU: ${forceEU},` : ''}
-      autoAcceptDelay: ${parseInt(config.autoAcceptDelay)},
-      days: ${parseInt(config.days)},
-      onYes: function() { console.log('Accepted!'); },
-      onNo: function() { console.log('Rejected!'); }
-    };
-  <\/script>
-  <script>
-    ${getCookieBannerSource()}
-  <\/script>
-</body>
-</html>`;
-    }
-
-    // Get cookie banner source (inline for preview)
-    function getCookieBannerSource() {
-      return `!function(e,n){"use strict";var t=[-1,0,1,2,3],o=["#ckb{","position:var(--ckb-position,fixed);","bottom:var(--ckb-bottom,0);","top:var(--ckb-top,auto);","left:var(--ckb-left,0);","right:var(--ckb-right,0);","padding:var(--ckb-padding,8px 12px);","background:var(--ckb-bg,#222);","color:var(--ckb-color,#fff);","font:var(--ckb-font,12px system-ui,sans-serif);","display:flex;align-items:center;gap:var(--ckb-gap,8px);","z-index:var(--ckb-z,9999);","flex-wrap:wrap;","}","#ckb p{margin:0;flex:1;min-width:200px}","#ckb button{","padding:var(--ckb-btn-padding,6px 12px);","border:var(--ckb-btn-border,none);","border-radius:var(--ckb-btn-radius,3px);","background:var(--ckb-btn-bg,#fff);","color:var(--ckb-btn-color,#222);","font:inherit;cursor:pointer;","}","#ckb #ckn{","background:var(--ckb-reject-bg,transparent);","color:var(--ckb-reject-color,inherit);","border:var(--ckb-reject-border,1px solid currentColor);","}"].join("");function r(){var e=-(new Date).getTimezoneOffset()/60|0;return t.indexOf(e)>-1}function c(){var e=n.cookie.match("(^|;)\\\\s*ck=([^;]*)");return e?e[2]:null}function i(e,t){var o=new Date;o.setDate(o.getDate()+(t||365));var r="ck="+e+";expires="+o.toUTCString()+";path=/;SameSite=Lax";"https:"===location.protocol&&(r+=";Secure"),n.cookie=r}function a(){n.cookie="ck=;expires=Thu,01 Jan 1970 00:00:00 GMT;path=/"}function d(e){if(!n.getElementById("ckb-style")){var t=n.createElement("style");t.id="ckb-style",t.textContent=o+(e||""),n.head.appendChild(t)}}function l(e,t,o){d(e.css);var r=n.createElement("div");r.id="ckb",e.style&&(r.style.cssText=e.style);var c=e.msg||"Cookies help us deliver our services.",i=e.acceptText||"OK",a=e.rejectText||"✗",l=t?'<button id="ckn">'+a+"</button>":"";r.innerHTML="<p>"+c+"</p>"+l+'<button id="cky">'+i+"</button>",n.body.appendChild(r),n.getElementById("cky").onclick=function(){o("1")};var u=n.getElementById("ckn");if(u&&(u.onclick=function(){o("0")}),!t){var s=void 0!==e.autoAcceptDelay?e.autoAcceptDelay:5e3,b=function(){o("1"),n.removeEventListener("scroll",k)},f=s>0?setTimeout(b,s):null,k=function(){f&&clearTimeout(f),b()};n.addEventListener("scroll",k)}return r}function u(){var t=e.CookieBannerConfig||{},o=e.CookieBanner||{},d=null,u=void 0!==t.forceEU?t.forceEU:r();function s(e){i(e,t.days),o.ok="1"===e,d&&(d.remove(),d=null);var n="1"===e?t.onYes:t.onNo;"function"==typeof n&&n()}o.yes=function(){s("1")},o.no=function(){s("0")},o.reset=function(){a(),location.reload()};var b=c();if(null!==b)return o.ok="1"===b,e.CookieBanner=o,o;function f(){d||(d=l(t,u,s))}return"loading"===n.readyState?n.addEventListener("DOMContentLoaded",f):f(),o.ok=null,e.CookieBanner=o,o}u()}("undefined"!=typeof window?window:global,"undefined"!=typeof document?document:{});`;
-    }
-
     // Generate output code
     function generateOutputCode(config) {
       const forceEU = config.mode === 'eu' ? 'true' : config.mode === 'non-eu' ? 'false' : null;
@@ -867,23 +678,10 @@ ${configObj.join(',\n')},
 ` : ''}<span class="keyword">&lt;script</span> <span class="property">src</span>=<span class="string">"https://unpkg.com/smallest-cookie-banner@latest/dist/cookie-banner.min.js"</span><span class="keyword">&gt;&lt;/script&gt;</span>`;
     }
 
-    // Update preview
+    // Update code output
     function updatePreview() {
       const config = getConfig();
-      const iframe = document.getElementById('preview-iframe');
-      const html = generatePreviewHTML(config);
-
-      // Clear iframe and write new content
-      iframe.srcdoc = html;
-
-      // Update code output
       document.getElementById('code-output').innerHTML = generateOutputCode(config);
-    }
-
-    // Reset banner in preview
-    function resetBanner() {
-      // Simply reload the preview - the sandbox prevents direct access
-      updatePreview();
     }
 
     // Show tab
