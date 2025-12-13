@@ -1733,16 +1733,22 @@ body {
   acceptText: '${config.acceptText.replace(/'/g, "\\'")}',
   rejectText: '${config.rejectText.replace(/'/g, "\\'")}'`;
       if (forceEU !== null) jsConfig += `,\n  forceEU: ${forceEU}`;
-      jsConfig += `\n};`;
+      if (config.bannerMode === 'gdpr') jsConfig += `,\n  mode: 'gdpr'`;
+      jsConfig += `\n};
+
+// Dynamically load the banner library (CodePen sandbox blocks external script tags)
+(function() {
+  var script = document.createElement('script');
+  script.src = 'https://unpkg.com/smallest-cookie-banner@latest/dist/cookie-banner.min.js';
+  document.body.appendChild(script);
+})();`;
 
       const html = `<div class="content">
   <h1>Cookie Banner Demo</h1>
   <p>This is a demo page. The cookie banner will appear at the bottom.</p>
   <p>Customize it using the configurator at:</p>
   <a href="https://dreadfulcode.github.io/smallest-cookie-banner/">dreadfulcode.github.io/smallest-cookie-banner</a>
-</div>
-
-<script src="https://unpkg.com/smallest-cookie-banner@latest/dist/cookie-banner.min.js"><\/script>`;
+</div>`;
 
       const data = {
         title: 'Cookie Banner Demo',
