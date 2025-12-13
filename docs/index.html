@@ -558,17 +558,6 @@
       color: #fff;
     }
 
-    .bookmarklet-btn {
-      text-decoration: none;
-      cursor: grab;
-      border: 2px dashed #4a9eff !important;
-      background: rgba(74, 158, 255, 0.1) !important;
-    }
-
-    .bookmarklet-btn:hover {
-      background: rgba(74, 158, 255, 0.2) !important;
-      border-style: solid !important;
-    }
     .code-body .number { color: #b5cea8; }
 
     /* Modal */
@@ -1146,10 +1135,6 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
             How to Use
           </button>
-          <a class="btn btn-secondary bookmarklet-btn" id="bookmarklet-link" href="#" title="Drag this to your bookmarks bar!">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
-            ⬆️ Drag to Bookmarks
-          </a>
           <button class="btn btn-primary" onclick="copyCode()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
             Copy Code
@@ -1210,9 +1195,7 @@
         </div>
         <div class="code-help">
           <strong>How to use:</strong>
-          1. Copy code → paste <code>&lt;style&gt;</code> in <code>&lt;head&gt;</code>, <code>&lt;script&gt;</code> before <code>&lt;/body&gt;</code>
-          <br>
-          <strong>Or test first:</strong> Drag "⬆️ Drag to Bookmarks" to your bookmarks bar, then click it on any website to preview!
+          Copy code → paste <code>&lt;style&gt;</code> in <code>&lt;head&gt;</code>, <code>&lt;script&gt;</code> before <code>&lt;/body&gt;</code>
         </div>
       </div>
     </div>
@@ -1248,9 +1231,6 @@
 
         <h3>GDPR Mode</h3>
         <p>For full GDPR compliance with granular consent categories, set <strong>Banner Mode</strong> to "GDPR" in the Behavior section. This shows users checkboxes for each cookie type (Essential, Analytics, Marketing, Functional).</p>
-
-        <h3>Testing</h3>
-        <p>Use the <strong>Drag to Bookmarks</strong> button to create a bookmarklet you can run on any website to preview your banner configuration.</p>
 
         <h3>Documentation</h3>
         <p><a href="https://github.com/DreadfulCode/smallest-cookie-banner" target="_blank">View full documentation on GitHub →</a></p>
@@ -1731,40 +1711,6 @@ ${config.bannerMode === 'gdpr' ? `  onConsent: function(consent) {
 
       // Update code output
       document.getElementById('code-output').innerHTML = generateOutputCode(config);
-
-      // Update bookmarklet
-      document.getElementById('bookmarklet-link').href = generateBookmarklet(config);
-    }
-
-    // Generate bookmarklet
-    function generateBookmarklet(config) {
-      const fontValue = config.fontFamily === 'inherit' ? 'inherit' : `${config.fontSize}px/${config.lineHeight} ${config.fontFamily}`;
-
-      // Build config object parts
-      let configParts = [
-        `msg:'${config.msg.replace(/'/g,"\\'")}'`,
-        `acceptText:'${config.acceptText.replace(/'/g,"\\'")}'`,
-        `rejectText:'${config.rejectText.replace(/'/g,"\\'")}' `
-      ];
-
-      if (config.mode === 'eu') configParts.push('forceEU:true');
-      else if (config.mode === 'non-eu') configParts.push('forceEU:false');
-
-      if (config.bannerMode === 'gdpr') configParts.push("mode:'gdpr'");
-
-      const code = `(function(){
-if(document.getElementById('ckb')){document.getElementById('ckb').remove();document.getElementById('ckb-style')?.remove();}
-var s=document.createElement('style');
-s.id='ckb-style';
-s.textContent=':root{--ckb-bg:${config.bgColor};--ckb-color:${config.textColor};--ckb-btn-bg:${config.btnBg};--ckb-btn-color:${config.btnColor};--ckb-reject-bg:${config.rejectBg};--ckb-font:${fontValue};--ckb-padding:${config.padding}px 16px;--ckb-gap:${config.gap}px;--ckb-btn-padding:${config.btnPaddingV}px ${config.btnPaddingH}px;--ckb-btn-radius:${config.btnRadius}px}';
-document.head.appendChild(s);
-window.CookieBannerConfig={${configParts.join(',')}};
-var sc=document.createElement('script');
-sc.src='https://unpkg.com/smallest-cookie-banner@latest/dist/cookie-banner.min.js';
-document.body.appendChild(sc);
-})();`;
-
-      return 'javascript:' + encodeURIComponent(code);
     }
 
     // Show tab
