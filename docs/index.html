@@ -668,27 +668,36 @@
     };
 
     // Sync color inputs
-    ['bg', 'text', 'btnBg', 'btnColor'].forEach(prefix => {
-      const colorInput = inputs[prefix + 'Color'];
-      const textInput = inputs[prefix + 'ColorText'];
+    [
+      ['bgColor', 'bgColorText'],
+      ['textColor', 'textColorText'],
+      ['btnBg', 'btnBgText'],
+      ['btnColor', 'btnColorText']
+    ].forEach(([colorKey, textKey]) => {
+      const colorInput = inputs[colorKey];
+      const textInput = inputs[textKey];
 
-      colorInput.addEventListener('input', () => {
-        textInput.value = colorInput.value;
-        updatePreview();
-      });
+      if (colorInput && textInput) {
+        colorInput.addEventListener('input', () => {
+          textInput.value = colorInput.value;
+          updatePreview();
+        });
 
-      textInput.addEventListener('input', () => {
-        if (/^#[0-9a-f]{6}$/i.test(textInput.value)) {
-          colorInput.value = textInput.value;
-        }
-        updatePreview();
-      });
+        textInput.addEventListener('input', () => {
+          if (/^#[0-9a-f]{6}$/i.test(textInput.value)) {
+            colorInput.value = textInput.value;
+          }
+          updatePreview();
+        });
+      }
     });
 
     // Add event listeners to all inputs
     Object.values(inputs).forEach(input => {
-      input.addEventListener('input', updatePreview);
-      input.addEventListener('change', updatePreview);
+      if (input) {
+        input.addEventListener('input', updatePreview);
+        input.addEventListener('change', updatePreview);
+      }
     });
 
     // Get current config
