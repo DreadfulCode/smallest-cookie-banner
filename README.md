@@ -6,6 +6,8 @@
 
 ~2KB minified + gzipped. Zero dependencies. TypeScript. Works with React, Vue, Angular, Svelte, or vanilla JS.
 
+> ⚠️ **Alpha Version** — This project is in active development and has not been tested in all browsers yet. Use in production at your own discretion. Please [report issues](https://github.com/DreadfulCode/smallest-cookie-banner/issues) if you encounter bugs.
+
 ## Features
 
 ### Minimal
