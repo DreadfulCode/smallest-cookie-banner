@@ -349,37 +349,6 @@
       align-items: center;
     }
 
-    .device-toggle {
-      display: flex;
-      background: #e5e5e5;
-      border-radius: 6px;
-      padding: 2px;
-    }
-
-    .device-toggle button {
-      padding: 6px 12px;
-      border: none;
-      background: transparent;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 13px;
-      color: var(--text-muted);
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .device-toggle button.active {
-      background: #fff;
-      color: var(--text);
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-
-    .device-toggle button svg {
-      width: 16px;
-      height: 16px;
-    }
-
     .preview-actions {
       display: flex;
       gap: 8px;
@@ -422,63 +391,61 @@
       background: #f5f5f5;
     }
 
-    /* Preview Frame */
-    .preview-frame {
-      background: #fff;
+    /* Live Banner Preview */
+    .banner-preview-container {
+      background: #f5f5f5;
       border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      overflow: hidden;
-      transition: all 0.3s ease;
+      padding: 20px;
+      margin-bottom: 20px;
+      min-height: 120px;
+      display: flex;
+      align-items: flex-end;
+      position: relative;
     }
 
-    .preview-frame.mobile {
-      max-width: 375px;
-      margin: 0 auto;
+    .banner-preview-container h3 {
+      position: absolute;
+      top: 8px;
+      left: 12px;
+      font-size: 11px;
+      text-transform: uppercase;
+      color: #888;
+      margin: 0;
     }
 
-    .preview-toolbar {
-      background: #f8f8f8;
-      padding: 8px 12px;
+    .banner-preview {
+      width: 100%;
       display: flex;
       align-items: center;
-      gap: 6px;
-      border-bottom: 1px solid var(--border);
+      gap: var(--preview-gap, 12px);
+      padding: var(--preview-padding, 12px 16px);
+      background: var(--preview-bg, #222);
+      color: var(--preview-color, #fff);
+      font: var(--preview-font, 14px/1.4 system-ui, sans-serif);
+      border-radius: var(--preview-radius, 0);
+      flex-wrap: wrap;
     }
 
-    .preview-dot {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-    }
-
-    .preview-dot.red { background: #ff5f57; }
-    .preview-dot.yellow { background: #febc2e; }
-    .preview-dot.green { background: #28c840; }
-
-    .preview-url {
+    .banner-preview p {
+      margin: 0;
       flex: 1;
-      margin-left: 10px;
-      padding: 4px 12px;
-      background: #fff;
-      border-radius: 4px;
-      font-size: 12px;
-      color: var(--text-muted);
+      min-width: 200px;
     }
 
-    .preview-content {
-      height: 500px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .preview-frame.mobile .preview-content {
-      height: 600px;
-    }
-
-    .preview-content iframe {
-      width: 100%;
-      height: 100%;
+    .banner-preview button {
+      padding: var(--preview-btn-padding, 10px 20px);
       border: none;
+      border-radius: var(--preview-btn-radius, 4px);
+      background: var(--preview-btn-bg, #fff);
+      color: var(--preview-btn-color, #222);
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .banner-preview .reject-btn {
+      background: var(--preview-reject-bg, transparent);
+      color: var(--preview-color, inherit);
+      border: 1px solid currentColor;
     }
 
     /* Code Output */
@@ -660,26 +627,10 @@
         border-color: #444;
       }
 
-      .device-toggle {
-        background: #333;
-      }
-
-      .device-toggle button.active {
-        background: #444;
-      }
-
       .btn-secondary {
         background: #333;
         border-color: #444;
         color: #e0e0e0;
-      }
-
-      .preview-frame {
-        background: #2a2a2a;
-      }
-
-      .preview-toolbar {
-        background: #333;
       }
     }
   </style>
@@ -986,27 +937,11 @@
       </div>
     </div>
 
-    <!-- Preview Area -->
+    <!-- Code Output Area -->
     <div class="preview-area">
       <div class="preview-header">
-        <h2>Live Preview</h2>
-        <div class="preview-controls">
-          <div class="device-toggle">
-            <button class="active" onclick="setDevice('desktop')" id="btn-desktop">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-              Desktop
-            </button>
-            <button onclick="setDevice('mobile')" id="btn-mobile">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg>
-              Mobile
-            </button>
-          </div>
-        </div>
+        <h2>Generated Code</h2>
         <div class="preview-actions">
-          <button class="btn btn-secondary" onclick="resetBanner()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"/></svg>
-            Reset
-          </button>
           <button class="btn btn-primary" onclick="copyCode()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
             Copy Code
@@ -1014,15 +949,13 @@
         </div>
       </div>
 
-      <div class="preview-frame" id="preview-frame">
-        <div class="preview-toolbar">
-          <div class="preview-dot red"></div>
-          <div class="preview-dot yellow"></div>
-          <div class="preview-dot green"></div>
-          <div class="preview-url">yourwebsite.com</div>
-        </div>
-        <div class="preview-content">
-          <iframe id="preview-iframe" sandbox="allow-scripts"></iframe>
+      <!-- Live Banner Preview -->
+      <div class="banner-preview-container" id="banner-preview-container">
+        <h3>Live Preview</h3>
+        <div class="banner-preview" id="banner-preview">
+          <p id="preview-msg">We use cookies to enhance your experience.</p>
+          <button class="reject-btn" id="preview-reject">Decline</button>
+          <button id="preview-accept">Accept</button>
         </div>
       </div>
 
@@ -1084,7 +1017,6 @@
 
     // State
     let currentTab = 'html';
-    let currentDevice = 'desktop';
 
     // Theme presets
     const presets = {
@@ -1222,17 +1154,18 @@
       document.querySelectorAll('.preset').forEach(p => p.classList.remove('active'));
       document.querySelector(`[data-preset="${name}"]`)?.classList.add('active');
 
-      inputs.bgColorText.value = preset.bgColor;
-      inputs.bgColor.value = preset.bgColor.startsWith('#') ? preset.bgColor : '#222222';
-      inputs.textColorText.value = preset.textColor;
-      inputs.textColor.value = preset.textColor;
-      inputs.btnBgText.value = preset.btnBg;
-      inputs.btnBg.value = preset.btnBg;
-      inputs.btnColorText.value = preset.btnColor;
-      inputs.btnColor.value = preset.btnColor;
-      inputs.rejectBgText.value = preset.rejectBg;
-      inputs.focusColorText.value = preset.focusColor;
-      inputs.focusColor.value = preset.focusColor;
+      // Helper to safely set values
+      const setColor = (textInput, colorInput, value) => {
+        if (textInput) textInput.value = value;
+        if (colorInput && value.startsWith('#')) colorInput.value = value;
+      };
+
+      setColor(inputs.bgColorText, inputs.bgColor, preset.bgColor);
+      setColor(inputs.textColorText, inputs.textColor, preset.textColor);
+      setColor(inputs.btnBgText, inputs.btnBg, preset.btnBg);
+      setColor(inputs.btnColorText, inputs.btnColor, preset.btnColor);
+      setColor(inputs.rejectBgText, inputs.rejectBg, preset.rejectBg);
+      setColor(inputs.focusColorText, inputs.focusColor, preset.focusColor);
 
       updatePreview();
     }
@@ -1240,14 +1173,6 @@
     // Toggle section collapse
     function toggleSection(header) {
       header.closest('.section').classList.toggle('collapsed');
-    }
-
-    // Set device preview
-    function setDevice(device) {
-      currentDevice = device;
-      document.getElementById('btn-desktop').classList.toggle('active', device === 'desktop');
-      document.getElementById('btn-mobile').classList.toggle('active', device === 'mobile');
-      document.getElementById('preview-frame').classList.toggle('mobile', device === 'mobile');
     }
 
     // Generate position CSS
@@ -1277,76 +1202,6 @@
           #ckb { animation: ckb-slide-down 0.3s ease; }`,
       };
       return animations[animation] || '';
-    }
-
-    // Generate preview HTML
-    function generatePreviewHTML(config) {
-      const forceEU = config.mode === 'eu' ? 'true' : config.mode === 'non-eu' ? 'false' : 'undefined';
-
-      let extraCSS = '';
-      if (config.position === 'bottom-left' || config.position === 'bottom-right') {
-        extraCSS = `
-          #ckb { width: 340px; border-radius: ${config.borderRadius}px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); flex-direction: column; align-items: stretch; }
-          #ckb p { min-width: auto; margin-bottom: 10px; }
-        `;
-      }
-      if (config.position === 'center') {
-        extraCSS = `
-          #ckb { width: 400px; border-radius: ${config.borderRadius}px; box-shadow: 0 4px 40px rgba(0,0,0,0.3); flex-direction: column; align-items: stretch; text-align: center; transform: translate(-50%, -50%); }
-          #ckb p { min-width: auto; margin-bottom: 12px; }
-        `;
-      }
-
-      const animationCSS = getAnimationCSS(config.animation);
-      const fontValue = config.fontFamily === 'inherit' ? 'inherit' : `${config.fontSize}px/${config.lineHeight} ${config.fontFamily}`;
-
-      return `<!DOCTYPE html>
-<html>
-<head>
-  <style>
-    body { font-family: system-ui, sans-serif; padding: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; margin: 0; }
-    .demo-content { background: white; padding: 30px; border-radius: 12px; max-width: 600px; margin: 0 auto; }
-    h1 { margin-top: 0; }
-    p { color: #666; line-height: 1.6; }
-    :root {
-      --ckb-bg: ${escapeHtml(config.bgColor)};
-      --ckb-color: ${escapeHtml(config.textColor)};
-      --ckb-btn-bg: ${escapeHtml(config.btnBg)};
-      --ckb-btn-color: ${escapeHtml(config.btnColor)};
-      --ckb-reject-bg: ${escapeHtml(config.rejectBg)};
-      --ckb-focus-color: ${escapeHtml(config.focusColor)};
-      --ckb-font: ${fontValue};
-      --ckb-padding: ${config.padding}px 16px;
-      --ckb-gap: ${config.gap}px;
-      --ckb-btn-padding: ${config.btnPaddingV}px ${config.btnPaddingH}px;
-      --ckb-btn-radius: ${config.btnRadius}px;
-      --ckb-z: ${config.zIndex};
-      ${getPositionCSS(config.position)}
-    }
-    ${extraCSS}
-    ${animationCSS}
-    ${escapeCss(config.customCss)}
-  </style>
-</head>
-<body>
-  <div class="demo-content">
-    <h1>Welcome to Our Site</h1>
-    <p>This is a preview of how the cookie banner will look on your website.</p>
-    <p>The banner respects user preferences and is fully compliant with GDPR, CCPA, and other privacy regulations.</p>
-  </div>
-  <script>
-    window.CookieBannerConfig = {
-      msg: ${JSON.stringify(config.msg)},
-      acceptText: ${JSON.stringify(config.acceptText)},
-      rejectText: ${JSON.stringify(config.rejectText)},
-      ${forceEU !== 'undefined' ? `forceEU: ${forceEU},` : ''}
-      autoAcceptDelay: ${config.autoAcceptDelay},
-      days: ${config.days}
-    };
-  <\/script>
-  <script src="https://cdn.jsdelivr.net/gh/DreadfulCode/smallest-cookie-banner@main/dist/cookie-banner.min.js"><\/script>
-</body>
-</html>`;
     }
 
     // Generate output code
@@ -1458,15 +1313,35 @@ ${configObj.join(',\n')},
     // Update preview
     function updatePreview() {
       const config = getConfig();
-      const iframe = document.getElementById('preview-iframe');
-      iframe.srcdoc = generatePreviewHTML(config);
-      document.getElementById('code-output').innerHTML = generateOutputCode(config);
-    }
 
-    // Reset banner
-    function resetBanner() {
-      updatePreview();
-      showToast('Banner reset');
+      // Update live banner preview
+      const container = document.getElementById('banner-preview-container');
+      const banner = document.getElementById('banner-preview');
+      const fontValue = config.fontFamily === 'inherit' ? 'inherit' : `${config.fontSize}px/${config.lineHeight} ${config.fontFamily}`;
+
+      container.style.setProperty('--preview-bg', config.bgColor);
+      container.style.setProperty('--preview-color', config.textColor);
+      container.style.setProperty('--preview-btn-bg', config.btnBg);
+      container.style.setProperty('--preview-btn-color', config.btnColor);
+      container.style.setProperty('--preview-reject-bg', config.rejectBg);
+      container.style.setProperty('--preview-font', fontValue);
+      container.style.setProperty('--preview-padding', `${config.padding}px 16px`);
+      container.style.setProperty('--preview-gap', `${config.gap}px`);
+      container.style.setProperty('--preview-btn-padding', `${config.btnPaddingV}px ${config.btnPaddingH}px`);
+      container.style.setProperty('--preview-btn-radius', `${config.btnRadius}px`);
+      container.style.setProperty('--preview-radius', `${config.borderRadius}px`);
+
+      // Update text content
+      document.getElementById('preview-msg').textContent = config.msg;
+      document.getElementById('preview-accept').textContent = config.acceptText;
+      document.getElementById('preview-reject').textContent = config.rejectText;
+
+      // Show/hide reject button based on mode
+      const rejectBtn = document.getElementById('preview-reject');
+      rejectBtn.style.display = config.mode === 'non-eu' ? 'none' : 'inline-block';
+
+      // Update code output
+      document.getElementById('code-output').innerHTML = generateOutputCode(config);
     }
 
     // Show tab
@@ -1537,16 +1412,5 @@ ${configObj.join(',\n')},
     // Initialize
     updatePreview();
   </script>
-
-  <!-- Live demo: actual cookie banner on this page -->
-  <script>
-    window.CookieBannerConfig = {
-      msg: "This site uses cookies to demonstrate the banner.",
-      acceptText: "Got it!",
-      rejectText: "No thanks",
-      forceEU: true
-    };
-  </script>
-  <script src="cookie-banner.min.js"></script>
 </body>
 </html>
