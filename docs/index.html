@@ -537,6 +537,26 @@
     .code-body .string { color: #ce9178; }
     .code-body .keyword { color: #569cd6; }
     .code-body .property { color: #9cdcfe; }
+
+    .code-help {
+      padding: 12px 16px;
+      background: #2d2d2d;
+      border-top: 1px solid #3d3d3d;
+      font-size: 13px;
+      color: #aaa;
+      line-height: 1.6;
+    }
+
+    .code-help code {
+      background: #3d3d3d;
+      padding: 2px 6px;
+      border-radius: 3px;
+      color: #e0e0e0;
+    }
+
+    .code-help strong {
+      color: #fff;
+    }
     .code-body .number { color: #b5cea8; }
 
     /* Toast notification */
@@ -942,6 +962,10 @@
       <div class="preview-header">
         <h2>Generated Code</h2>
         <div class="preview-actions">
+          <button class="btn btn-secondary" onclick="tryOnCodePen()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/><line x1="12" y1="22" x2="12" y2="15.5"/><polyline points="22 8.5 12 15.5 2 8.5"/></svg>
+            Try on CodePen
+          </button>
           <button class="btn btn-primary" onclick="copyCode()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
             Copy Code
@@ -979,6 +1003,13 @@
         </div>
         <div class="code-body">
           <pre id="code-output"></pre>
+        </div>
+        <div class="code-help">
+          <strong>How to use:</strong>
+          1. Copy the code above
+          2. Paste the <code>&lt;style&gt;</code> block in your HTML <code>&lt;head&gt;</code>
+          3. Paste the <code>&lt;script&gt;</code> tags before <code>&lt;/body&gt;</code>
+          — Or click "Try on CodePen" to test it live first!
         </div>
       </div>
     </div>
@@ -1381,6 +1412,81 @@ ${configObj.join(',\n')},
         showToast('Copy failed');
       }
       document.body.removeChild(textarea);
+    }
+
+    // Try on CodePen
+    function tryOnCodePen() {
+      const config = getConfig();
+      const fontValue = config.fontFamily === 'inherit' ? 'inherit' : `${config.fontSize}px/${config.lineHeight} ${config.fontFamily}`;
+
+      const css = `:root {
+  --ckb-bg: ${config.bgColor};
+  --ckb-color: ${config.textColor};
+  --ckb-btn-bg: ${config.btnBg};
+  --ckb-btn-color: ${config.btnColor};
+  --ckb-reject-bg: ${config.rejectBg};
+  --ckb-font: ${fontValue};
+  --ckb-padding: ${config.padding}px 16px;
+  --ckb-gap: ${config.gap}px;
+  --ckb-btn-padding: ${config.btnPaddingV}px ${config.btnPaddingH}px;
+  --ckb-btn-radius: ${config.btnRadius}px;
+}
+
+body {
+  font-family: system-ui, sans-serif;
+  padding: 40px;
+  background: #f5f5f5;
+}
+
+.content {
+  max-width: 600px;
+  margin: 0 auto;
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+}`;
+
+      const forceEU = config.mode === 'eu' ? 'true' : config.mode === 'non-eu' ? 'false' : null;
+      let jsConfig = `window.CookieBannerConfig = {
+  msg: '${config.msg.replace(/'/g, "\\'")}',
+  acceptText: '${config.acceptText.replace(/'/g, "\\'")}',
+  rejectText: '${config.rejectText.replace(/'/g, "\\'")}'`;
+      if (forceEU !== null) jsConfig += `,\n  forceEU: ${forceEU}`;
+      jsConfig += `\n};`;
+
+      const html = `<div class="content">
+  <h1>Cookie Banner Demo</h1>
+  <p>This is a demo page. The cookie banner will appear at the bottom.</p>
+  <p>Customize it using the configurator at:</p>
+  <a href="https://dreadfulcode.github.io/smallest-cookie-banner/">dreadfulcode.github.io/smallest-cookie-banner</a>
+</div>
+
+<script src="https://unpkg.com/smallest-cookie-banner@latest/dist/cookie-banner.min.js"><\/script>`;
+
+      const data = {
+        title: 'Cookie Banner Demo',
+        html: html,
+        css: css,
+        js: jsConfig,
+        editors: '111'
+      };
+
+      const form = document.createElement('form');
+      form.action = 'https://codepen.io/pen/define';
+      form.method = 'POST';
+      form.target = '_blank';
+
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'data';
+      input.value = JSON.stringify(data);
+
+      form.appendChild(input);
+      document.body.appendChild(form);
+      form.submit();
+      document.body.removeChild(form);
+
+      showToast('Opening CodePen...');
     }
 
     // Download config
