@@ -47,6 +47,30 @@ export const DEFAULT_CATEGORIES: CookieCategory[] = [
   { id: 'functional', name: 'Functional', description: 'Enable enhanced features and personalization' },
 ];
 
+/** Consent widget configuration for managing preferences after initial consent */
+export interface ConsentWidgetConfig {
+  /** Enable the floating consent widget (default: false) */
+  enabled?: boolean;
+  /** Widget position: 'bottom-left' | 'bottom-right' (default: 'bottom-left') */
+  position?: 'bottom-left' | 'bottom-right';
+  /** Widget text (default: "🍪") */
+  text?: string;
+  /** Widget aria-label (default: "Manage cookie preferences") */
+  ariaLabel?: string;
+}
+
+/** Consent record with audit trail metadata */
+export interface ConsentRecord {
+  /** Consent state for each category */
+  state: ConsentState;
+  /** ISO 8601 timestamp when consent was given */
+  timestamp: string;
+  /** Version of the consent policy (optional) */
+  policyVersion?: string;
+  /** How consent was given */
+  method: 'banner' | 'widget' | 'api';
+}
+
 export interface CookieBannerConfig {
   /** Banner mode: 'minimal' (default) or 'gdpr' for granular consent */
   mode?: BannerMode;
@@ -84,8 +108,12 @@ export interface CookieBannerConfig {
   container?: HTMLElement;
   /** CSP nonce for inline styles */
   cspNonce?: string;
-  /** Callback when user saves consent (receives consent state) */
-  onConsent?: (consent: ConsentState) => void;
+  /** Policy version for audit trail (e.g., "1.0", "2024-01") */
+  policyVersion?: string;
+  /** Consent widget configuration for managing preferences after consent */
+  widget?: ConsentWidgetConfig;
+  /** Callback when user saves consent (receives consent record with metadata) */
+  onConsent?: (consent: ConsentState, record?: ConsentRecord) => void;
   /** Callback when user accepts all */
   onAccept?: () => void;
   /** Callback when user rejects all */
@@ -101,6 +129,8 @@ export interface CookieBannerInstance {
   readonly status: boolean | null;
   /** Get granular consent state (returns null if no consent yet) */
   getConsent(): ConsentState | null;
+  /** Get full consent record with audit metadata (returns null if no consent yet) */
+  getConsentRecord(): ConsentRecord | null;
   /** Check if a specific category is enabled */
   hasConsent(categoryId: string): boolean;
   /** Accept all consent programmatically */
@@ -117,6 +147,10 @@ export interface CookieBannerInstance {
   destroy(clearCookie?: boolean): void;
   /** Check if banner is currently visible */
   isVisible(): boolean;
+  /** Show/hide the consent management widget */
+  showWidget(): void;
+  /** Hide the consent management widget */
+  hideWidget(): void;
 }
 
 // Legacy API for backwards compatibility
@@ -174,13 +208,34 @@ const isBrowser = typeof window !== 'undefined' && typeof document !== 'undefine
 // ============================================================================
 
 /**
+ * Decode CSS unicode escape sequences to prevent obfuscation bypasses
+ * E.g., \75\72\6C = url
+ */
+function decodeCssUnicodeEscapes(css: string): string {
+  return css.replace(/\\([0-9a-fA-F]{1,6})\s?/g, (_match, hex) => {
+    const charCode = parseInt(hex, 16);
+    // Only decode valid characters, block null bytes
+    if (charCode === 0 || charCode > 0x10FFFF) return '';
+    return String.fromCodePoint(charCode);
+  });
+}
+
+/**
  * Sanitize CSS to prevent injection attacks
  * Blocks: @import, url() with external URLs, expression(), behavior:, -moz-binding, HTML tags
  */
 export function sanitizeCss(css: string): string {
   if (!css) return '';
 
+  // Limit length to prevent ReDoS
+  if (css.length > 50000) {
+    css = css.slice(0, 50000);
+  }
+
   let sanitized = css;
+
+  // FIRST: Decode unicode escapes to prevent obfuscation bypasses
+  sanitized = decodeCssUnicodeEscapes(sanitized);
 
   // Remove HTML tags (style tag breakout prevention)
   sanitized = sanitized.replace(/<[^>]*>/g, '');
@@ -197,13 +252,21 @@ export function sanitizeCss(css: string): string {
   // Remove -moz-binding (Firefox XBL)
   sanitized = sanitized.replace(/-moz-binding\s*:[^;]*(;|$)/gi, '');
 
-  // Sanitize url() - only allow data:image URIs
+  // Sanitize url() - only allow safe data:image URIs (not SVG which can contain scripts)
   sanitized = sanitized.replace(
     /url\s*\(\s*(['"]?)([^'")\s]+)\1\s*\)/gi,
     (match, _quote, url) => {
       const trimmedUrl = url.trim().toLowerCase();
-      // Allow data:image URIs
-      if (trimmedUrl.startsWith('data:image/')) {
+      // Block SVG which can contain embedded scripts
+      if (trimmedUrl.includes('svg')) {
+        return '';
+      }
+      // Only allow safe raster image formats
+      if (trimmedUrl.startsWith('data:image/png') ||
+          trimmedUrl.startsWith('data:image/jpeg') ||
+          trimmedUrl.startsWith('data:image/jpg') ||
+          trimmedUrl.startsWith('data:image/gif') ||
+          trimmedUrl.startsWith('data:image/webp')) {
         return match;
       }
       // Block everything else (javascript:, external URLs, etc.)
@@ -215,6 +278,31 @@ export function sanitizeCss(css: string): string {
   sanitized = sanitized.replace(/javascript\s*:/gi, '');
 
   return sanitized;
+}
+
+/**
+ * Sanitize URLs to prevent javascript: XSS and phishing
+ * Only allows http:, https:, and relative URLs
+ */
+export function sanitizeUrl(url: string): string {
+  if (!url) return '';
+  const trimmed = url.trim();
+  const lower = trimmed.toLowerCase();
+
+  // Allow http/https URLs
+  if (lower.startsWith('http://') || lower.startsWith('https://')) {
+    return trimmed;
+  }
+  // Allow relative URLs
+  if (trimmed.startsWith('/') || trimmed.startsWith('./') || trimmed.startsWith('../')) {
+    return trimmed;
+  }
+  // Allow anchor links
+  if (trimmed.startsWith('#')) {
+    return trimmed;
+  }
+  // Block everything else (javascript:, data:, vbscript:, file:, etc.)
+  return '';
 }
 
 /**
@@ -476,6 +564,7 @@ export function createCookieBanner(config: CookieBannerConfig = {}): CookieBanne
     return {
       status: null,
       getConsent: () => null,
+      getConsentRecord: () => null,
       hasConsent: () => false,
       accept: () => {},
       reject: () => {},
@@ -484,6 +573,8 @@ export function createCookieBanner(config: CookieBannerConfig = {}): CookieBanne
       hide: () => {},
       destroy: () => {},
       isVisible: () => false,
+      showWidget: () => {},
+      hideWidget: () => {},
     };
   }
 
@@ -501,8 +592,11 @@ export function createCookieBanner(config: CookieBannerConfig = {}): CookieBanne
   let banner: BannerElement | null = null;
   let _status: boolean | null = null;
   let _consentState: ConsentState | null = null;
+  let _consentTimestamp: string | null = null;
+  let _consentMethod: 'banner' | 'widget' | 'api' = 'banner';
   let previousActiveElement: Element | null = null;
   const styleId = `ckb-style-${Math.random().toString(36).slice(2, 8) || 'default'}`;
+  const widgetId = `ckb-widget-${Math.random().toString(36).slice(2, 8) || 'default'}`;
 
   // Check existing consent
   const existing = getConsent(cookieName);
@@ -543,6 +637,9 @@ export function createCookieBanner(config: CookieBannerConfig = {}): CookieBanne
   }
 
   function handleConsent(accepted: boolean): void {
+    // Record timestamp for audit trail
+    _consentTimestamp = new Date().toISOString();
+
     if (hasCategories) {
       // Build consent state for all categories
       const state: ConsentState = {};
@@ -563,6 +660,11 @@ export function createCookieBanner(config: CookieBannerConfig = {}): CookieBanne
       banner = null;
     }
 
+    // Show widget if enabled after consent is given
+    if (config.widget?.enabled) {
+      createWidget();
+    }
+
     // Restore focus to previous element
     if (previousActiveElement && previousActiveElement instanceof HTMLElement) {
       previousActiveElement.focus();
@@ -580,10 +682,16 @@ export function createCookieBanner(config: CookieBannerConfig = {}): CookieBanne
       }
     }
 
-    // Call onConsent with granular state
+    // Call onConsent with granular state and record
     if (hasCategories && typeof config.onConsent === 'function') {
       try {
-        config.onConsent(_consentState!);
+        const record: ConsentRecord = {
+          state: _consentState!,
+          timestamp: _consentTimestamp,
+          policyVersion: config.policyVersion,
+          method: _consentMethod,
+        };
+        config.onConsent(_consentState!, record);
       } catch (error) {
         console.error('Cookie banner onConsent callback error:', error);
       }
@@ -591,6 +699,8 @@ export function createCookieBanner(config: CookieBannerConfig = {}): CookieBanne
   }
 
   function handleGranularConsent(state: ConsentState): void {
+    // Record timestamp for audit trail
+    _consentTimestamp = new Date().toISOString();
     _consentState = state;
     setConsent(encodeGranularConsent(state), cookieName, days, cookieDomain);
 
@@ -623,13 +733,24 @@ export function createCookieBanner(config: CookieBannerConfig = {}): CookieBanne
       banner = null;
     }
 
+    // Show widget if enabled after consent is given
+    if (config.widget?.enabled) {
+      createWidget();
+    }
+
     if (previousActiveElement && previousActiveElement instanceof HTMLElement) {
       previousActiveElement.focus();
     }
 
     if (typeof config.onConsent === 'function') {
       try {
-        config.onConsent(state);
+        const record: ConsentRecord = {
+          state: state,
+          timestamp: _consentTimestamp,
+          policyVersion: config.policyVersion,
+          method: _consentMethod,
+        };
+        config.onConsent(state, record);
       } catch (error) {
         console.error('Cookie banner onConsent callback error:', error);
       }
@@ -666,9 +787,10 @@ export function createCookieBanner(config: CookieBannerConfig = {}): CookieBanne
     const saveText = escapeHtml(config.saveText || 'Save Preferences');
     const privacyText = escapeHtml(config.privacyPolicyText || 'Privacy Policy');
 
-    // Build privacy policy link if URL provided
-    const privacyLink = config.privacyPolicyUrl
-      ? ` <a href="${escapeHtml(config.privacyPolicyUrl)}" target="_blank" rel="noopener">${privacyText}</a>`
+    // Build privacy policy link if URL provided (sanitize to prevent javascript: XSS)
+    const sanitizedPrivacyUrl = sanitizeUrl(config.privacyPolicyUrl || '');
+    const privacyLink = sanitizedPrivacyUrl
+      ? ` <a href="${escapeHtml(sanitizedPrivacyUrl)}" target="_blank" rel="noopener">${privacyText}</a>`
       : '';
 
     // Build HTML based on mode
@@ -856,6 +978,62 @@ export function createCookieBanner(config: CookieBannerConfig = {}): CookieBanne
     return el;
   }
 
+  // Create consent management widget
+  function createWidget(): void {
+    // Don't create if one already exists
+    if (document.getElementById(widgetId)) return;
+
+    const widgetConfig = config.widget || {};
+    const position = widgetConfig.position || 'bottom-left';
+    const text = widgetConfig.text || '🍪';
+    const ariaLabel = widgetConfig.ariaLabel || 'Manage cookie preferences';
+
+    const widget = document.createElement('button');
+    widget.id = widgetId;
+    widget.type = 'button';
+    widget.setAttribute('aria-label', ariaLabel);
+    widget.textContent = text;
+
+    // Widget styles
+    const posStyles = position === 'bottom-right'
+      ? 'right:16px;left:auto;'
+      : 'left:16px;right:auto;';
+
+    widget.style.cssText = `
+      position:fixed;
+      bottom:16px;
+      ${posStyles}
+      width:48px;
+      height:48px;
+      border-radius:50%;
+      border:none;
+      background:var(--ckb-btn-bg,#222);
+      color:var(--ckb-btn-color,#fff);
+      font-size:20px;
+      cursor:pointer;
+      z-index:var(--ckb-z,9998);
+      box-shadow:0 2px 8px rgba(0,0,0,0.2);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      transition:transform 0.2s ease;
+    `.replace(/\s+/g, '');
+
+    widget.addEventListener('mouseenter', () => {
+      widget.style.transform = 'scale(1.1)';
+    });
+    widget.addEventListener('mouseleave', () => {
+      widget.style.transform = 'scale(1)';
+    });
+
+    widget.addEventListener('click', () => {
+      _consentMethod = 'widget';
+      instance.manage();
+    });
+
+    container.appendChild(widget);
+  }
+
   // Instance API
   const instance: CookieBannerInstance = {
     get status() {
@@ -922,7 +1100,33 @@ export function createCookieBanner(config: CookieBannerConfig = {}): CookieBanne
     isVisible() {
       return banner !== null;
     },
+
+    getConsentRecord() {
+      if (!_consentState) return null;
+      return {
+        state: _consentState,
+        timestamp: _consentTimestamp || new Date().toISOString(),
+        policyVersion: config.policyVersion,
+        method: _consentMethod || 'banner',
+      };
+    },
+
+    showWidget() {
+      createWidget();
+    },
+
+    hideWidget() {
+      const existingWidget = document.getElementById(widgetId);
+      if (existingWidget) {
+        existingWidget.remove();
+      }
+    },
   };
+
+  // Create widget if enabled
+  if (config.widget?.enabled && _status !== null) {
+    createWidget();
+  }
 
   return instance;
 }
