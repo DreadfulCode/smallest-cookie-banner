@@ -435,7 +435,7 @@ export function isEU(): boolean {
 export function getConsent(cookieName = 'cookie_consent'): string | null {
   if (!isBrowser) return null;
   const escapedName = escapeRegex(cookieName);
-  const match = document.cookie.match(new RegExp('(^|;)\\s*' + escapedName + '=([^;]*)'));
+  const match = document.cookie.match(new RegExp(`(^|;)\\s*${escapedName}=([^;]*)`));
   return match ? match[2] : null;
 }
 
@@ -531,7 +531,7 @@ export function encodeGranularConsent(state: ConsentState): string {
   for (let i = 0; i < keys.length; i++) {
     const id = keys[i];
     const enabled = state[id];
-    parts.push(id + ':' + (enabled ? '1' : '0'));
+    parts.push(`${id}:${enabled ? '1' : '0'}`);
   }
   return parts.join(',');
 }
@@ -850,16 +850,18 @@ export function createCookieBanner(config: CookieBannerConfig = {}): CookieBanne
         const checkedAttr = isChecked ? ' checked' : '';
         const disabledAttr = isRequired ? ' disabled' : '';
         const requiredLabelText = escapeHtml(config.requiredLabel || '(Required)');
-        const requiredLabel = isRequired ? '<span class="cat-req">' + requiredLabelText + '</span>' : '';
-        const desc = cat.description ? '<div class="cat-desc">' + escapeHtml(cat.description) + '</div>' : '';
+        const requiredLabel = isRequired ? `<span class="cat-req">${requiredLabelText}</span>` : '';
+        const desc = cat.description ? `<div class="cat-desc">${escapeHtml(cat.description)}</div>` : '';
+        const catId = escapeHtml(cat.id);
+        const catName = escapeHtml(cat.name);
 
-        catsHtml += '<label>' +
-          '<input type="checkbox" name="ckb-cat" value="' + escapeHtml(cat.id) + '"' + checkedAttr + disabledAttr + '>' +
-          '<div class="cat-info">' +
-            '<div class="cat-name">' + escapeHtml(cat.name) + ' ' + requiredLabel + '</div>' +
-            desc +
-          '</div>' +
-        '</label>';
+        catsHtml += `<label>
+          <input type="checkbox" name="ckb-cat" value="${catId}"${checkedAttr}${disabledAttr}>
+          <div class="cat-info">
+            <div class="cat-name">${catName} ${requiredLabel}</div>
+            ${desc}
+          </div>
+        </label>`;
       }
       catsHtml += '</div>';
 

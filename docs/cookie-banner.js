@@ -276,7 +276,7 @@ var __assign = (this && this.__assign) || function () {
         if (!isBrowser)
             return null;
         var escapedName = escapeRegex(cookieName);
-        var match = document.cookie.match(new RegExp('(^|;)\\s*' + escapedName + '=([^;]*)'));
+        var match = document.cookie.match(new RegExp("(^|;)\\s*".concat(escapedName, "=([^;]*)")));
         return match ? match[2] : null;
     }
     /**
@@ -359,7 +359,7 @@ var __assign = (this && this.__assign) || function () {
         for (var i = 0; i < keys.length; i++) {
             var id = keys[i];
             var enabled = state[id];
-            parts.push(id + ':' + (enabled ? '1' : '0'));
+            parts.push("".concat(id, ":").concat(enabled ? '1' : '0'));
         }
         return parts.join(',');
     }
@@ -658,15 +658,11 @@ var __assign = (this && this.__assign) || function () {
                     var checkedAttr = isChecked ? ' checked' : '';
                     var disabledAttr = isRequired ? ' disabled' : '';
                     var requiredLabelText = escapeHtml(config.requiredLabel || '(Required)');
-                    var requiredLabel = isRequired ? '<span class="cat-req">' + requiredLabelText + '</span>' : '';
-                    var desc = cat.description ? '<div class="cat-desc">' + escapeHtml(cat.description) + '</div>' : '';
-                    catsHtml += '<label>' +
-                        '<input type="checkbox" name="ckb-cat" value="' + escapeHtml(cat.id) + '"' + checkedAttr + disabledAttr + '>' +
-                        '<div class="cat-info">' +
-                        '<div class="cat-name">' + escapeHtml(cat.name) + ' ' + requiredLabel + '</div>' +
-                        desc +
-                        '</div>' +
-                        '</label>';
+                    var requiredLabel = isRequired ? "<span class=\"cat-req\">".concat(requiredLabelText, "</span>") : '';
+                    var desc = cat.description ? "<div class=\"cat-desc\">".concat(escapeHtml(cat.description), "</div>") : '';
+                    var catId = escapeHtml(cat.id);
+                    var catName = escapeHtml(cat.name);
+                    catsHtml += "<label>\n          <input type=\"checkbox\" name=\"ckb-cat\" value=\"".concat(catId, "\"").concat(checkedAttr).concat(disabledAttr, ">\n          <div class=\"cat-info\">\n            <div class=\"cat-name\">").concat(catName, " ").concat(requiredLabel, "</div>\n            ").concat(desc, "\n          </div>\n        </label>");
                 }
                 catsHtml += '</div>';
                 html += catsHtml;

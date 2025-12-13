@@ -119,10 +119,10 @@ interface CookieBannerConfig {
   rejectText?: string;       // Reject button text (EU only)
 
   // Behavior
-  days?: number;             // Cookie expiry (1-3650)
+  days?: number;             // Cookie expiry (1-3650, default: 365)
   forceEU?: boolean;         // Force EU mode
   autoAcceptDelay?: number;  // Auto-accept delay in ms (0-300000)
-  cookieName?: string;       // Custom cookie name
+  cookieName?: string;       // Cookie name (default: "cookie_consent")
   cookieDomain?: string;     // Cookie domain for subdomains
 
   // Callbacks
@@ -286,18 +286,39 @@ const banner: CookieBannerInstance = createCookieBanner(config);
 
 ## Contributing
 
-Contributions welcome! Please:
+Contributions welcome! Current version: **v1.0.5**
 
-1. Fork the repo and create a feature branch
-2. Write tests for new functionality
-3. Ensure all tests pass: `npm test`
-4. Maintain **90%+ code coverage** (enforced by CI)
-5. Run linting: `npm run lint`
-6. Submit a PR with a clear description
+### Getting Started
+
+1. Fork the repo and clone locally
+2. Install dependencies: `npm install`
+3. Create a feature branch: `git checkout -b feature/your-feature`
+
+### PR Requirements
+
+All PRs must include:
+
+| Type | Requirements |
+|------|-------------|
+| **Bug Fix** | Test case reproducing the bug + fix |
+| **New Feature** | Tests covering the feature, updated types |
+| **Refactor** | No coverage regression, passing tests |
+| **Docs** | Accurate, clear, spell-checked |
+
+### Checklist
+
+- [ ] Tests pass: `npm test`
+- [ ] **90%+ code coverage** (enforced by CI)
+- [ ] Linting passes: `npm run lint`
+- [ ] Types check: `npm run typecheck`
+- [ ] Build succeeds: `npm run build`
+- [ ] PR description explains the change
+
+### CI Pipeline
 
 All PRs are automatically checked for:
-- Linting (ESLint)
-- Tests (Jest)
+- Linting (ESLint + TypeScript)
+- Tests (Jest, 260+ test cases)
 - Coverage threshold (90% minimum)
 - Build verification
 
