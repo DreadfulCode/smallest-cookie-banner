@@ -368,7 +368,14 @@
       <div class="section">
         <h2>Behavior</h2>
         <div class="field">
-          <label>Mode</label>
+          <label>Banner Mode</label>
+          <select id="bannerMode">
+            <option value="minimal">Minimal (simple accept/reject)</option>
+            <option value="gdpr">GDPR (granular consent categories)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Region Mode</label>
           <select id="mode">
             <option value="auto">Auto-detect (EU vs non-EU)</option>
             <option value="eu">Force EU mode (always show reject)</option>
@@ -497,6 +504,21 @@
         <h3>Live Preview</h3>
         <div class="banner-preview" id="banner-preview">
           <p id="preview-msg">We use cookies to enhance your experience.</p>
+          <div id="preview-categories" style="display:none;width:100%;padding:12px 0;border-top:1px solid rgba(255,255,255,0.2);margin-top:8px;">
+            <label style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;cursor:pointer;">
+              <input type="checkbox" checked disabled style="width:18px;height:18px;">
+              <div><div style="font-weight:600">Essential <span style="opacity:0.6;font-size:11px">(Required)</span></div><div style="font-size:12px;opacity:0.8">Required for the website to function</div></div>
+            </label>
+            <label style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;cursor:pointer;">
+              <input type="checkbox" style="width:18px;height:18px;">
+              <div><div style="font-weight:600">Analytics</div><div style="font-size:12px;opacity:0.8">Help us understand how visitors use our site</div></div>
+            </label>
+            <label style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;cursor:pointer;">
+              <input type="checkbox" style="width:18px;height:18px;">
+              <div><div style="font-weight:600">Marketing</div><div style="font-size:12px;opacity:0.8">Used to deliver relevant ads</div></div>
+            </label>
+          </div>
+          <button class="settings-btn" id="preview-settings" style="display:none;background:transparent;color:inherit;border:1px solid currentColor;">Customize</button>
           <button class="reject-btn" id="preview-reject">Decline</button>
           <button id="preview-accept">Accept</button>
         </div>
@@ -555,6 +577,7 @@
       msg: document.getElementById('msg'),
       acceptText: document.getElementById('acceptText'),
       rejectText: document.getElementById('rejectText'),
+      bannerMode: document.getElementById('bannerMode'),
       mode: document.getElementById('mode'),
       autoAcceptDelay: document.getElementById('autoAcceptDelay'),
       days: document.getElementById('days'),
@@ -606,6 +629,7 @@
         msg: inputs.msg.value,
         acceptText: inputs.acceptText.value,
         rejectText: inputs.rejectText.value,
+        bannerMode: inputs.bannerMode.value,
         mode: inputs.mode.value,
         autoAcceptDelay: parseInt(inputs.autoAcceptDelay.value),
         days: parseInt(inputs.days.value),
@@ -691,6 +715,9 @@
 
       // HTML tab - use proper escaping for all user inputs
       let configObj = [];
+      if (config.bannerMode === 'gdpr') {
+        configObj.push(`  mode: 'gdpr'`);
+      }
       if (config.msg !== 'We use cookies to enhance your experience.') {
         configObj.push(`  msg: '${escapeJs(config.msg)}'`);
       }
@@ -738,8 +765,12 @@ ${cssVars}
 ${configObj.length > 0 ? `<span class="keyword">&lt;script&gt;</span>
 window.CookieBannerConfig = {
 ${configObj.join(',\n')},
-  onYes: function() { <span class="comment">/* Load analytics */</span> },
-  onNo: function() { <span class="comment">/* Respect choice */</span> }
+${config.bannerMode === 'gdpr' ? `  onConsent: function(consent) {
+    <span class="comment">// consent = { essential: true, analytics: true/false, marketing: true/false, functional: true/false }</span>
+    if (consent.analytics) { <span class="comment">/* Load analytics */</span> }
+    if (consent.marketing) { <span class="comment">/* Load marketing scripts */</span> }
+  }` : `  onAccept: function() { <span class="comment">/* Load analytics */</span> },
+  onReject: function() { <span class="comment">/* Respect choice */</span> }`}
 };
 <span class="keyword">&lt;/script&gt;</span>
 ` : ''}<span class="keyword">&lt;script</span> <span class="property">src</span>=<span class="string">"https://unpkg.com/smallest-cookie-banner@latest/dist/cookie-banner.min.js"</span><span class="keyword">&gt;&lt;/script&gt;</span>`;
@@ -771,6 +802,22 @@ ${configObj.join(',\n')},
       // Show/hide reject button based on mode
       const rejectBtn = document.getElementById('preview-reject');
       rejectBtn.style.display = config.mode === 'non-eu' ? 'none' : 'inline-block';
+
+      // Show/hide GDPR elements based on banner mode
+      const isGdpr = config.bannerMode === 'gdpr';
+      document.getElementById('preview-categories').style.display = isGdpr ? 'block' : 'none';
+      document.getElementById('preview-settings').style.display = isGdpr ? 'inline-block' : 'none';
+
+      // Update button text for GDPR mode
+      if (isGdpr) {
+        document.getElementById('preview-accept').textContent = 'Accept All';
+        if (config.mode !== 'non-eu') {
+          document.getElementById('preview-reject').textContent = 'Reject All';
+        }
+      } else {
+        document.getElementById('preview-accept').textContent = config.acceptText;
+        document.getElementById('preview-reject').textContent = config.rejectText;
+      }
 
       // Update code output
       document.getElementById('code-output').innerHTML = generateOutputCode(config);
