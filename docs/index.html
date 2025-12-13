@@ -930,6 +930,14 @@
               <input type="number" id="days" value="365" min="1" max="3650">
             </div>
           </div>
+          <div class="field">
+            <label>Privacy Policy URL</label>
+            <input type="text" id="privacyUrl" placeholder="https://example.com/privacy (optional)">
+          </div>
+          <div class="field">
+            <label>Terms URL</label>
+            <input type="text" id="termsUrl" placeholder="https://example.com/terms (optional)">
+          </div>
         </div>
       </div>
 
@@ -1147,7 +1155,7 @@
       <div class="banner-preview-container" id="banner-preview-container">
         <h3>Live Preview</h3>
         <div class="banner-preview" id="banner-preview">
-          <p id="preview-msg">We use cookies to enhance your experience.</p>
+          <p id="preview-msg">We use cookies to enhance your experience. <span id="preview-links" style="display:none;font-size:12px;opacity:0.8;"></span></p>
           <div id="preview-categories" style="display:none;width:100%;padding:12px 0;border-top:1px solid rgba(255,255,255,0.2);margin-top:8px;">
             <label style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;cursor:pointer;">
               <input type="checkbox" checked disabled style="width:20px;height:20px;">
@@ -1166,7 +1174,7 @@
               <div><div style="font-weight:600">Functional</div><div style="font-size:12px;opacity:0.8">Enable enhanced features and personalization</div></div>
             </label>
           </div>
-          <button class="settings-btn" id="preview-settings" style="display:none;background:transparent;color:inherit;border:1px solid currentColor;">Customize</button>
+          <button class="settings-btn" id="preview-settings" onclick="togglePreviewCategories()" style="display:none;background:transparent;color:inherit;border:1px solid currentColor;">Customize</button>
           <button class="save-btn" id="preview-save" style="display:none;">Save Preferences</button>
           <button class="reject-btn" id="preview-reject">Decline</button>
           <button id="preview-accept">Accept</button>
@@ -1346,6 +1354,8 @@
       animation: document.getElementById('animation'),
       zIndex: document.getElementById('zIndex'),
       customCss: document.getElementById('customCss'),
+      privacyUrl: document.getElementById('privacyUrl'),
+      termsUrl: document.getElementById('termsUrl'),
     };
 
     // Sync color inputs
@@ -1434,7 +1444,21 @@
         animation: inputs.animation.value,
         zIndex: parseInt(inputs.zIndex.value) || 9999,
         customCss: inputs.customCss.value,
+        privacyUrl: inputs.privacyUrl.value.trim(),
+        termsUrl: inputs.termsUrl.value.trim(),
       };
+    }
+
+    // Toggle preview categories (for GDPR mode demo)
+    let previewCategoriesExpanded = false;
+    function togglePreviewCategories() {
+      previewCategoriesExpanded = !previewCategoriesExpanded;
+      const categories = document.getElementById('preview-categories');
+      const saveBtn = document.getElementById('preview-save');
+      const settingsBtn = document.getElementById('preview-settings');
+      categories.style.display = previewCategoriesExpanded ? 'block' : 'none';
+      saveBtn.style.display = previewCategoriesExpanded ? 'inline-block' : 'none';
+      settingsBtn.textContent = previewCategoriesExpanded ? 'Hide Options' : 'Customize';
     }
 
     // Apply preset
@@ -1594,6 +1618,12 @@
       if (config.days !== 365) {
         configObj.push(`  days: ${config.days}`);
       }
+      if (config.privacyUrl) {
+        configObj.push(`  privacyUrl: '${escapeJs(config.privacyUrl)}'`);
+      }
+      if (config.termsUrl) {
+        configObj.push(`  termsUrl: '${escapeJs(config.termsUrl)}'`);
+      }
 
       let cssVars = `  --ckb-bg: ${escapeHtml(config.bgColor)};
   --ckb-color: ${escapeHtml(config.textColor)};
@@ -1656,15 +1686,31 @@ ${config.bannerMode === 'gdpr' ? `  onConsent: function(consent) {
       document.getElementById('preview-accept').textContent = config.acceptText;
       document.getElementById('preview-reject').textContent = config.rejectText;
 
+      // Update privacy/terms links
+      const linksSpan = document.getElementById('preview-links');
+      let linksHtml = [];
+      if (config.privacyUrl) linksHtml.push(`<a href="#" style="color:inherit;text-decoration:underline;">Privacy Policy</a>`);
+      if (config.termsUrl) linksHtml.push(`<a href="#" style="color:inherit;text-decoration:underline;">Terms</a>`);
+      if (linksHtml.length > 0) {
+        linksSpan.innerHTML = 'See our ' + linksHtml.join(' and ') + '.';
+        linksSpan.style.display = 'inline';
+      } else {
+        linksSpan.style.display = 'none';
+      }
+
       // Show/hide reject button based on mode
       const rejectBtn = document.getElementById('preview-reject');
       rejectBtn.style.display = config.mode === 'non-eu' ? 'none' : 'inline-block';
 
       // Show/hide GDPR elements based on banner mode
       const isGdpr = config.bannerMode === 'gdpr';
-      document.getElementById('preview-categories').style.display = isGdpr ? 'block' : 'none';
+      // Reset expanded state when mode changes
+      if (!isGdpr) previewCategoriesExpanded = false;
+      // Categories start collapsed in GDPR mode, shown via Customize button
+      document.getElementById('preview-categories').style.display = (isGdpr && previewCategoriesExpanded) ? 'block' : 'none';
       document.getElementById('preview-settings').style.display = isGdpr ? 'inline-block' : 'none';
-      document.getElementById('preview-save').style.display = 'none'; // Hidden until settings clicked
+      document.getElementById('preview-save').style.display = (isGdpr && previewCategoriesExpanded) ? 'inline-block' : 'none';
+      document.getElementById('preview-settings').textContent = previewCategoriesExpanded ? 'Hide Options' : 'Customize';
 
       // Update button text for GDPR mode
       if (isGdpr) {
