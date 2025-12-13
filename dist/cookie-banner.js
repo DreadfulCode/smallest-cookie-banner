@@ -36,6 +36,7 @@ var __assign = (this && this.__assign) || function () {
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.DEFAULT_CSS = exports.DEFAULT_CATEGORIES = void 0;
     exports.sanitizeCss = sanitizeCss;
+    exports.sanitizeUrl = sanitizeUrl;
     exports.sanitizeInlineStyle = sanitizeInlineStyle;
     exports.validateConfig = validateConfig;
     exports.isEU = isEU;
@@ -74,13 +75,32 @@ var __assign = (this && this.__assign) || function () {
     // CSS Sanitization (Security)
     // ============================================================================
     /**
+     * Decode CSS unicode escape sequences to prevent obfuscation bypasses
+     * E.g., \75\72\6C = url
+     */
+    function decodeCssUnicodeEscapes(css) {
+        return css.replace(/\\([0-9a-fA-F]{1,6})\s?/g, function (_match, hex) {
+            var charCode = parseInt(hex, 16);
+            // Only decode valid characters, block null bytes
+            if (charCode === 0 || charCode > 0x10FFFF)
+                return '';
+            return String.fromCodePoint(charCode);
+        });
+    }
+    /**
      * Sanitize CSS to prevent injection attacks
      * Blocks: @import, url() with external URLs, expression(), behavior:, -moz-binding, HTML tags
      */
     function sanitizeCss(css) {
         if (!css)
             return '';
+        // Limit length to prevent ReDoS
+        if (css.length > 50000) {
+            css = css.slice(0, 50000);
+        }
         var sanitized = css;
+        // FIRST: Decode unicode escapes to prevent obfuscation bypasses
+        sanitized = decodeCssUnicodeEscapes(sanitized);
         // Remove HTML tags (style tag breakout prevention)
         sanitized = sanitized.replace(/<[^>]*>/g, '');
         // Remove @import (case-insensitive, handles whitespace obfuscation)
@@ -91,11 +111,19 @@ var __assign = (this && this.__assign) || function () {
         sanitized = sanitized.replace(/behavior\s*:[^;]*(;|$)/gi, '');
         // Remove -moz-binding (Firefox XBL)
         sanitized = sanitized.replace(/-moz-binding\s*:[^;]*(;|$)/gi, '');
-        // Sanitize url() - only allow data:image URIs
+        // Sanitize url() - only allow safe data:image URIs (not SVG which can contain scripts)
         sanitized = sanitized.replace(/url\s*\(\s*(['"]?)([^'")\s]+)\1\s*\)/gi, function (match, _quote, url) {
             var trimmedUrl = url.trim().toLowerCase();
-            // Allow data:image URIs
-            if (trimmedUrl.startsWith('data:image/')) {
+            // Block SVG which can contain embedded scripts
+            if (trimmedUrl.includes('svg')) {
+                return '';
+            }
+            // Only allow safe raster image formats
+            if (trimmedUrl.startsWith('data:image/png') ||
+                trimmedUrl.startsWith('data:image/jpeg') ||
+                trimmedUrl.startsWith('data:image/jpg') ||
+                trimmedUrl.startsWith('data:image/gif') ||
+                trimmedUrl.startsWith('data:image/webp')) {
                 return match;
             }
             // Block everything else (javascript:, external URLs, etc.)
@@ -104,6 +132,30 @@ var __assign = (this && this.__assign) || function () {
         // Remove javascript: protocol
         sanitized = sanitized.replace(/javascript\s*:/gi, '');
         return sanitized;
+    }
+    /**
+     * Sanitize URLs to prevent javascript: XSS and phishing
+     * Only allows http:, https:, and relative URLs
+     */
+    function sanitizeUrl(url) {
+        if (!url)
+            return '';
+        var trimmed = url.trim();
+        var lower = trimmed.toLowerCase();
+        // Allow http/https URLs
+        if (lower.startsWith('http://') || lower.startsWith('https://')) {
+            return trimmed;
+        }
+        // Allow relative URLs
+        if (trimmed.startsWith('/') || trimmed.startsWith('./') || trimmed.startsWith('../')) {
+            return trimmed;
+        }
+        // Allow anchor links
+        if (trimmed.startsWith('#')) {
+            return trimmed;
+        }
+        // Block everything else (javascript:, data:, vbscript:, file:, etc.)
+        return '';
     }
     /**
      * Sanitize inline styles (more restrictive than CSS blocks)
@@ -326,12 +378,14 @@ var __assign = (this && this.__assign) || function () {
      * Framework-friendly: no global state, proper cleanup, SSR-safe
      */
     function createCookieBanner(config) {
+        var _a;
         if (config === void 0) { config = {}; }
         // SSR: return no-op instance
         if (!isBrowser) {
             return {
                 status: null,
                 getConsent: function () { return null; },
+                getConsentRecord: function () { return null; },
                 hasConsent: function () { return false; },
                 accept: function () { },
                 reject: function () { },
@@ -340,6 +394,8 @@ var __assign = (this && this.__assign) || function () {
                 hide: function () { },
                 destroy: function () { },
                 isVisible: function () { return false; },
+                showWidget: function () { },
+                hideWidget: function () { },
             };
         }
         // Validate configuration
@@ -355,8 +411,11 @@ var __assign = (this && this.__assign) || function () {
         var banner = null;
         var _status = null;
         var _consentState = null;
+        var _consentTimestamp = null;
+        var _consentMethod = 'banner';
         var previousActiveElement = null;
         var styleId = "ckb-style-".concat(Math.random().toString(36).slice(2, 8) || 'default');
+        var widgetId = "ckb-widget-".concat(Math.random().toString(36).slice(2, 8) || 'default');
         // Check existing consent
         var existing = getConsent(cookieName);
         if (existing !== null) {
@@ -398,6 +457,9 @@ var __assign = (this && this.__assign) || function () {
             }
         }
         function handleConsent(accepted) {
+            var _a;
+            // Record timestamp for audit trail
+            _consentTimestamp = new Date().toISOString();
             if (hasCategories) {
                 // Build consent state for all categories
                 var state = {};
@@ -418,6 +480,10 @@ var __assign = (this && this.__assign) || function () {
                 banner.remove();
                 banner = null;
             }
+            // Show widget if enabled after consent is given
+            if ((_a = config.widget) === null || _a === void 0 ? void 0 : _a.enabled) {
+                createWidget();
+            }
             // Restore focus to previous element
             if (previousActiveElement && previousActiveElement instanceof HTMLElement) {
                 previousActiveElement.focus();
@@ -433,10 +499,16 @@ var __assign = (this && this.__assign) || function () {
                     console.error('Cookie banner callback error:', error);
                 }
             }
-            // Call onConsent with granular state
+            // Call onConsent with granular state and record
             if (hasCategories && typeof config.onConsent === 'function') {
                 try {
-                    config.onConsent(_consentState);
+                    var record = {
+                        state: _consentState,
+                        timestamp: _consentTimestamp,
+                        policyVersion: config.policyVersion,
+                        method: _consentMethod,
+                    };
+                    config.onConsent(_consentState, record);
                 }
                 catch (error) {
                     console.error('Cookie banner onConsent callback error:', error);
@@ -444,6 +516,9 @@ var __assign = (this && this.__assign) || function () {
             }
         }
         function handleGranularConsent(state) {
+            var _a;
+            // Record timestamp for audit trail
+            _consentTimestamp = new Date().toISOString();
             _consentState = state;
             setConsent(encodeGranularConsent(state), cookieName, days, cookieDomain);
             // Check if any non-required category is enabled
@@ -474,12 +549,22 @@ var __assign = (this && this.__assign) || function () {
                 banner.remove();
                 banner = null;
             }
+            // Show widget if enabled after consent is given
+            if ((_a = config.widget) === null || _a === void 0 ? void 0 : _a.enabled) {
+                createWidget();
+            }
             if (previousActiveElement && previousActiveElement instanceof HTMLElement) {
                 previousActiveElement.focus();
             }
             if (typeof config.onConsent === 'function') {
                 try {
-                    config.onConsent(state);
+                    var record = {
+                        state: state,
+                        timestamp: _consentTimestamp,
+                        policyVersion: config.policyVersion,
+                        method: _consentMethod,
+                    };
+                    config.onConsent(state, record);
                 }
                 catch (error) {
                     console.error('Cookie banner onConsent callback error:', error);
@@ -495,9 +580,13 @@ var __assign = (this && this.__assign) || function () {
             el.id = 'ckb';
             // ARIA attributes for accessibility
             el.setAttribute('role', 'dialog');
-            el.setAttribute('aria-label', 'Cookie consent');
+            el.setAttribute('aria-label', config.bannerAriaLabel || 'Cookie consent');
             el.setAttribute('aria-modal', 'true');
             el.setAttribute('tabindex', '-1');
+            // RTL support - set dir attribute if specified
+            if (config.dir) {
+                el.setAttribute('dir', config.dir);
+            }
             // Apply sanitized inline styles
             if (config.style) {
                 el.style.cssText = sanitizeInlineStyle(config.style);
@@ -511,9 +600,10 @@ var __assign = (this && this.__assign) || function () {
             var settingsText = escapeHtml(config.settingsText || 'Customize');
             var saveText = escapeHtml(config.saveText || 'Save Preferences');
             var privacyText = escapeHtml(config.privacyPolicyText || 'Privacy Policy');
-            // Build privacy policy link if URL provided
-            var privacyLink = config.privacyPolicyUrl
-                ? " <a href=\"".concat(escapeHtml(config.privacyPolicyUrl), "\" target=\"_blank\" rel=\"noopener\">").concat(privacyText, "</a>")
+            // Build privacy policy link if URL provided (sanitize to prevent javascript: XSS)
+            var sanitizedPrivacyUrl = sanitizeUrl(config.privacyPolicyUrl || '');
+            var privacyLink = sanitizedPrivacyUrl
+                ? " <a href=\"".concat(escapeHtml(sanitizedPrivacyUrl), "\" target=\"_blank\" rel=\"noopener\">").concat(privacyText, "</a>")
                 : '';
             // Build HTML based on mode
             var html = "<p id=\"".concat(msgId, "\">").concat(msg).concat(privacyLink, "</p>");
@@ -530,7 +620,8 @@ var __assign = (this && this.__assign) || function () {
                         : (isRequired || cat.defaultEnabled === true);
                     var checkedAttr = isChecked ? ' checked' : '';
                     var disabledAttr = isRequired ? ' disabled' : '';
-                    var requiredLabel = isRequired ? '<span class="cat-req">(Required)</span>' : '';
+                    var requiredLabelText = escapeHtml(config.requiredLabel || '(Required)');
+                    var requiredLabel = isRequired ? '<span class="cat-req">' + requiredLabelText + '</span>' : '';
                     var desc = cat.description ? '<div class="cat-desc">' + escapeHtml(cat.description) + '</div>' : '';
                     catsHtml += '<label>' +
                         '<input type="checkbox" name="ckb-cat" value="' + escapeHtml(cat.id) + '"' + checkedAttr + disabledAttr + '>' +
@@ -680,6 +771,37 @@ var __assign = (this && this.__assign) || function () {
             };
             return el;
         }
+        // Create consent management widget
+        function createWidget() {
+            // Don't create if one already exists
+            if (document.getElementById(widgetId))
+                return;
+            var widgetConfig = config.widget || {};
+            var position = widgetConfig.position || 'bottom-left';
+            var text = widgetConfig.text || '🍪';
+            var ariaLabel = widgetConfig.ariaLabel || 'Manage cookie preferences';
+            var widget = document.createElement('button');
+            widget.id = widgetId;
+            widget.type = 'button';
+            widget.setAttribute('aria-label', ariaLabel);
+            widget.textContent = text;
+            // Widget styles
+            var posStyles = position === 'bottom-right'
+                ? 'right:16px;left:auto;'
+                : 'left:16px;right:auto;';
+            widget.style.cssText = "\n      position:fixed;\n      bottom:16px;\n      ".concat(posStyles, "\n      width:48px;\n      height:48px;\n      border-radius:50%;\n      border:none;\n      background:var(--ckb-btn-bg,#222);\n      color:var(--ckb-btn-color,#fff);\n      font-size:20px;\n      cursor:pointer;\n      z-index:var(--ckb-z,9998);\n      box-shadow:0 2px 8px rgba(0,0,0,0.2);\n      display:flex;\n      align-items:center;\n      justify-content:center;\n      transition:transform 0.2s ease;\n    ").replace(/\s+/g, '');
+            widget.addEventListener('mouseenter', function () {
+                widget.style.transform = 'scale(1.1)';
+            });
+            widget.addEventListener('mouseleave', function () {
+                widget.style.transform = 'scale(1)';
+            });
+            widget.addEventListener('click', function () {
+                _consentMethod = 'widget';
+                instance.manage();
+            });
+            container.appendChild(widget);
+        }
         // Instance API
         var instance = {
             get status() {
@@ -742,7 +864,30 @@ var __assign = (this && this.__assign) || function () {
             isVisible: function () {
                 return banner !== null;
             },
+            getConsentRecord: function () {
+                if (!_consentState)
+                    return null;
+                return {
+                    state: _consentState,
+                    timestamp: _consentTimestamp || new Date().toISOString(),
+                    policyVersion: config.policyVersion,
+                    method: _consentMethod || 'banner',
+                };
+            },
+            showWidget: function () {
+                createWidget();
+            },
+            hideWidget: function () {
+                var existingWidget = document.getElementById(widgetId);
+                if (existingWidget) {
+                    existingWidget.remove();
+                }
+            },
         };
+        // Create widget if enabled
+        if (((_a = config.widget) === null || _a === void 0 ? void 0 : _a.enabled) && _status !== null) {
+            createWidget();
+        }
         return instance;
     }
     // ============================================================================

@@ -33,6 +33,28 @@ export interface ConsentState {
 export type BannerMode = 'minimal' | 'gdpr';
 /** Default categories for GDPR mode */
 export declare const DEFAULT_CATEGORIES: CookieCategory[];
+/** Consent widget configuration for managing preferences after initial consent */
+export interface ConsentWidgetConfig {
+    /** Enable the floating consent widget (default: false) */
+    enabled?: boolean;
+    /** Widget position: 'bottom-left' | 'bottom-right' (default: 'bottom-left') */
+    position?: 'bottom-left' | 'bottom-right';
+    /** Widget text (default: "🍪") */
+    text?: string;
+    /** Widget aria-label (default: "Manage cookie preferences") */
+    ariaLabel?: string;
+}
+/** Consent record with audit trail metadata */
+export interface ConsentRecord {
+    /** Consent state for each category */
+    state: ConsentState;
+    /** ISO 8601 timestamp when consent was given */
+    timestamp: string;
+    /** Version of the consent policy (optional) */
+    policyVersion?: string;
+    /** How consent was given */
+    method: 'banner' | 'widget' | 'api';
+}
 export interface CookieBannerConfig {
     /** Banner mode: 'minimal' (default) or 'gdpr' for granular consent */
     mode?: BannerMode;
@@ -52,6 +74,12 @@ export interface CookieBannerConfig {
     privacyPolicyUrl?: string;
     /** Privacy policy link text (default: "Privacy Policy") */
     privacyPolicyText?: string;
+    /** Banner ARIA label for accessibility (default: "Cookie consent") */
+    bannerAriaLabel?: string;
+    /** Label for required categories (default: "(Required)") */
+    requiredLabel?: string;
+    /** Text direction for RTL languages: 'ltr' | 'rtl' | 'auto' (default: inherits from page) */
+    dir?: 'ltr' | 'rtl' | 'auto';
     /** Cookie name (default: "ck") */
     cookieName?: string;
     /** Cookie expiry in days (default: 365, max: 3650) */
@@ -70,8 +98,12 @@ export interface CookieBannerConfig {
     container?: HTMLElement;
     /** CSP nonce for inline styles */
     cspNonce?: string;
-    /** Callback when user saves consent (receives consent state) */
-    onConsent?: (consent: ConsentState) => void;
+    /** Policy version for audit trail (e.g., "1.0", "2024-01") */
+    policyVersion?: string;
+    /** Consent widget configuration for managing preferences after consent */
+    widget?: ConsentWidgetConfig;
+    /** Callback when user saves consent (receives consent record with metadata) */
+    onConsent?: (consent: ConsentState, record?: ConsentRecord) => void;
     /** Callback when user accepts all */
     onAccept?: () => void;
     /** Callback when user rejects all */
@@ -86,6 +118,8 @@ export interface CookieBannerInstance {
     readonly status: boolean | null;
     /** Get granular consent state (returns null if no consent yet) */
     getConsent(): ConsentState | null;
+    /** Get full consent record with audit metadata (returns null if no consent yet) */
+    getConsentRecord(): ConsentRecord | null;
     /** Check if a specific category is enabled */
     hasConsent(categoryId: string): boolean;
     /** Accept all consent programmatically */
@@ -102,6 +136,10 @@ export interface CookieBannerInstance {
     destroy(clearCookie?: boolean): void;
     /** Check if banner is currently visible */
     isVisible(): boolean;
+    /** Show/hide the consent management widget */
+    showWidget(): void;
+    /** Hide the consent management widget */
+    hideWidget(): void;
 }
 export interface LegacyCookieBannerAPI {
     readonly ok: boolean | null;
@@ -129,6 +167,11 @@ export declare const DEFAULT_CSS = "#ckb{position:var(--ckb-position,fixed);bott
  * Blocks: @import, url() with external URLs, expression(), behavior:, -moz-binding, HTML tags
  */
 export declare function sanitizeCss(css: string): string;
+/**
+ * Sanitize URLs to prevent javascript: XSS and phishing
+ * Only allows http:, https:, and relative URLs
+ */
+export declare function sanitizeUrl(url: string): string;
 /**
  * Sanitize inline styles (more restrictive than CSS blocks)
  */
