@@ -6,6 +6,8 @@
 
 ~2KB minified + gzipped. Zero dependencies. TypeScript. Works with React, Vue, Angular, Svelte, or vanilla JS.
 
+**[Read more about the library and see it in action on my blog](https://vibecodingwithfred.com/blog/gdpr-cookie-banner-cdn/)**
+
 > ⚠️ **Alpha Version** — This project is in active development and has not been tested in all browsers yet. Use in production at your own discretion. Please [report issues](https://github.com/DreadfulCode/smallest-cookie-banner/issues) if you encounter bugs.
 
 ## Features
