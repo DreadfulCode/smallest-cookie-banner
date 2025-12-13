@@ -1537,5 +1537,16 @@ ${configObj.join(',\n')},
     // Initialize
     updatePreview();
   </script>
+
+  <!-- Live demo: actual cookie banner on this page -->
+  <script>
+    window.CookieBannerConfig = {
+      msg: "This site uses cookies to demonstrate the banner.",
+      acceptText: "Got it!",
+      rejectText: "No thanks",
+      forceEU: true
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/gh/DreadfulCode/smallest-cookie-banner@main/dist/cookie-banner.min.js"></script>
 </body>
 </html>
