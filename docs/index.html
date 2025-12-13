@@ -571,6 +571,130 @@
     }
     .code-body .number { color: #b5cea8; }
 
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.2s;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal {
+      background: #fff;
+      border-radius: 12px;
+      max-width: 600px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      transform: translateY(20px);
+      transition: transform 0.2s;
+    }
+
+    .modal-overlay.active .modal {
+      transform: translateY(0);
+    }
+
+    .modal-header {
+      padding: 20px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-header h2 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #888;
+      padding: 4px 8px;
+    }
+
+    .modal-close:hover {
+      color: #333;
+    }
+
+    .modal-body {
+      padding: 20px;
+    }
+
+    .modal-body h3 {
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin: 20px 0 10px;
+    }
+
+    .modal-body h3:first-child {
+      margin-top: 0;
+    }
+
+    .modal-body ol {
+      padding-left: 24px;
+      line-height: 1.8;
+    }
+
+    .modal-body code {
+      background: #f5f5f5;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 13px;
+    }
+
+    .modal-body .note {
+      background: #f0f9ff;
+      border-left: 4px solid #3b82f6;
+      padding: 12px 16px;
+      margin: 16px 0;
+      border-radius: 0 8px 8px 0;
+    }
+
+    .modal-body a {
+      color: var(--primary);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .modal {
+        background: #2d2d2d;
+        color: #e0e0e0;
+      }
+      .modal-header {
+        border-color: #444;
+      }
+      .modal-close {
+        color: #aaa;
+      }
+      .modal-close:hover {
+        color: #fff;
+      }
+      .modal-body code {
+        background: #3d3d3d;
+        color: #e0e0e0;
+      }
+      .modal-body .note {
+        background: #1e3a4d;
+      }
+    }
+
     /* Toast notification */
     .toast {
       position: fixed;
@@ -762,7 +886,15 @@
         </h2>
         <div class="section-content">
           <div class="field">
-            <label>Mode</label>
+            <label>Banner Mode</label>
+            <select id="bannerMode">
+              <option value="minimal">Minimal (simple accept/reject)</option>
+              <option value="gdpr">GDPR (granular consent categories)</option>
+            </select>
+            <div class="help-text">GDPR mode shows cookie category checkboxes</div>
+          </div>
+          <div class="field">
+            <label>Region Mode</label>
             <select id="mode">
               <option value="auto">Auto-detect (EU vs non-EU)</option>
               <option value="eu">Force EU mode (always show reject)</option>
@@ -974,6 +1106,10 @@
       <div class="preview-header">
         <h2>Generated Code</h2>
         <div class="preview-actions">
+          <button class="btn btn-secondary" onclick="showHelpModal()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            How to Use
+          </button>
           <a class="btn btn-secondary bookmarklet-btn" id="bookmarklet-link" href="#" title="Drag this to your bookmarks bar!">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
             ⬆️ Drag to Bookmarks
@@ -994,6 +1130,26 @@
         <h3>Live Preview</h3>
         <div class="banner-preview" id="banner-preview">
           <p id="preview-msg">We use cookies to enhance your experience.</p>
+          <div id="preview-categories" style="display:none;width:100%;padding:12px 0;border-top:1px solid rgba(255,255,255,0.2);margin-top:8px;">
+            <label style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;cursor:pointer;">
+              <input type="checkbox" checked disabled style="width:20px;height:20px;">
+              <div><div style="font-weight:600">Essential <span style="opacity:0.6;font-size:11px">(Required)</span></div><div style="font-size:12px;opacity:0.8">Required for the website to function</div></div>
+            </label>
+            <label style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;cursor:pointer;">
+              <input type="checkbox" style="width:20px;height:20px;">
+              <div><div style="font-weight:600">Analytics</div><div style="font-size:12px;opacity:0.8">Help us understand how visitors use our site</div></div>
+            </label>
+            <label style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;cursor:pointer;">
+              <input type="checkbox" style="width:20px;height:20px;">
+              <div><div style="font-weight:600">Marketing</div><div style="font-size:12px;opacity:0.8">Used to deliver relevant ads</div></div>
+            </label>
+            <label style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;cursor:pointer;">
+              <input type="checkbox" style="width:20px;height:20px;">
+              <div><div style="font-weight:600">Functional</div><div style="font-size:12px;opacity:0.8">Enable enhanced features and personalization</div></div>
+            </label>
+          </div>
+          <button class="settings-btn" id="preview-settings" style="display:none;background:transparent;color:inherit;border:1px solid currentColor;">Customize</button>
+          <button class="save-btn" id="preview-save" style="display:none;">Save Preferences</button>
           <button class="reject-btn" id="preview-reject">Decline</button>
           <button id="preview-accept">Accept</button>
         </div>
@@ -1031,6 +1187,44 @@
   </div>
 
   <div class="toast" id="toast"></div>
+
+  <!-- Help Modal -->
+  <div class="modal-overlay" id="help-modal" onclick="hideHelpModal(event)">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Quick Start Guide</h2>
+        <button class="modal-close" onclick="hideHelpModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <h3>Installation</h3>
+        <ol>
+          <li>Copy the generated code using the <strong>Copy Code</strong> button</li>
+          <li>Paste the <code>&lt;style&gt;</code> section into your HTML's <code>&lt;head&gt;</code></li>
+          <li>Paste the <code>&lt;script&gt;</code> section just before <code>&lt;/body&gt;</code></li>
+        </ol>
+
+        <div class="note">
+          <strong>That's it!</strong> The banner will automatically appear when visitors land on your site and haven't made a choice yet.
+        </div>
+
+        <h3>For npm users</h3>
+        <ol>
+          <li>Install: <code>npm install smallest-cookie-banner</code></li>
+          <li>Import: <code>import { createCookieBanner } from 'smallest-cookie-banner'</code></li>
+          <li>Initialize: <code>createCookieBanner(config).show()</code></li>
+        </ol>
+
+        <h3>GDPR Mode</h3>
+        <p>For full GDPR compliance with granular consent categories, set <strong>Banner Mode</strong> to "GDPR" in the Behavior section. This shows users checkboxes for each cookie type (Essential, Analytics, Marketing, Functional).</p>
+
+        <h3>Testing</h3>
+        <p>Use the <strong>Drag to Bookmarks</strong> button to create a bookmarklet you can run on any website to preview your banner configuration.</p>
+
+        <h3>Documentation</h3>
+        <p><a href="https://github.com/DreadfulCode/smallest-cookie-banner" target="_blank">View full documentation on GitHub →</a></p>
+      </div>
+    </div>
+  </div>
 
   <script>
     // Security: Escape functions
@@ -1105,6 +1299,7 @@
       msg: document.getElementById('msg'),
       acceptText: document.getElementById('acceptText'),
       rejectText: document.getElementById('rejectText'),
+      bannerMode: document.getElementById('bannerMode'),
       mode: document.getElementById('mode'),
       autoAcceptDelay: document.getElementById('autoAcceptDelay'),
       days: document.getElementById('days'),
@@ -1167,6 +1362,7 @@
         msg: inputs.msg.value,
         acceptText: inputs.acceptText.value,
         rejectText: inputs.rejectText.value,
+        bannerMode: inputs.bannerMode.value,
         mode: inputs.mode.value,
         autoAcceptDelay: parseInt(inputs.autoAcceptDelay.value) || 5000,
         days: parseInt(inputs.days.value) || 365,
@@ -1268,21 +1464,33 @@
 
       // JSON tab
       if (currentTab === 'json') {
-        const jsonConfig = {
-          msg: config.msg,
-          acceptText: config.acceptText,
-          rejectText: config.rejectText,
-        };
+        const jsonConfig = {};
+        if (config.bannerMode === 'gdpr') jsonConfig.mode = 'gdpr';
+        jsonConfig.msg = config.msg;
+        jsonConfig.acceptText = config.acceptText;
+        jsonConfig.rejectText = config.rejectText;
         if (forceEU !== null) jsonConfig.forceEU = forceEU === 'true';
         if (config.autoAcceptDelay !== 5000) jsonConfig.autoAcceptDelay = config.autoAcceptDelay;
         if (config.days !== 365) jsonConfig.days = config.days;
 
-        return `<span class="comment">// Configuration object</span>
+        let jsonOutput = `<span class="comment">// Configuration object</span>
 <span class="keyword">window</span>.<span class="property">CookieBannerConfig</span> = ${JSON.stringify(jsonConfig, null, 2)
           .replace(/"([^"]+)":/g, '<span class="property">"$1"</span>:')
           .replace(/: "([^"]+)"/g, ': <span class="string">"$1"</span>')
           .replace(/: (\d+)/g, ': <span class="number">$1</span>')
           .replace(/: (true|false)/g, ': <span class="keyword">$1</span>')};`;
+
+        if (config.bannerMode === 'gdpr') {
+          jsonOutput += `
+
+<span class="comment">// GDPR mode provides granular consent</span>
+<span class="comment">// Use onConsent to handle category-specific choices:</span>
+<span class="comment">// onConsent: function(consent) {</span>
+<span class="comment">//   if (consent.analytics) loadAnalytics();</span>
+<span class="comment">//   if (consent.marketing) loadMarketing();</span>
+<span class="comment">// }</span>`;
+        }
+        return jsonOutput;
       }
 
       // CSS tab
@@ -1306,6 +1514,9 @@
 
       // HTML tab
       let configObj = [];
+      if (config.bannerMode === 'gdpr') {
+        configObj.push(`  mode: 'gdpr'`);
+      }
       if (config.msg !== 'We use cookies to enhance your experience.') {
         configObj.push(`  msg: '${escapeJs(config.msg)}'`);
       }
@@ -1349,8 +1560,12 @@ ${cssVars}
 ${configObj.length > 0 ? `<span class="keyword">&lt;script&gt;</span>
 window.CookieBannerConfig = {
 ${configObj.join(',\n')},
-  onAccept: function() { <span class="comment">/* Load analytics */</span> },
-  onReject: function() { <span class="comment">/* Respect choice */</span> }
+${config.bannerMode === 'gdpr' ? `  onConsent: function(consent) {
+    <span class="comment">// consent = { essential: true, analytics: true/false, marketing: true/false, functional: true/false }</span>
+    if (consent.analytics) { <span class="comment">/* Load analytics */</span> }
+    if (consent.marketing) { <span class="comment">/* Load marketing scripts */</span> }
+  }` : `  onAccept: function() { <span class="comment">/* Load analytics */</span> },
+  onReject: function() { <span class="comment">/* Respect choice */</span> }`}
 };
 <span class="keyword">&lt;/script&gt;</span>
 ` : ''}<span class="keyword">&lt;script</span> <span class="property">src</span>=<span class="string">"https://unpkg.com/smallest-cookie-banner@latest/dist/cookie-banner.min.js"</span><span class="keyword">&gt;&lt;/script&gt;</span>`;
@@ -1386,6 +1601,23 @@ ${configObj.join(',\n')},
       const rejectBtn = document.getElementById('preview-reject');
       rejectBtn.style.display = config.mode === 'non-eu' ? 'none' : 'inline-block';
 
+      // Show/hide GDPR elements based on banner mode
+      const isGdpr = config.bannerMode === 'gdpr';
+      document.getElementById('preview-categories').style.display = isGdpr ? 'block' : 'none';
+      document.getElementById('preview-settings').style.display = isGdpr ? 'inline-block' : 'none';
+      document.getElementById('preview-save').style.display = 'none'; // Hidden until settings clicked
+
+      // Update button text for GDPR mode
+      if (isGdpr) {
+        document.getElementById('preview-accept').textContent = 'Accept All';
+        if (config.mode !== 'non-eu') {
+          document.getElementById('preview-reject').textContent = 'Reject All';
+        }
+      } else {
+        document.getElementById('preview-accept').textContent = config.acceptText;
+        document.getElementById('preview-reject').textContent = config.rejectText;
+      }
+
       // Update code output
       document.getElementById('code-output').innerHTML = generateOutputCode(config);
 
@@ -1396,7 +1628,18 @@ ${configObj.join(',\n')},
     // Generate bookmarklet
     function generateBookmarklet(config) {
       const fontValue = config.fontFamily === 'inherit' ? 'inherit' : `${config.fontSize}px/${config.lineHeight} ${config.fontFamily}`;
-      const forceEU = config.mode === 'eu' ? 'true' : config.mode === 'non-eu' ? 'false' : 'undefined';
+
+      // Build config object parts
+      let configParts = [
+        `msg:'${config.msg.replace(/'/g,"\\'")}'`,
+        `acceptText:'${config.acceptText.replace(/'/g,"\\'")}'`,
+        `rejectText:'${config.rejectText.replace(/'/g,"\\'")}' `
+      ];
+
+      if (config.mode === 'eu') configParts.push('forceEU:true');
+      else if (config.mode === 'non-eu') configParts.push('forceEU:false');
+
+      if (config.bannerMode === 'gdpr') configParts.push("mode:'gdpr'");
 
       const code = `(function(){
 if(document.getElementById('ckb')){document.getElementById('ckb').remove();document.getElementById('ckb-style')?.remove();}
@@ -1404,7 +1647,7 @@ var s=document.createElement('style');
 s.id='ckb-style';
 s.textContent=':root{--ckb-bg:${config.bgColor};--ckb-color:${config.textColor};--ckb-btn-bg:${config.btnBg};--ckb-btn-color:${config.btnColor};--ckb-reject-bg:${config.rejectBg};--ckb-font:${fontValue};--ckb-padding:${config.padding}px 16px;--ckb-gap:${config.gap}px;--ckb-btn-padding:${config.btnPaddingV}px ${config.btnPaddingH}px;--ckb-btn-radius:${config.btnRadius}px}';
 document.head.appendChild(s);
-window.CookieBannerConfig={msg:'${config.msg.replace(/'/g,"\\'")}',acceptText:'${config.acceptText.replace(/'/g,"\\'")}',rejectText:'${config.rejectText.replace(/'/g,"\\'")}',forceEU:${forceEU}};
+window.CookieBannerConfig={${configParts.join(',')}};
 var sc=document.createElement('script');
 sc.src='https://unpkg.com/smallest-cookie-banner@latest/dist/cookie-banner.min.js';
 document.body.appendChild(sc);
@@ -1544,6 +1787,23 @@ body {
       URL.revokeObjectURL(url);
       showToast('Config downloaded!');
     }
+
+    // Help modal functions
+    function showHelpModal() {
+      document.getElementById('help-modal').classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function hideHelpModal(event) {
+      if (event && event.target !== event.currentTarget) return;
+      document.getElementById('help-modal').classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    // Close modal on escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') hideHelpModal();
+    });
 
     // Show toast notification
     function showToast(message) {
