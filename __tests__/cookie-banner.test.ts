@@ -14,11 +14,13 @@ import {
   LegacyCookieBannerAPI,
   sanitizeCss,
   sanitizeInlineStyle,
+  sanitizeUrl,
   validateConfig,
   parseGranularConsent,
   encodeGranularConsent,
   CookieCategory,
   ConsentState,
+  ConsentRecord,
 } from '../src/cookie-banner';
 
 // Store original location for restoration
@@ -402,6 +404,49 @@ describe('smallest-cookie-banner', () => {
         expect(document.getElementById('cky')?.textContent).toBe('接受');
         expect(document.getElementById('ckn')?.textContent).toBe('拒绝');
       });
+
+      it('supports custom bannerAriaLabel', () => {
+        const banner = createCookieBanner({
+          bannerAriaLabel: 'Consentement aux cookies',
+          forceEU: true,
+        });
+        banner.show();
+        expect(document.getElementById('ckb')?.getAttribute('aria-label')).toBe('Consentement aux cookies');
+      });
+
+      it('supports custom requiredLabel in GDPR mode', () => {
+        const banner = createCookieBanner({
+          mode: 'gdpr',
+          requiredLabel: '(Obligatoire)',
+          forceEU: true,
+        });
+        banner.show();
+        const requiredSpan = document.querySelector('.cat-req');
+        expect(requiredSpan?.textContent).toBe('(Obligatoire)');
+      });
+
+      it('supports full French localization', () => {
+        const banner = createCookieBanner({
+          mode: 'gdpr',
+          msg: 'Nous utilisons des cookies pour améliorer votre expérience.',
+          acceptText: 'Tout accepter',
+          rejectText: 'Tout refuser',
+          settingsText: 'Personnaliser',
+          saveText: 'Enregistrer les préférences',
+          privacyPolicyText: 'Politique de confidentialité',
+          bannerAriaLabel: 'Consentement aux cookies',
+          requiredLabel: '(Obligatoire)',
+          privacyPolicyUrl: '/politique-confidentialite',
+          forceEU: true,
+        });
+        banner.show();
+        expect(document.getElementById('ckb')?.innerHTML).toContain('Nous utilisons des cookies');
+        expect(document.getElementById('cky')?.textContent).toBe('Tout accepter');
+        expect(document.getElementById('ckn')?.textContent).toBe('Tout refuser');
+        expect(document.getElementById('cks')?.textContent).toBe('Personnaliser');
+        expect(document.querySelector('.cat-req')?.textContent).toBe('(Obligatoire)');
+        expect(document.getElementById('ckb')?.getAttribute('aria-label')).toBe('Consentement aux cookies');
+      });
     });
 
     describe('XSS prevention', () => {
@@ -562,6 +607,32 @@ describe('smallest-cookie-banner', () => {
         // After normalization, these should be blocked
         expect(result).not.toContain('import');
       });
+
+      it('decodes CSS unicode escape sequences', () => {
+        // \75\72\6C decodes to "url"
+        const css = 'body { background: \\75\\72\\6C(https://evil.com); }';
+        const result = sanitizeCss(css);
+        // After decoding, url() should be blocked
+        expect(result).not.toContain('evil.com');
+      });
+
+      it('blocks SVG data URIs (can contain scripts)', () => {
+        const css = 'body { background: url(data:image/svg+xml,<svg onload="alert(1)"/>); }';
+        const result = sanitizeCss(css);
+        expect(result).not.toContain('svg');
+      });
+
+      it('allows safe raster image data URIs', () => {
+        const css = 'body { background: url(data:image/png;base64,abc); }';
+        const result = sanitizeCss(css);
+        expect(result).toContain('data:image/png');
+      });
+
+      it('truncates very long CSS to prevent ReDoS', () => {
+        const longCss = 'a'.repeat(60000);
+        const result = sanitizeCss(longCss);
+        expect(result.length).toBeLessThanOrEqual(50000);
+      });
     });
 
     describe('sanitizeInlineStyle()', () => {
@@ -583,6 +654,60 @@ describe('smallest-cookie-banner', () => {
         const style = 'width: expression(alert(document.cookie))';
         const result = sanitizeInlineStyle(style);
         expect(result).not.toContain('expression');
+      });
+    });
+
+    describe('sanitizeUrl()', () => {
+      it('allows http URLs', () => {
+        expect(sanitizeUrl('http://example.com')).toBe('http://example.com');
+      });
+
+      it('allows https URLs', () => {
+        expect(sanitizeUrl('https://example.com/privacy')).toBe('https://example.com/privacy');
+      });
+
+      it('allows relative URLs starting with /', () => {
+        expect(sanitizeUrl('/privacy-policy')).toBe('/privacy-policy');
+      });
+
+      it('allows relative URLs starting with ./', () => {
+        expect(sanitizeUrl('./privacy.html')).toBe('./privacy.html');
+      });
+
+      it('allows relative URLs starting with ../', () => {
+        expect(sanitizeUrl('../privacy.html')).toBe('../privacy.html');
+      });
+
+      it('allows anchor links', () => {
+        expect(sanitizeUrl('#privacy-section')).toBe('#privacy-section');
+      });
+
+      it('blocks javascript: URLs (XSS attack)', () => {
+        expect(sanitizeUrl('javascript:alert(1)')).toBe('');
+        expect(sanitizeUrl('JAVASCRIPT:alert(1)')).toBe('');
+        expect(sanitizeUrl('  javascript:alert(document.cookie)')).toBe('');
+      });
+
+      it('blocks data: URLs', () => {
+        expect(sanitizeUrl('data:text/html,<script>alert(1)</script>')).toBe('');
+      });
+
+      it('blocks vbscript: URLs', () => {
+        expect(sanitizeUrl('vbscript:msgbox(1)')).toBe('');
+      });
+
+      it('blocks file: URLs', () => {
+        expect(sanitizeUrl('file:///etc/passwd')).toBe('');
+      });
+
+      it('returns empty string for empty input', () => {
+        expect(sanitizeUrl('')).toBe('');
+        expect(sanitizeUrl(null as unknown as string)).toBe('');
+        expect(sanitizeUrl(undefined as unknown as string)).toBe('');
+      });
+
+      it('trims whitespace', () => {
+        expect(sanitizeUrl('  https://example.com  ')).toBe('https://example.com');
       });
     });
 
@@ -1293,6 +1418,702 @@ describe('smallest-cookie-banner', () => {
         expect(analyticsCheckbox.checked).toBe(true);
         expect(marketingCheckbox.checked).toBe(false);
       });
+    });
+  });
+
+  // ============================================================================
+  // CONSENT RECORD & AUDIT TRAIL TESTS
+  // ============================================================================
+  describe('Consent Record & Audit Trail', () => {
+    describe('getConsentRecord()', () => {
+      it('returns null before consent is given', () => {
+        const banner = createCookieBanner({ mode: 'gdpr', forceEU: true });
+        expect(banner.getConsentRecord()).toBeNull();
+      });
+
+      it('returns consent record with timestamp after accepting', () => {
+        const banner = createCookieBanner({ mode: 'gdpr', forceEU: true });
+        banner.show();
+        banner.accept();
+
+        const record = banner.getConsentRecord();
+        expect(record).not.toBeNull();
+        expect(record?.timestamp).toBeDefined();
+        expect(new Date(record!.timestamp).getTime()).not.toBeNaN();
+      });
+
+      it('includes policy version when provided', () => {
+        const banner = createCookieBanner({
+          mode: 'gdpr',
+          forceEU: true,
+          policyVersion: '2.0',
+        });
+        banner.show();
+        banner.accept();
+
+        const record = banner.getConsentRecord();
+        expect(record?.policyVersion).toBe('2.0');
+      });
+
+      it('records method as "banner" for initial consent', () => {
+        const banner = createCookieBanner({ mode: 'gdpr', forceEU: true });
+        banner.show();
+        banner.accept();
+
+        const record = banner.getConsentRecord();
+        expect(record?.method).toBe('banner');
+      });
+
+      it('includes consent state in record', () => {
+        const banner = createCookieBanner({ mode: 'gdpr', forceEU: true });
+        banner.show();
+        banner.accept();
+
+        const record = banner.getConsentRecord();
+        expect(record?.state.essential).toBe(true);
+        expect(record?.state.analytics).toBe(true);
+      });
+    });
+
+    describe('onConsent callback receives record', () => {
+      it('passes consent record to onConsent callback', () => {
+        const onConsent = jest.fn();
+        const banner = createCookieBanner({
+          mode: 'gdpr',
+          forceEU: true,
+          policyVersion: '1.5',
+          onConsent,
+        });
+        banner.show();
+        banner.accept();
+
+        expect(onConsent).toHaveBeenCalledTimes(1);
+        const record = onConsent.mock.calls[0][1] as ConsentRecord;
+        expect(record.timestamp).toBeDefined();
+        expect(record.policyVersion).toBe('1.5');
+        expect(record.method).toBe('banner');
+      });
+    });
+  });
+
+  // ============================================================================
+  // CONSENT WIDGET TESTS
+  // ============================================================================
+  describe('Consent Widget', () => {
+    describe('widget configuration', () => {
+      it('does not show widget by default', () => {
+        const banner = createCookieBanner({ mode: 'gdpr', forceEU: true });
+        banner.show();
+        banner.accept();
+
+        const widget = document.querySelector('[id^="ckb-widget"]');
+        expect(widget).toBeNull();
+      });
+
+      it('shows widget after consent when enabled', () => {
+        const banner = createCookieBanner({
+          mode: 'gdpr',
+          forceEU: true,
+          widget: { enabled: true },
+        });
+        banner.show();
+        banner.accept();
+
+        const widget = document.querySelector('[id^="ckb-widget"]');
+        expect(widget).not.toBeNull();
+      });
+
+      it('positions widget on bottom-left by default', () => {
+        const banner = createCookieBanner({
+          mode: 'gdpr',
+          forceEU: true,
+          widget: { enabled: true },
+        });
+        banner.show();
+        banner.accept();
+
+        const widget = document.querySelector('[id^="ckb-widget"]') as HTMLElement;
+        // Browser may normalize to "left: 16px" with space
+        expect(widget?.style.cssText).toMatch(/left:\s*16px/);
+      });
+
+      it('positions widget on bottom-right when configured', () => {
+        const banner = createCookieBanner({
+          mode: 'gdpr',
+          forceEU: true,
+          widget: { enabled: true, position: 'bottom-right' },
+        });
+        banner.show();
+        banner.accept();
+
+        const widget = document.querySelector('[id^="ckb-widget"]') as HTMLElement;
+        // Browser may normalize to "right: 16px" with space
+        expect(widget?.style.cssText).toMatch(/right:\s*16px/);
+      });
+
+      it('uses custom widget text', () => {
+        const banner = createCookieBanner({
+          mode: 'gdpr',
+          forceEU: true,
+          widget: { enabled: true, text: '⚙️' },
+        });
+        banner.show();
+        banner.accept();
+
+        const widget = document.querySelector('[id^="ckb-widget"]');
+        expect(widget?.textContent).toBe('⚙️');
+      });
+
+      it('uses custom aria-label', () => {
+        const banner = createCookieBanner({
+          mode: 'gdpr',
+          forceEU: true,
+          widget: { enabled: true, ariaLabel: 'Cookie Settings' },
+        });
+        banner.show();
+        banner.accept();
+
+        const widget = document.querySelector('[id^="ckb-widget"]');
+        expect(widget?.getAttribute('aria-label')).toBe('Cookie Settings');
+      });
+    });
+
+    describe('showWidget() / hideWidget()', () => {
+      it('showWidget creates widget programmatically', () => {
+        const banner = createCookieBanner({ mode: 'gdpr', forceEU: true });
+        banner.show();
+        banner.accept();
+
+        expect(document.querySelector('[id^="ckb-widget"]')).toBeNull();
+        banner.showWidget();
+        expect(document.querySelector('[id^="ckb-widget"]')).not.toBeNull();
+      });
+
+      it('hideWidget removes widget', () => {
+        const banner = createCookieBanner({
+          mode: 'gdpr',
+          forceEU: true,
+          widget: { enabled: true },
+        });
+        banner.show();
+        banner.accept();
+
+        expect(document.querySelector('[id^="ckb-widget"]')).not.toBeNull();
+        banner.hideWidget();
+        expect(document.querySelector('[id^="ckb-widget"]')).toBeNull();
+      });
+
+      it('does not create duplicate widgets', () => {
+        const banner = createCookieBanner({ mode: 'gdpr', forceEU: true });
+        banner.show();
+        banner.accept();
+
+        banner.showWidget();
+        banner.showWidget();
+        banner.showWidget();
+
+        const widgets = document.querySelectorAll('[id^="ckb-widget"]');
+        expect(widgets.length).toBe(1);
+      });
+    });
+
+    describe('widget interaction', () => {
+      it('clicking widget opens manage dialog', () => {
+        const banner = createCookieBanner({
+          mode: 'gdpr',
+          forceEU: true,
+          widget: { enabled: true },
+        });
+        banner.show();
+        banner.accept();
+
+        expect(document.getElementById('ckb')).toBeNull();
+
+        const widget = document.querySelector('[id^="ckb-widget"]') as HTMLButtonElement;
+        widget?.click();
+
+        expect(document.getElementById('ckb')).not.toBeNull();
+        expect(document.getElementById('ckb')?.classList.contains('expanded')).toBe(true);
+      });
+
+      it('records method as "widget" when consent changed via widget', () => {
+        const onConsent = jest.fn();
+        const banner = createCookieBanner({
+          mode: 'gdpr',
+          forceEU: true,
+          widget: { enabled: true },
+          onConsent,
+        });
+        banner.show();
+        banner.accept();
+
+        // Click widget to reopen
+        const widget = document.querySelector('[id^="ckb-widget"]') as HTMLButtonElement;
+        widget?.click();
+
+        // Save new preferences
+        document.getElementById('cksv')?.click();
+
+        // Second call should have method 'widget'
+        expect(onConsent).toHaveBeenCalledTimes(2);
+        const record = onConsent.mock.calls[1][1] as ConsentRecord;
+        expect(record.method).toBe('widget');
+      });
+    });
+
+    describe('widget with existing consent', () => {
+      it('shows widget on init when consent exists and widget enabled', () => {
+        document.cookie = 'ck=essential:1,analytics:1;path=/';
+        createCookieBanner({
+          mode: 'gdpr',
+          forceEU: true,
+          widget: { enabled: true },
+        });
+
+        // Widget should be shown since consent already exists
+        const widget = document.querySelector('[id^="ckb-widget"]');
+        expect(widget).not.toBeNull();
+      });
+    });
+  });
+
+  // ============================================================================
+  // PRIVACY POLICY URL SANITIZATION TESTS
+  // ============================================================================
+  describe('Privacy Policy URL Sanitization', () => {
+    it('sanitizes javascript: URLs in privacyPolicyUrl', () => {
+      const banner = createCookieBanner({
+        mode: 'gdpr',
+        forceEU: true,
+        privacyPolicyUrl: 'javascript:alert(document.cookie)',
+      });
+      banner.show();
+
+      const link = document.querySelector('#ckb a');
+      // Link should not be rendered since URL is blocked
+      expect(link).toBeNull();
+    });
+
+    it('allows valid https URLs in privacyPolicyUrl', () => {
+      const banner = createCookieBanner({
+        mode: 'gdpr',
+        forceEU: true,
+        privacyPolicyUrl: 'https://example.com/privacy',
+      });
+      banner.show();
+
+      const link = document.querySelector('#ckb a[href="https://example.com/privacy"]');
+      expect(link).not.toBeNull();
+    });
+
+    it('allows relative URLs in privacyPolicyUrl', () => {
+      const banner = createCookieBanner({
+        mode: 'gdpr',
+        forceEU: true,
+        privacyPolicyUrl: '/privacy-policy',
+      });
+      banner.show();
+
+      const link = document.querySelector('#ckb a[href="/privacy-policy"]');
+      expect(link).not.toBeNull();
+    });
+  });
+
+  // ============================================================================
+  // COMPREHENSIVE CONFIG OPTIONS TESTS - MINIMAL MODE
+  // ============================================================================
+  describe('Minimal Mode Config Options', () => {
+    it('uses default button text in minimal mode', () => {
+      const banner = createCookieBanner({ forceEU: true });
+      banner.show();
+      // Minimal mode defaults: "OK" for accept, "✗" for reject
+      expect(document.getElementById('cky')?.textContent).toBe('OK');
+      expect(document.getElementById('ckn')?.textContent).toBe('✗');
+    });
+
+    it('supports custom acceptText in minimal mode', () => {
+      const banner = createCookieBanner({
+        acceptText: 'Got it',
+        forceEU: true,
+      });
+      banner.show();
+      expect(document.getElementById('cky')?.textContent).toBe('Got it');
+    });
+
+    it('supports custom rejectText in minimal mode', () => {
+      const banner = createCookieBanner({
+        rejectText: 'No thanks',
+        forceEU: true,
+      });
+      banner.show();
+      expect(document.getElementById('ckn')?.textContent).toBe('No thanks');
+    });
+
+    it('supports privacyPolicyUrl in minimal mode', () => {
+      const banner = createCookieBanner({
+        privacyPolicyUrl: 'https://example.com/privacy',
+        forceEU: true,
+      });
+      banner.show();
+      const link = document.querySelector('#ckb a[href="https://example.com/privacy"]');
+      expect(link).not.toBeNull();
+    });
+
+    it('supports privacyPolicyText in minimal mode', () => {
+      const banner = createCookieBanner({
+        privacyPolicyUrl: '/privacy',
+        privacyPolicyText: 'Read our policy',
+        forceEU: true,
+      });
+      banner.show();
+      const link = document.querySelector('#ckb a');
+      expect(link?.textContent).toBe('Read our policy');
+    });
+
+    it('supports bannerAriaLabel in minimal mode', () => {
+      const banner = createCookieBanner({
+        bannerAriaLabel: 'Cookie Notice',
+        forceEU: true,
+      });
+      banner.show();
+      expect(document.getElementById('ckb')?.getAttribute('aria-label')).toBe('Cookie Notice');
+    });
+
+    it('does not show settings/save buttons in minimal mode', () => {
+      const banner = createCookieBanner({ forceEU: true });
+      banner.show();
+      expect(document.getElementById('cks')).toBeNull();
+      expect(document.getElementById('cksv')).toBeNull();
+    });
+
+    it('does not show categories panel in minimal mode', () => {
+      const banner = createCookieBanner({ forceEU: true });
+      banner.show();
+      expect(document.getElementById('ckb-cats')).toBeNull();
+    });
+
+    it('stores consent state in minimal mode', () => {
+      const banner = createCookieBanner({
+        forceEU: true,
+      });
+      banner.show();
+      banner.accept();
+      // In minimal mode, status is set but no granular consent state
+      expect(banner.status).toBe(true);
+      // getConsentRecord returns null in minimal mode (no categories)
+      expect(banner.getConsentRecord()).toBeNull();
+    });
+
+    it('supports widget in minimal mode', () => {
+      const banner = createCookieBanner({
+        forceEU: true,
+        widget: { enabled: true },
+      });
+      banner.show();
+      banner.accept();
+      const widget = document.querySelector('[id^="ckb-widget"]');
+      expect(widget).not.toBeNull();
+    });
+
+    it('supports full minimal mode localization', () => {
+      const banner = createCookieBanner({
+        msg: 'Utilizamos cookies.',
+        acceptText: 'Aceptar',
+        rejectText: 'Rechazar',
+        privacyPolicyUrl: '/privacidad',
+        privacyPolicyText: 'Política de privacidad',
+        bannerAriaLabel: 'Aviso de cookies',
+        forceEU: true,
+      });
+      banner.show();
+      expect(document.getElementById('ckb')?.innerHTML).toContain('Utilizamos cookies');
+      expect(document.getElementById('cky')?.textContent).toBe('Aceptar');
+      expect(document.getElementById('ckn')?.textContent).toBe('Rechazar');
+      expect(document.querySelector('#ckb a')?.textContent).toBe('Política de privacidad');
+      expect(document.getElementById('ckb')?.getAttribute('aria-label')).toBe('Aviso de cookies');
+    });
+  });
+
+  // ============================================================================
+  // COMPREHENSIVE CONFIG OPTIONS TESTS - GDPR MODE
+  // ============================================================================
+  describe('GDPR Mode Config Options', () => {
+    it('uses default button text in GDPR mode', () => {
+      const banner = createCookieBanner({ mode: 'gdpr', forceEU: true });
+      banner.show();
+      expect(document.getElementById('cky')?.textContent).toBe('Accept All');
+      expect(document.getElementById('ckn')?.textContent).toBe('Reject All');
+      expect(document.getElementById('cks')?.textContent).toBe('Customize');
+    });
+
+    it('supports custom acceptText in GDPR mode', () => {
+      const banner = createCookieBanner({
+        mode: 'gdpr',
+        acceptText: 'Allow All',
+        forceEU: true,
+      });
+      banner.show();
+      expect(document.getElementById('cky')?.textContent).toBe('Allow All');
+    });
+
+    it('supports custom rejectText in GDPR mode', () => {
+      const banner = createCookieBanner({
+        mode: 'gdpr',
+        rejectText: 'Deny All',
+        forceEU: true,
+      });
+      banner.show();
+      expect(document.getElementById('ckn')?.textContent).toBe('Deny All');
+    });
+
+    it('supports custom settingsText in GDPR mode', () => {
+      const banner = createCookieBanner({
+        mode: 'gdpr',
+        settingsText: 'Manage Preferences',
+        forceEU: true,
+      });
+      banner.show();
+      expect(document.getElementById('cks')?.textContent).toBe('Manage Preferences');
+    });
+
+    it('supports custom saveText in GDPR mode', () => {
+      const banner = createCookieBanner({
+        mode: 'gdpr',
+        saveText: 'Confirm Selection',
+        forceEU: true,
+      });
+      banner.show();
+      // Expand to see save button
+      document.getElementById('cks')?.click();
+      expect(document.getElementById('cksv')?.textContent).toBe('Confirm Selection');
+    });
+
+    it('supports privacyPolicyUrl in GDPR mode', () => {
+      const banner = createCookieBanner({
+        mode: 'gdpr',
+        privacyPolicyUrl: 'https://example.com/privacy',
+        forceEU: true,
+      });
+      banner.show();
+      const link = document.querySelector('#ckb a[href="https://example.com/privacy"]');
+      expect(link).not.toBeNull();
+    });
+
+    it('supports privacyPolicyText in GDPR mode', () => {
+      const banner = createCookieBanner({
+        mode: 'gdpr',
+        privacyPolicyUrl: '/privacy',
+        privacyPolicyText: 'View Privacy Policy',
+        forceEU: true,
+      });
+      banner.show();
+      const link = document.querySelector('#ckb a');
+      expect(link?.textContent).toBe('View Privacy Policy');
+    });
+
+    it('supports bannerAriaLabel in GDPR mode', () => {
+      const banner = createCookieBanner({
+        mode: 'gdpr',
+        bannerAriaLabel: 'Cookie Preferences',
+        forceEU: true,
+      });
+      banner.show();
+      expect(document.getElementById('ckb')?.getAttribute('aria-label')).toBe('Cookie Preferences');
+    });
+
+    it('supports requiredLabel in GDPR mode', () => {
+      const banner = createCookieBanner({
+        mode: 'gdpr',
+        requiredLabel: '(Mandatory)',
+        forceEU: true,
+      });
+      banner.show();
+      expect(document.querySelector('.cat-req')?.textContent).toBe('(Mandatory)');
+    });
+
+    it('shows categories panel in GDPR mode', () => {
+      const banner = createCookieBanner({ mode: 'gdpr', forceEU: true });
+      banner.show();
+      expect(document.getElementById('ckb-cats')).not.toBeNull();
+    });
+
+    it('shows settings and save buttons in GDPR mode', () => {
+      const banner = createCookieBanner({ mode: 'gdpr', forceEU: true });
+      banner.show();
+      expect(document.getElementById('cks')).not.toBeNull();
+      expect(document.getElementById('cksv')).not.toBeNull();
+    });
+
+    it('supports full GDPR mode localization (German)', () => {
+      const banner = createCookieBanner({
+        mode: 'gdpr',
+        msg: 'Wir verwenden Cookies.',
+        acceptText: 'Alle akzeptieren',
+        rejectText: 'Alle ablehnen',
+        settingsText: 'Anpassen',
+        saveText: 'Einstellungen speichern',
+        privacyPolicyUrl: '/datenschutz',
+        privacyPolicyText: 'Datenschutzerklärung',
+        bannerAriaLabel: 'Cookie-Einwilligung',
+        requiredLabel: '(Erforderlich)',
+        categories: [
+          { id: 'essential', name: 'Notwendig', description: 'Für die Funktion erforderlich', required: true },
+          { id: 'analytics', name: 'Analyse', description: 'Hilft uns die Nutzung zu verstehen' },
+        ],
+        forceEU: true,
+      });
+      banner.show();
+      expect(document.getElementById('ckb')?.innerHTML).toContain('Wir verwenden Cookies');
+      expect(document.getElementById('cky')?.textContent).toBe('Alle akzeptieren');
+      expect(document.getElementById('ckn')?.textContent).toBe('Alle ablehnen');
+      expect(document.getElementById('cks')?.textContent).toBe('Anpassen');
+      expect(document.querySelector('#ckb a')?.textContent).toBe('Datenschutzerklärung');
+      expect(document.getElementById('ckb')?.getAttribute('aria-label')).toBe('Cookie-Einwilligung');
+      expect(document.querySelector('.cat-req')?.textContent).toBe('(Erforderlich)');
+      expect(document.querySelector('.cat-name')?.textContent).toContain('Notwendig');
+    });
+  });
+
+  // ============================================================================
+  // RTL (RIGHT-TO-LEFT) SUPPORT TESTS
+  // ============================================================================
+  describe('RTL Support', () => {
+    it('sets dir="rtl" when configured', () => {
+      const banner = createCookieBanner({
+        dir: 'rtl',
+        forceEU: true,
+      });
+      banner.show();
+      expect(document.getElementById('ckb')?.getAttribute('dir')).toBe('rtl');
+    });
+
+    it('sets dir="ltr" when configured', () => {
+      const banner = createCookieBanner({
+        dir: 'ltr',
+        forceEU: true,
+      });
+      banner.show();
+      expect(document.getElementById('ckb')?.getAttribute('dir')).toBe('ltr');
+    });
+
+    it('sets dir="auto" when configured', () => {
+      const banner = createCookieBanner({
+        dir: 'auto',
+        forceEU: true,
+      });
+      banner.show();
+      expect(document.getElementById('ckb')?.getAttribute('dir')).toBe('auto');
+    });
+
+    it('does not set dir attribute when not configured', () => {
+      const banner = createCookieBanner({ forceEU: true });
+      banner.show();
+      expect(document.getElementById('ckb')?.hasAttribute('dir')).toBe(false);
+    });
+
+    it('supports full Arabic localization with RTL', () => {
+      const banner = createCookieBanner({
+        mode: 'gdpr',
+        dir: 'rtl',
+        msg: 'نستخدم ملفات تعريف الارتباط.',
+        acceptText: 'قبول الكل',
+        rejectText: 'رفض الكل',
+        settingsText: 'تخصيص',
+        saveText: 'حفظ التفضيلات',
+        privacyPolicyText: 'سياسة الخصوصية',
+        bannerAriaLabel: 'موافقة ملفات تعريف الارتباط',
+        requiredLabel: '(مطلوب)',
+        privacyPolicyUrl: '/privacy',
+        forceEU: true,
+      });
+      banner.show();
+      expect(document.getElementById('ckb')?.getAttribute('dir')).toBe('rtl');
+      expect(document.getElementById('ckb')?.innerHTML).toContain('نستخدم ملفات تعريف الارتباط');
+      expect(document.getElementById('cky')?.textContent).toBe('قبول الكل');
+      expect(document.getElementById('ckn')?.textContent).toBe('رفض الكل');
+    });
+
+    it('supports Hebrew localization with RTL', () => {
+      const banner = createCookieBanner({
+        dir: 'rtl',
+        msg: 'אנחנו משתמשים בעוגיות.',
+        acceptText: 'קבל',
+        rejectText: 'דחה',
+        forceEU: true,
+      });
+      banner.show();
+      expect(document.getElementById('ckb')?.getAttribute('dir')).toBe('rtl');
+      expect(document.getElementById('ckb')?.innerHTML).toContain('אנחנו משתמשים בעוגיות');
+    });
+  });
+
+  // ============================================================================
+  // MODE SWITCHING TESTS
+  // ============================================================================
+  describe('Mode Switching', () => {
+    it('minimal mode with no categories shows simple buttons', () => {
+      const banner = createCookieBanner({
+        // mode defaults to minimal, no categories
+        forceEU: true,
+      });
+      banner.show();
+      // No categories panel, no settings button
+      expect(document.getElementById('ckb-cats')).toBeNull();
+      expect(document.getElementById('cks')).toBeNull();
+      // Simple OK/X buttons
+      expect(document.getElementById('cky')?.textContent).toBe('OK');
+    });
+
+    it('passing categories shows categories even without mode:gdpr', () => {
+      // Categories show regardless of mode when explicitly provided
+      const banner = createCookieBanner({
+        categories: [
+          { id: 'essential', name: 'Essential', required: true },
+          { id: 'analytics', name: 'Analytics' },
+        ],
+        forceEU: true,
+      });
+      banner.show();
+      // Categories panel shows because categories were provided
+      expect(document.getElementById('ckb-cats')).not.toBeNull();
+      const checkboxes = document.querySelectorAll('input[name="ckb-cat"]');
+      expect(checkboxes.length).toBe(2);
+    });
+
+    it('gdpr mode shows default categories when none provided', () => {
+      const banner = createCookieBanner({
+        mode: 'gdpr',
+        forceEU: true,
+      });
+      banner.show();
+      const checkboxes = document.querySelectorAll('input[name="ckb-cat"]');
+      expect(checkboxes.length).toBe(4); // DEFAULT_CATEGORIES has 4 items
+    });
+
+    it('gdpr mode uses custom categories when provided', () => {
+      const banner = createCookieBanner({
+        mode: 'gdpr',
+        categories: [
+          { id: 'required', name: 'Required', required: true },
+          { id: 'optional', name: 'Optional' },
+        ],
+        forceEU: true,
+      });
+      banner.show();
+      const checkboxes = document.querySelectorAll('input[name="ckb-cat"]');
+      expect(checkboxes.length).toBe(2);
+    });
+
+    it('mode:gdpr without forceEU still shows categories', () => {
+      // GDPR mode enables categories even for non-EU
+      const banner = createCookieBanner({
+        mode: 'gdpr',
+        forceEU: false,
+      });
+      banner.show();
+      expect(document.getElementById('ckb-cats')).not.toBeNull();
+      // But reject button hidden for non-EU
+      expect(document.getElementById('ckn')).toBeNull();
     });
   });
 });
