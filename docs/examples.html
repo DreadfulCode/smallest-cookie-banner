@@ -3,845 +3,380 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cookie Banner Examples | smallest-cookie-banner</title>
-  <meta name="description" content="20 example styles for the smallest cookie banner - 10 minimal and 10 GDPR configurations with various colors, positions, and designs.">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍪</text></svg>">
+  <title>smallest-cookie-banner Demo</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --primary: #2563eb;
-      --bg: #f5f5f5;
-      --text: #333;
-      --text-muted: #666;
-    }
-
+    * { box-sizing: border-box; }
     body {
       font-family: system-ui, -apple-system, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.6;
-    }
-
-    /* Header */
-    .header {
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-      padding: 40px 20px;
-      text-align: center;
-      color: #fff;
-    }
-
-    .header h1 {
-      font-size: 32px;
-      margin-bottom: 8px;
-    }
-
-    .header p {
-      opacity: 0.8;
-      max-width: 600px;
+      max-width: 800px;
       margin: 0 auto;
-    }
-
-    .header-links {
-      margin-top: 20px;
-      display: flex;
-      gap: 16px;
-      justify-content: center;
-    }
-
-    .header-links a {
-      color: #fff;
-      text-decoration: none;
-      padding: 8px 20px;
-      border-radius: 6px;
-      font-size: 14px;
-      transition: all 0.2s;
-    }
-
-    .header-links a.primary {
-      background: var(--primary);
-    }
-
-    .header-links a.secondary {
-      border: 1px solid rgba(255,255,255,0.3);
-    }
-
-    .header-links a:hover {
-      transform: translateY(-2px);
-    }
-
-    /* Section */
-    .section {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 40px 20px;
-    }
-
-    .section-title {
-      font-size: 24px;
-      margin-bottom: 8px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .section-title .badge {
-      font-size: 12px;
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-weight: 500;
-    }
-
-    .section-title .badge.minimal {
-      background: #e0f2fe;
-      color: #0369a1;
-    }
-
-    .section-title .badge.gdpr {
-      background: #dcfce7;
-      color: #166534;
-    }
-
-    .section-desc {
-      color: var(--text-muted);
-      margin-bottom: 32px;
-    }
-
-    /* Examples Grid */
-    .examples-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-      gap: 24px;
-    }
-
-    @media (max-width: 500px) {
-      .examples-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    /* Example Card */
-    .example-card {
-      background: #fff;
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    }
-
-    .example-header {
-      padding: 16px 20px;
-      border-bottom: 1px solid #eee;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .example-header h3 {
-      font-size: 16px;
-      font-weight: 600;
-    }
-
-    .example-header .tags {
-      display: flex;
-      gap: 6px;
-    }
-
-    .example-header .tag {
-      font-size: 11px;
-      padding: 2px 8px;
-      border-radius: 4px;
-      background: #f0f0f0;
-      color: #666;
-    }
-
-    .example-preview {
       padding: 20px;
-      min-height: 180px;
-      display: flex;
-      align-items: flex-end;
-      background: #fafafa;
-      position: relative;
+      line-height: 1.6;
+      padding-bottom: 100px;
     }
-
-    .example-preview.center {
-      align-items: center;
-      justify-content: center;
+    h1 { margin-top: 0; }
+    code {
+      background: #f1f5f9;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.9em;
     }
-
-    .example-preview.top {
-      align-items: flex-start;
+    pre {
+      background: #f1f5f9;
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
     }
-
-    /* Banner Styles */
-    .banner {
-      width: 100%;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 12px 16px;
-      font-size: 14px;
-      flex-wrap: wrap;
+    .status {
+      padding: 16px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      margin: 20px 0;
     }
-
-    .banner p {
-      flex: 1;
-      min-width: 150px;
-      margin: 0;
-    }
-
-    .banner .buttons {
+    .controls {
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
-    }
-
-    .banner button {
-      padding: 8px 16px;
-      border: none;
-      border-radius: 4px;
-      font-size: 14px;
-      cursor: pointer;
-      font-family: inherit;
-    }
-
-    .banner .accept-btn {
-      font-weight: 500;
-    }
-
-    .banner .reject-btn {
-      background: transparent;
-      border: 1px solid currentColor;
-    }
-
-    .banner .settings-btn {
-      background: transparent;
-      border: 1px solid currentColor;
-    }
-
-    /* Toast style */
-    .banner.toast {
-      width: 320px;
-      flex-direction: column;
-      text-align: left;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-    }
-
-    .banner.toast p {
-      min-width: auto;
-      margin-bottom: 12px;
-    }
-
-    .banner.toast .buttons {
-      width: 100%;
-    }
-
-    .banner.toast button {
-      flex: 1;
-    }
-
-    /* Modal style */
-    .banner.modal {
-      width: 380px;
-      flex-direction: column;
-      text-align: center;
-      box-shadow: 0 4px 40px rgba(0,0,0,0.2);
-    }
-
-    .banner.modal p {
-      min-width: auto;
-      margin-bottom: 16px;
-    }
-
-    /* GDPR Categories */
-    .gdpr-categories {
-      width: 100%;
-      padding: 12px 0;
-      border-top: 1px solid rgba(255,255,255,0.2);
-      margin-top: 8px;
-    }
-
-    .gdpr-category {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      padding: 6px 0;
-    }
-
-    .gdpr-category input {
-      width: 18px;
-      height: 18px;
-      margin-top: 2px;
-    }
-
-    .gdpr-category .label {
-      font-weight: 600;
-      font-size: 13px;
-    }
-
-    .gdpr-category .desc {
-      font-size: 11px;
-      opacity: 0.7;
-    }
-
-    .gdpr-category .required {
-      opacity: 0.5;
-      font-size: 10px;
-    }
-
-    /* Code button */
-    .example-footer {
-      padding: 12px 20px;
-      border-top: 1px solid #eee;
-      display: flex;
-      justify-content: flex-end;
-    }
-
-    .code-btn {
-      padding: 6px 12px;
-      background: #f0f0f0;
-      border: none;
-      border-radius: 4px;
-      font-size: 12px;
-      cursor: pointer;
-      color: #666;
-    }
-
-    .code-btn:hover {
-      background: #e0e0e0;
-    }
-
-    /* Divider */
-    .divider {
-      border: 0;
-      height: 1px;
-      background: #e0e0e0;
       margin: 20px 0;
     }
-
-    /* Footer */
-    .footer {
-      text-align: center;
-      padding: 40px 20px;
-      color: var(--text-muted);
+    .controls button {
+      padding: 10px 20px;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      background: #fff;
+      cursor: pointer;
       font-size: 14px;
     }
-
-    .footer a {
-      color: var(--primary);
-      text-decoration: none;
+    .controls button:hover {
+      background: #f8fafc;
+    }
+    .theme-switcher {
+      margin: 20px 0;
+      padding: 20px;
+      background: #f8fafc;
+      border-radius: 8px;
+    }
+    .theme-switcher label {
+      display: block;
+      margin: 8px 0;
+      cursor: pointer;
+    }
+    .scroll-helper {
+      height: 150vh;
+      background: linear-gradient(#fff, #f0f0f0);
+      margin-top: 40px;
+      padding: 20px;
+      border-radius: 8px;
+    }
+    .config-panel {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+    .config-panel h3 { margin-top: 0; }
+    .config-row {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin: 12px 0;
+    }
+    .config-row label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+    .config-row input[type="number"] {
+      width: 80px;
+      padding: 4px 8px;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+    }
+    #countdown {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: #1e293b;
+      color: #fff;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 14px;
+      z-index: 99999;
+      display: none;
     }
   </style>
 </head>
 <body>
-  <header class="header">
-    <h1>Cookie Banner Examples</h1>
-    <p>20 ready-to-use styles showcasing the flexibility of smallest-cookie-banner. Click any example to copy its configuration.</p>
-    <div class="header-links">
-      <a href="index.html" class="primary">Open Configurator</a>
-      <a href="https://github.com/DreadfulCode/smallest-cookie-banner" class="secondary">GitHub</a>
+  <h1>smallest-cookie-banner</h1>
+  <p>The smallest legally compliant cookie consent banner. ~1.4KB gzipped.</p>
+
+  <div class="status">
+    <strong>Current consent status:</strong>
+    <span id="consent-value">checking...</span>
+  </div>
+
+  <div id="countdown"></div>
+
+  <div class="config-panel">
+    <h3>Configuration</h3>
+    <div class="config-row">
+      <strong>Mode:</strong>
+      <label><input type="radio" name="mode" value="minimal" checked> Minimal</label>
+      <label><input type="radio" name="mode" value="gdpr"> GDPR (categories)</label>
     </div>
-  </header>
-
-  <!-- Minimal Examples -->
-  <section class="section">
-    <h2 class="section-title">
-      Minimal Mode
-      <span class="badge minimal">10 Examples</span>
-    </h2>
-    <p class="section-desc">Simple accept/reject banners - clean, fast, and effective for most use cases.</p>
-
-    <div class="examples-grid">
-      <!-- 1. Classic Dark -->
-      <div class="example-card" data-config='{"mode":"minimal","bgColor":"#222222","textColor":"#ffffff","btnBg":"#ffffff","btnColor":"#222222"}'>
-        <div class="example-header">
-          <h3>Classic Dark</h3>
-          <div class="tags"><span class="tag">Bottom</span><span class="tag">Dark</span></div>
-        </div>
-        <div class="example-preview">
-          <div class="banner" style="background:#222;color:#fff;border-radius:0;">
-            <p>We use cookies to enhance your experience.</p>
-            <div class="buttons">
-              <button class="reject-btn" style="color:#fff;">Decline</button>
-              <button class="accept-btn" style="background:#fff;color:#222;">Accept</button>
-            </div>
-          </div>
-        </div>
-        <div class="example-footer">
-          <button class="code-btn" onclick="copyConfig(this)">Copy Config</button>
-        </div>
-      </div>
-
-      <!-- 2. Clean White -->
-      <div class="example-card" data-config='{"mode":"minimal","bgColor":"#ffffff","textColor":"#333333","btnBg":"#2563eb","btnColor":"#ffffff","borderRadius":8}'>
-        <div class="example-header">
-          <h3>Clean White</h3>
-          <div class="tags"><span class="tag">Bottom</span><span class="tag">Light</span></div>
-        </div>
-        <div class="example-preview">
-          <div class="banner" style="background:#fff;color:#333;border-radius:0;box-shadow:0 -2px 10px rgba(0,0,0,0.1);">
-            <p>We use cookies to enhance your experience.</p>
-            <div class="buttons">
-              <button class="reject-btn" style="color:#333;">Decline</button>
-              <button class="accept-btn" style="background:#2563eb;color:#fff;">Accept</button>
-            </div>
-          </div>
-        </div>
-        <div class="example-footer">
-          <button class="code-btn" onclick="copyConfig(this)">Copy Config</button>
-        </div>
-      </div>
-
-      <!-- 3. Purple Gradient -->
-      <div class="example-card" data-config='{"mode":"minimal","bgColor":"#667eea","textColor":"#ffffff","btnBg":"#ffffff","btnColor":"#667eea"}'>
-        <div class="example-header">
-          <h3>Purple Gradient</h3>
-          <div class="tags"><span class="tag">Bottom</span><span class="tag">Gradient</span></div>
-        </div>
-        <div class="example-preview">
-          <div class="banner" style="background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border-radius:0;">
-            <p>We use cookies to enhance your experience.</p>
-            <div class="buttons">
-              <button class="reject-btn" style="color:#fff;">Decline</button>
-              <button class="accept-btn" style="background:#fff;color:#667eea;">Accept</button>
-            </div>
-          </div>
-        </div>
-        <div class="example-footer">
-          <button class="code-btn" onclick="copyConfig(this)">Copy Config</button>
-        </div>
-      </div>
-
-      <!-- 4. Toast Dark -->
-      <div class="example-card" data-config='{"mode":"minimal","position":"bottom-right","bgColor":"#1a1a2e","textColor":"#ffffff","btnBg":"#4ade80","btnColor":"#1a1a2e","borderRadius":12}'>
-        <div class="example-header">
-          <h3>Toast Dark</h3>
-          <div class="tags"><span class="tag">Bottom Right</span><span class="tag">Toast</span></div>
-        </div>
-        <div class="example-preview">
-          <div class="banner toast" style="background:#1a1a2e;color:#fff;border-radius:12px;">
-            <p>We use cookies to enhance your experience.</p>
-            <div class="buttons">
-              <button class="reject-btn" style="color:#fff;">Decline</button>
-              <button class="accept-btn" style="background:#4ade80;color:#1a1a2e;">Accept</button>
-            </div>
-          </div>
-        </div>
-        <div class="example-footer">
-          <button class="code-btn" onclick="copyConfig(this)">Copy Config</button>
-        </div>
-      </div>
-
-      <!-- 5. Toast Light -->
-      <div class="example-card" data-config='{"mode":"minimal","position":"bottom-left","bgColor":"#ffffff","textColor":"#333333","btnBg":"#333333","btnColor":"#ffffff","borderRadius":16}'>
-        <div class="example-header">
-          <h3>Toast Light</h3>
-          <div class="tags"><span class="tag">Bottom Left</span><span class="tag">Toast</span></div>
-        </div>
-        <div class="example-preview">
-          <div class="banner toast" style="background:#fff;color:#333;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.15);">
-            <p>We use cookies to enhance your experience.</p>
-            <div class="buttons">
-              <button class="reject-btn" style="color:#333;">Decline</button>
-              <button class="accept-btn" style="background:#333;color:#fff;">Accept</button>
-            </div>
-          </div>
-        </div>
-        <div class="example-footer">
-          <button class="code-btn" onclick="copyConfig(this)">Copy Config</button>
-        </div>
-      </div>
-
-      <!-- 6. Center Modal -->
-      <div class="example-card" data-config='{"mode":"minimal","position":"center","bgColor":"#ffffff","textColor":"#333333","btnBg":"#2563eb","btnColor":"#ffffff","borderRadius":16}'>
-        <div class="example-header">
-          <h3>Center Modal</h3>
-          <div class="tags"><span class="tag">Center</span><span class="tag">Modal</span></div>
-        </div>
-        <div class="example-preview center" style="background:rgba(0,0,0,0.3);">
-          <div class="banner modal" style="background:#fff;color:#333;border-radius:16px;">
-            <p>We use cookies to enhance your experience on our website.</p>
-            <div class="buttons">
-              <button class="reject-btn" style="color:#333;">Decline</button>
-              <button class="accept-btn" style="background:#2563eb;color:#fff;">Accept All</button>
-            </div>
-          </div>
-        </div>
-        <div class="example-footer">
-          <button class="code-btn" onclick="copyConfig(this)">Copy Config</button>
-        </div>
-      </div>
-
-      <!-- 7. Top Bar -->
-      <div class="example-card" data-config='{"mode":"minimal","position":"top","bgColor":"#0f172a","textColor":"#e2e8f0","btnBg":"#3b82f6","btnColor":"#ffffff"}'>
-        <div class="example-header">
-          <h3>Top Bar</h3>
-          <div class="tags"><span class="tag">Top</span><span class="tag">Dark</span></div>
-        </div>
-        <div class="example-preview top">
-          <div class="banner" style="background:#0f172a;color:#e2e8f0;border-radius:0;">
-            <p>This site uses cookies for analytics and personalization.</p>
-            <div class="buttons">
-              <button class="reject-btn" style="color:#e2e8f0;">Decline</button>
-              <button class="accept-btn" style="background:#3b82f6;color:#fff;">Accept</button>
-            </div>
-          </div>
-        </div>
-        <div class="example-footer">
-          <button class="code-btn" onclick="copyConfig(this)">Copy Config</button>
-        </div>
-      </div>
-
-      <!-- 8. Warm Orange -->
-      <div class="example-card" data-config='{"mode":"minimal","bgColor":"#fff7ed","textColor":"#9a3412","btnBg":"#ea580c","btnColor":"#ffffff","borderRadius":8}'>
-        <div class="example-header">
-          <h3>Warm Orange</h3>
-          <div class="tags"><span class="tag">Bottom</span><span class="tag">Warm</span></div>
-        </div>
-        <div class="example-preview">
-          <div class="banner" style="background:#fff7ed;color:#9a3412;border-radius:0;">
-            <p>We use cookies to improve your browsing experience.</p>
-            <div class="buttons">
-              <button class="reject-btn" style="color:#9a3412;">No thanks</button>
-              <button class="accept-btn" style="background:#ea580c;color:#fff;border-radius:8px;">Got it!</button>
-            </div>
-          </div>
-        </div>
-        <div class="example-footer">
-          <button class="code-btn" onclick="copyConfig(this)">Copy Config</button>
-        </div>
-      </div>
-
-      <!-- 9. Minimal Gray -->
-      <div class="example-card" data-config='{"mode":"minimal","bgColor":"#f8f8f8","textColor":"#666666","btnBg":"#666666","btnColor":"#ffffff"}'>
-        <div class="example-header">
-          <h3>Minimal Gray</h3>
-          <div class="tags"><span class="tag">Bottom</span><span class="tag">Subtle</span></div>
-        </div>
-        <div class="example-preview">
-          <div class="banner" style="background:#f8f8f8;color:#666;border-radius:0;border-top:1px solid #e0e0e0;">
-            <p>This website uses cookies.</p>
-            <div class="buttons">
-              <button class="reject-btn" style="color:#666;">Decline</button>
-              <button class="accept-btn" style="background:#666;color:#fff;">OK</button>
-            </div>
-          </div>
-        </div>
-        <div class="example-footer">
-          <button class="code-btn" onclick="copyConfig(this)">Copy Config</button>
-        </div>
-      </div>
-
-      <!-- 10. Neon Cyber -->
-      <div class="example-card" data-config='{"mode":"minimal","bgColor":"#0a0a0a","textColor":"#00ff88","btnBg":"#00ff88","btnColor":"#0a0a0a","borderRadius":0}'>
-        <div class="example-header">
-          <h3>Neon Cyber</h3>
-          <div class="tags"><span class="tag">Bottom</span><span class="tag">Neon</span></div>
-        </div>
-        <div class="example-preview">
-          <div class="banner" style="background:#0a0a0a;color:#00ff88;border-radius:0;border-top:2px solid #00ff88;">
-            <p>[ cookies detected ] accept to continue</p>
-            <div class="buttons">
-              <button class="reject-btn" style="color:#00ff88;border-color:#00ff88;">[ reject ]</button>
-              <button class="accept-btn" style="background:#00ff88;color:#0a0a0a;">[ accept ]</button>
-            </div>
-          </div>
-        </div>
-        <div class="example-footer">
-          <button class="code-btn" onclick="copyConfig(this)">Copy Config</button>
-        </div>
-      </div>
+    <div class="config-row">
+      <strong>Region:</strong>
+      <label><input type="radio" name="region" value="auto" checked> Auto-detect</label>
+      <label><input type="radio" name="region" value="eu"> Force EU</label>
+      <label><input type="radio" name="region" value="non-eu"> Force Non-EU</label>
     </div>
-  </section>
-
-  <hr class="divider" style="max-width:1400px;margin:0 auto;">
-
-  <!-- GDPR Examples -->
-  <section class="section">
-    <h2 class="section-title">
-      GDPR Mode
-      <span class="badge gdpr">10 Examples</span>
-    </h2>
-    <p class="section-desc">Granular consent with category checkboxes - full compliance for EU regulations.</p>
-
-    <div class="examples-grid">
-      <!-- 1. GDPR Classic -->
-      <div class="example-card" data-config='{"mode":"gdpr","bgColor":"#222222","textColor":"#ffffff","btnBg":"#ffffff","btnColor":"#222222"}'>
-        <div class="example-header">
-          <h3>GDPR Classic</h3>
-          <div class="tags"><span class="tag">Bottom</span><span class="tag">Dark</span></div>
-        </div>
-        <div class="example-preview">
-          <div class="banner" style="background:#222;color:#fff;border-radius:0;flex-direction:column;align-items:stretch;">
-            <p>We use cookies. Customize your preferences below.</p>
-            <div class="gdpr-categories" style="border-color:rgba(255,255,255,0.2);">
-              <div class="gdpr-category"><input type="checkbox" checked disabled><div><span class="label">Essential</span> <span class="required">(Required)</span></div></div>
-              <div class="gdpr-category"><input type="checkbox"><div><span class="label">Analytics</span></div></div>
-              <div class="gdpr-category"><input type="checkbox"><div><span class="label">Marketing</span></div></div>
-            </div>
-            <div class="buttons" style="margin-top:12px;">
-              <button class="reject-btn" style="color:#fff;flex:1;">Reject All</button>
-              <button class="accept-btn" style="background:#fff;color:#222;flex:1;">Accept All</button>
-            </div>
-          </div>
-        </div>
-        <div class="example-footer">
-          <button class="code-btn" onclick="copyConfig(this)">Copy Config</button>
-        </div>
-      </div>
-
-      <!-- 2. GDPR Light -->
-      <div class="example-card" data-config='{"mode":"gdpr","bgColor":"#ffffff","textColor":"#333333","btnBg":"#10b981","btnColor":"#ffffff","borderRadius":12}'>
-        <div class="example-header">
-          <h3>GDPR Light</h3>
-          <div class="tags"><span class="tag">Bottom</span><span class="tag">Light</span></div>
-        </div>
-        <div class="example-preview">
-          <div class="banner" style="background:#fff;color:#333;border-radius:0;flex-direction:column;align-items:stretch;box-shadow:0 -4px 20px rgba(0,0,0,0.1);">
-            <p>Manage your cookie preferences</p>
-            <div class="gdpr-categories" style="border-color:#e0e0e0;">
-              <div class="gdpr-category"><input type="checkbox" checked disabled><div><span class="label">Essential</span> <span class="required">(Required)</span></div></div>
-              <div class="gdpr-category"><input type="checkbox"><div><span class="label">Analytics</span></div></div>
-              <div class="gdpr-category"><input type="checkbox"><div><span class="label">Marketing</span></div></div>
-            </div>
-            <div class="buttons" style="margin-top:12px;">
-              <button class="reject-btn" style="color:#333;flex:1;">Reject All</button>
-              <button class="accept-btn" style="background:#10b981;color:#fff;flex:1;border-radius:8px;">Accept All</button>
-            </div>
-          </div>
-        </div>
-        <div class="example-footer">
-          <button class="code-btn" onclick="copyConfig(this)">Copy Config</button>
-        </div>
-      </div>
-
-      <!-- 3. GDPR Modal Dark -->
-      <div class="example-card" data-config='{"mode":"gdpr","position":"center","bgColor":"#1e1e1e","textColor":"#e0e0e0","btnBg":"#6366f1","btnColor":"#ffffff","borderRadius":16}'>
-        <div class="example-header">
-          <h3>GDPR Modal Dark</h3>
-          <div class="tags"><span class="tag">Center</span><span class="tag">Modal</span></div>
-        </div>
-        <div class="example-preview center" style="background:rgba(0,0,0,0.5);">
-          <div class="banner modal" style="background:#1e1e1e;color:#e0e0e0;border-radius:16px;width:340px;text-align:left;">
-            <p style="text-align:center;font-weight:600;font-size:16px;">Cookie Preferences</p>
-            <div class="gdpr-categories" style="border-color:rgba(255,255,255,0.1);">
-              <div class="gdpr-category"><input type="checkbox" checked disabled><div><span class="label">Essential</span></div></div>
-              <div class="gdpr-category"><input type="checkbox"><div><span class="label">Analytics</span></div></div>
-              <div class="gdpr-category"><input type="checkbox"><div><span class="label">Marketing</span></div></div>
-              <div class="gdpr-category"><input type="checkbox"><div><span class="label">Functional</span></div></div>
-            </div>
-            <div class="buttons" style="margin-top:16px;flex-direction:column;gap:8px;">
-              <button class="accept-btn" style="background:#6366f1;color:#fff;border-radius:8px;width:100%;">Accept All</button>
-              <button class="reject-btn" style="color:#e0e0e0;width:100%;">Reject All</button>
-            </div>
-          </div>
-        </div>
-        <div class="example-footer">
-          <button class="code-btn" onclick="copyConfig(this)">Copy Config</button>
-        </div>
-      </div>
-
-      <!-- 4. GDPR Modal Light -->
-      <div class="example-card" data-config='{"mode":"gdpr","position":"center","bgColor":"#ffffff","textColor":"#1f2937","btnBg":"#059669","btnColor":"#ffffff","borderRadius":20}'>
-        <div class="example-header">
-          <h3>GDPR Modal Light</h3>
-          <div class="tags"><span class="tag">Center</span><span class="tag">Modal</span></div>
-        </div>
-        <div class="example-preview center" style="background:rgba(0,0,0,0.3);">
-          <div class="banner modal" style="background:#fff;color:#1f2937;border-radius:20px;width:360px;text-align:left;">
-            <p style="text-align:center;font-weight:600;font-size:18px;margin-bottom:4px;">Privacy Settings</p>
-            <p style="text-align:center;font-size:13px;opacity:0.7;">Choose which cookies you want to accept</p>
-            <div class="gdpr-categories" style="border-color:#e5e7eb;">
-              <div class="gdpr-category"><input type="checkbox" checked disabled><div><span class="label">Essential</span></div></div>
-              <div class="gdpr-category"><input type="checkbox"><div><span class="label">Analytics</span></div></div>
-              <div class="gdpr-category"><input type="checkbox"><div><span class="label">Marketing</span></div></div>
-            </div>
-            <div class="buttons" style="margin-top:16px;">
-              <button class="reject-btn" style="color:#1f2937;flex:1;border-radius:10px;">Reject</button>
-              <button class="accept-btn" style="background:#059669;color:#fff;flex:1;border-radius:10px;">Accept All</button>
-            </div>
-          </div>
-        </div>
-        <div class="example-footer">
-          <button class="code-btn" onclick="copyConfig(this)">Copy Config</button>
-        </div>
-      </div>
-
-      <!-- 5. GDPR Toast -->
-      <div class="example-card" data-config='{"mode":"gdpr","position":"bottom-right","bgColor":"#18181b","textColor":"#fafafa","btnBg":"#f59e0b","btnColor":"#18181b","borderRadius":12}'>
-        <div class="example-header">
-          <h3>GDPR Toast</h3>
-          <div class="tags"><span class="tag">Bottom Right</span><span class="tag">Toast</span></div>
-        </div>
-        <div class="example-preview">
-          <div class="banner toast" style="background:#18181b;color:#fafafa;border-radius:12px;width:300px;">
-            <p style="font-size:13px;">Cookie Settings</p>
-            <div class="gdpr-categories" style="border-color:rgba(255,255,255,0.1);font-size:12px;">
-              <div class="gdpr-category"><input type="checkbox" checked disabled style="width:14px;height:14px;"><div><span class="label" style="font-size:12px;">Essential</span></div></div>
-              <div class="gdpr-category"><input type="checkbox" style="width:14px;height:14px;"><div><span class="label" style="font-size:12px;">Analytics</span></div></div>
-              <div class="gdpr-category"><input type="checkbox" style="width:14px;height:14px;"><div><span class="label" style="font-size:12px;">Marketing</span></div></div>
-            </div>
-            <div class="buttons" style="margin-top:12px;">
-              <button class="reject-btn" style="color:#fafafa;flex:1;font-size:12px;padding:6px 10px;">Reject</button>
-              <button class="accept-btn" style="background:#f59e0b;color:#18181b;flex:1;font-size:12px;padding:6px 10px;border-radius:6px;">Accept</button>
-            </div>
-          </div>
-        </div>
-        <div class="example-footer">
-          <button class="code-btn" onclick="copyConfig(this)">Copy Config</button>
-        </div>
-      </div>
-
-      <!-- 6. GDPR Blue Corporate -->
-      <div class="example-card" data-config='{"mode":"gdpr","bgColor":"#1e40af","textColor":"#ffffff","btnBg":"#ffffff","btnColor":"#1e40af"}'>
-        <div class="example-header">
-          <h3>Blue Corporate</h3>
-          <div class="tags"><span class="tag">Bottom</span><span class="tag">Corporate</span></div>
-        </div>
-        <div class="example-preview">
-          <div class="banner" style="background:#1e40af;color:#fff;border-radius:0;flex-direction:column;align-items:stretch;">
-            <p>We value your privacy. Choose your cookie preferences.</p>
-            <div class="gdpr-categories" style="border-color:rgba(255,255,255,0.2);">
-              <div class="gdpr-category"><input type="checkbox" checked disabled><div><span class="label">Essential</span></div></div>
-              <div class="gdpr-category"><input type="checkbox"><div><span class="label">Analytics</span></div></div>
-              <div class="gdpr-category"><input type="checkbox"><div><span class="label">Preferences</span></div></div>
-            </div>
-            <div class="buttons" style="margin-top:12px;">
-              <button class="reject-btn" style="color:#fff;flex:1;">Necessary Only</button>
-              <button class="accept-btn" style="background:#fff;color:#1e40af;flex:1;">Accept All</button>
-            </div>
-          </div>
-        </div>
-        <div class="example-footer">
-          <button class="code-btn" onclick="copyConfig(this)">Copy Config</button>
-        </div>
-      </div>
-
-      <!-- 7. GDPR Green Eco -->
-      <div class="example-card" data-config='{"mode":"gdpr","bgColor":"#ecfdf5","textColor":"#064e3b","btnBg":"#059669","btnColor":"#ffffff","borderRadius":8}'>
-        <div class="example-header">
-          <h3>Green Eco</h3>
-          <div class="tags"><span class="tag">Bottom</span><span class="tag">Eco</span></div>
-        </div>
-        <div class="example-preview">
-          <div class="banner" style="background:#ecfdf5;color:#064e3b;border-radius:0;flex-direction:column;align-items:stretch;">
-            <p>Help us improve while respecting your privacy.</p>
-            <div class="gdpr-categories" style="border-color:#a7f3d0;">
-              <div class="gdpr-category"><input type="checkbox" checked disabled><div><span class="label">Essential</span></div></div>
-              <div class="gdpr-category"><input type="checkbox"><div><span class="label">Analytics</span></div></div>
-              <div class="gdpr-category"><input type="checkbox"><div><span class="label">Marketing</span></div></div>
-            </div>
-            <div class="buttons" style="margin-top:12px;">
-              <button class="reject-btn" style="color:#064e3b;flex:1;">Decline</button>
-              <button class="accept-btn" style="background:#059669;color:#fff;flex:1;border-radius:8px;">Accept</button>
-            </div>
-          </div>
-        </div>
-        <div class="example-footer">
-          <button class="code-btn" onclick="copyConfig(this)">Copy Config</button>
-        </div>
-      </div>
-
-      <!-- 8. GDPR Glassmorphism -->
-      <div class="example-card" data-config='{"mode":"gdpr","position":"center","bgColor":"rgba(255,255,255,0.9)","textColor":"#1f2937","btnBg":"#8b5cf6","btnColor":"#ffffff","borderRadius":24}'>
-        <div class="example-header">
-          <h3>Glassmorphism</h3>
-          <div class="tags"><span class="tag">Center</span><span class="tag">Glass</span></div>
-        </div>
-        <div class="example-preview center" style="background:linear-gradient(135deg,#667eea,#764ba2);">
-          <div class="banner modal" style="background:rgba(255,255,255,0.95);color:#1f2937;border-radius:24px;width:340px;text-align:left;backdrop-filter:blur(10px);">
-            <p style="text-align:center;font-weight:600;">Cookie Preferences</p>
-            <div class="gdpr-categories" style="border-color:#e5e7eb;">
-              <div class="gdpr-category"><input type="checkbox" checked disabled><div><span class="label">Essential</span></div></div>
-              <div class="gdpr-category"><input type="checkbox"><div><span class="label">Analytics</span></div></div>
-              <div class="gdpr-category"><input type="checkbox"><div><span class="label">Marketing</span></div></div>
-            </div>
-            <div class="buttons" style="margin-top:16px;">
-              <button class="reject-btn" style="color:#1f2937;flex:1;border-radius:12px;">Decline</button>
-              <button class="accept-btn" style="background:#8b5cf6;color:#fff;flex:1;border-radius:12px;">Accept All</button>
-            </div>
-          </div>
-        </div>
-        <div class="example-footer">
-          <button class="code-btn" onclick="copyConfig(this)">Copy Config</button>
-        </div>
-      </div>
-
-      <!-- 9. GDPR Rounded -->
-      <div class="example-card" data-config='{"mode":"gdpr","position":"bottom-left","bgColor":"#fef3c7","textColor":"#92400e","btnBg":"#d97706","btnColor":"#ffffff","borderRadius":20}'>
-        <div class="example-header">
-          <h3>Warm Rounded</h3>
-          <div class="tags"><span class="tag">Bottom Left</span><span class="tag">Warm</span></div>
-        </div>
-        <div class="example-preview">
-          <div class="banner toast" style="background:#fef3c7;color:#92400e;border-radius:20px;width:300px;">
-            <p style="font-weight:600;">Cookie Settings</p>
-            <div class="gdpr-categories" style="border-color:#fcd34d;">
-              <div class="gdpr-category"><input type="checkbox" checked disabled><div><span class="label">Essential</span></div></div>
-              <div class="gdpr-category"><input type="checkbox"><div><span class="label">Analytics</span></div></div>
-              <div class="gdpr-category"><input type="checkbox"><div><span class="label">Marketing</span></div></div>
-            </div>
-            <div class="buttons" style="margin-top:12px;">
-              <button class="reject-btn" style="color:#92400e;flex:1;border-radius:10px;">Decline</button>
-              <button class="accept-btn" style="background:#d97706;color:#fff;flex:1;border-radius:10px;">Accept</button>
-            </div>
-          </div>
-        </div>
-        <div class="example-footer">
-          <button class="code-btn" onclick="copyConfig(this)">Copy Config</button>
-        </div>
-      </div>
-
-      <!-- 10. GDPR Tech Dark -->
-      <div class="example-card" data-config='{"mode":"gdpr","bgColor":"#030712","textColor":"#d1d5db","btnBg":"#22d3ee","btnColor":"#030712","borderRadius":0}'>
-        <div class="example-header">
-          <h3>Tech Dark</h3>
-          <div class="tags"><span class="tag">Bottom</span><span class="tag">Tech</span></div>
-        </div>
-        <div class="example-preview">
-          <div class="banner" style="background:#030712;color:#d1d5db;border-radius:0;flex-direction:column;align-items:stretch;border-top:1px solid #22d3ee;">
-            <p style="font-family:monospace;">[ PRIVACY_SETTINGS ]</p>
-            <div class="gdpr-categories" style="border-color:#1f2937;font-family:monospace;">
-              <div class="gdpr-category"><input type="checkbox" checked disabled><div><span class="label">ESSENTIAL</span></div></div>
-              <div class="gdpr-category"><input type="checkbox"><div><span class="label">ANALYTICS</span></div></div>
-              <div class="gdpr-category"><input type="checkbox"><div><span class="label">TRACKING</span></div></div>
-            </div>
-            <div class="buttons" style="margin-top:12px;font-family:monospace;">
-              <button class="reject-btn" style="color:#d1d5db;flex:1;">[ REJECT ]</button>
-              <button class="accept-btn" style="background:#22d3ee;color:#030712;flex:1;">[ ACCEPT ]</button>
-            </div>
-          </div>
-        </div>
-        <div class="example-footer">
-          <button class="code-btn" onclick="copyConfig(this)">Copy Config</button>
-        </div>
-      </div>
+    <div class="config-row">
+      <strong>Auto-accept delay:</strong>
+      <label><input type="number" id="autoDelay" value="5000" min="0" max="60000" step="1000"> ms</label>
+      <span style="color:#666; font-size:13px">(0 = disabled, Non-EU only)</span>
     </div>
-  </section>
+    <div class="config-row">
+      <label><input type="checkbox" id="showWidget"> Show widget after consent</label>
+      <label><input type="checkbox" id="showCountdown" checked> Show countdown</label>
+      <label><input type="checkbox" id="scrollAutoAccept"> Auto-accept on scroll (Non-EU)</label>
+    </div>
+    <div class="controls" style="margin-top: 16px;">
+      <button onclick="launchBanner()" style="background:#2563eb; color:#fff;">Launch Banner</button>
+      <button onclick="resetBanner()">Reset</button>
+    </div>
+  </div>
 
-  <footer class="footer">
-    <p>Built with smallest-cookie-banner | <a href="index.html">Open Configurator</a> | <a href="https://github.com/DreadfulCode/smallest-cookie-banner">GitHub</a></p>
-  </footer>
+  <h2>Legacy API Controls</h2>
+  <div class="controls">
+    <button onclick="CookieBanner && CookieBanner.yes()">Accept (legacy)</button>
+    <button onclick="CookieBanner && CookieBanner.no()">Reject (legacy)</button>
+    <button onclick="CookieBanner && CookieBanner.reset()">Reset (legacy)</button>
+    <button onclick="updateStatus()">Refresh Status</button>
+  </div>
+
+  <h2>Theme Examples</h2>
+  <div class="theme-switcher">
+    <p>Try different themes (requires reset to see changes):</p>
+    <label>
+      <input type="radio" name="theme" value="default" checked>
+      Default (dark bar)
+    </label>
+    <label>
+      <input type="radio" name="theme" value="light">
+      Light theme
+    </label>
+    <label>
+      <input type="radio" name="theme" value="gradient">
+      Gradient theme
+    </label>
+    <label>
+      <input type="radio" name="theme" value="toast">
+      Toast style (bottom-right)
+    </label>
+  </div>
+
+  <h2>How it works</h2>
+  <ul>
+    <li><strong>EU users</strong> (detected via timezone): See Accept + Reject buttons</li>
+    <li><strong>Non-EU users</strong>: See OK button, auto-accepts after timer (scroll auto-accept optional)</li>
+  </ul>
+
+  <h2>Usage</h2>
+  <pre>&lt;script src="cookie-banner.min.js"&gt;&lt;/script&gt;</pre>
+
+  <div class="scroll-helper">
+    <p>Scroll down to test scroll auto-accept (enable checkbox above, non-EU mode only)</p>
+    <p style="margin-top: 50vh;">Keep scrolling...</p>
+  </div>
+
+  <!-- Theme styles -->
+  <style id="theme-styles"></style>
+
+  <!-- Configuration -->
+  <script>
+    // Apply theme from localStorage
+    const savedTheme = localStorage.getItem('cookie-banner-theme') || 'default';
+    document.querySelector(`input[value="${savedTheme}"]`).checked = true;
+    applyTheme(savedTheme);
+
+    // Theme switcher
+    document.querySelectorAll('input[name="theme"]').forEach(radio => {
+      radio.addEventListener('change', (e) => {
+        applyTheme(e.target.value);
+        localStorage.setItem('cookie-banner-theme', e.target.value);
+      });
+    });
+
+    function applyTheme(theme) {
+      const styleEl = document.getElementById('theme-styles');
+      const themes = {
+        default: '',
+        light: `
+          :root {
+            --ckb-bg: #fff;
+            --ckb-color: #333;
+            --ckb-btn-bg: #2563eb;
+            --ckb-btn-color: #fff;
+          }
+        `,
+        gradient: `
+          :root {
+            --ckb-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --ckb-btn-bg: #fff;
+            --ckb-btn-color: #764ba2;
+          }
+        `,
+        toast: `
+          :root {
+            --ckb-bottom: 20px;
+            --ckb-right: 20px;
+            --ckb-left: auto;
+          }
+          #ckb {
+            width: 320px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            flex-direction: column;
+            text-align: center;
+          }
+          #ckb p { min-width: auto; }
+        `
+      };
+      styleEl.textContent = themes[theme] || '';
+    }
+
+    // Countdown timer
+    let countdownInterval = null;
+    const countdownEl = document.getElementById('countdown');
+
+    function clearCountdown() {
+      if (countdownInterval) {
+        clearInterval(countdownInterval);
+        countdownInterval = null;
+      }
+      countdownEl.style.display = 'none';
+    }
+
+    function startCountdown(ms) {
+      clearCountdown();
+      if (!document.getElementById('showCountdown').checked) return;
+
+      let remaining = ms;
+      countdownEl.style.display = 'block';
+
+      function tick() {
+        countdownEl.textContent = 'Auto-accept: ' + (remaining / 1000).toFixed(1) + 's';
+        remaining -= 100;
+        if (remaining < 0) clearCountdown();
+      }
+      tick();
+      countdownInterval = setInterval(tick, 100);
+    }
+
+    // Current banner instance
+    let currentBanner = null;
+
+    function getConfig() {
+      const mode = document.querySelector('input[name="mode"]:checked').value;
+      const region = document.querySelector('input[name="region"]:checked').value;
+      const autoDelay = parseInt(document.getElementById('autoDelay').value) || 5000;
+
+      return {
+        mode: mode,
+        forceEU: region === 'eu' ? true : region === 'non-eu' ? false : undefined,
+        autoAcceptDelay: autoDelay,
+        autoAcceptOnScroll: document.getElementById('scrollAutoAccept').checked,
+        msg: 'This site uses cookies to enhance your experience.',
+        acceptText: mode === 'gdpr' ? 'Accept All' : 'Accept',
+        rejectText: mode === 'gdpr' ? 'Reject All' : 'Decline',
+        widget: document.getElementById('showWidget').checked ? { enabled: true } : undefined,
+        onAccept: function() {
+          console.log('Accepted');
+          clearCountdown();
+          updateStatus();
+        },
+        onReject: function() {
+          console.log('Rejected');
+          clearCountdown();
+          updateStatus();
+        },
+        onConsent: function(state) {
+          console.log('Consent:', state);
+          clearCountdown();
+          updateStatus();
+        }
+      };
+    }
+
+    function launchBanner() {
+      resetBanner();
+
+      const config = getConfig();
+      console.log('Launching with config:', config);
+
+      currentBanner = window.createCookieBanner(config);
+      currentBanner.show();
+
+      // Start countdown for non-EU
+      const isNonEU = config.forceEU === false ||
+        (config.forceEU === undefined && !window.CookieBannerModule.isEU());
+      if (isNonEU && config.autoAcceptDelay > 0) {
+        startCountdown(config.autoAcceptDelay);
+      }
+
+      updateStatus();
+    }
+
+    function resetBanner() {
+      clearCountdown();
+
+      // Clear cookies
+      document.cookie.split(';').forEach(c => {
+        const name = c.trim().split('=')[0];
+        if (name) document.cookie = name + '=;expires=Thu,01 Jan 1970 00:00:00 GMT;path=/';
+      });
+
+      // Destroy current banner
+      if (currentBanner) {
+        currentBanner.destroy();
+        currentBanner = null;
+      }
+
+      // Clean up DOM
+      const banner = document.getElementById('ckb');
+      if (banner) banner.remove();
+      document.querySelectorAll('[id^="ckb-widget"]').forEach(w => w.remove());
+      document.querySelectorAll('style[id^="ckb-style"]').forEach(s => s.remove());
+
+      window.CookieBanner = undefined;
+      updateStatus();
+    }
+
+    function updateStatus() {
+      let status = null;
+      if (currentBanner) {
+        status = currentBanner.status;
+      } else if (window.CookieBanner) {
+        status = CookieBanner.ok;
+      }
+
+      const text = status === true ? '✅ Accepted' :
+                   status === false ? '❌ Rejected' :
+                   '⏳ Pending';
+      document.getElementById('consent-value').textContent = text;
+    }
+  </script>
+
+  <!-- The cookie banner library -->
+  <script src="cookie-banner.min.js"></script>
 
   <script>
-    function copyConfig(btn) {
-      const card = btn.closest('.example-card');
-      const config = card.dataset.config;
-
-      navigator.clipboard.writeText(config).then(() => {
-        btn.textContent = 'Copied!';
-        setTimeout(() => btn.textContent = 'Copy Config', 2000);
-      }).catch(() => {
-        // Fallback
-        const textarea = document.createElement('textarea');
-        textarea.value = config;
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textarea);
-        btn.textContent = 'Copied!';
-        setTimeout(() => btn.textContent = 'Copy Config', 2000);
-      });
-    }
+    updateStatus();
+    console.log('Library loaded:', typeof window.createCookieBanner === 'function' ? 'OK' : 'FAILED');
   </script>
 </body>
 </html>

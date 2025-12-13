@@ -323,6 +323,41 @@
       border-bottom-color: #2563eb;
     }
 
+    /* Demo status */
+    .demo-status {
+      background: #f0f9ff;
+      border: 1px solid #bae6fd;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      font-size: 14px;
+    }
+
+    .demo-status.accepted {
+      background: #dcfce7;
+      border-color: #86efac;
+    }
+
+    .demo-status.rejected {
+      background: #fee2e2;
+      border-color: #fca5a5;
+    }
+
+    /* Countdown */
+    #countdown {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: #1e293b;
+      color: #fff;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 14px;
+      z-index: 99999;
+      display: none;
+    }
+
     /* Responsive */
     @media (max-width: 900px) {
       .layout {
@@ -476,12 +511,32 @@
         </div>
       </div>
 
+      <!-- Widget -->
+      <div class="section">
+        <h2>Widget</h2>
+        <div class="checkbox-field">
+          <input type="checkbox" id="showWidget">
+          <label>Show widget after consent</label>
+        </div>
+        <div class="field" id="widgetPositionField" style="display:none; margin-top:12px;">
+          <label>Widget Position</label>
+          <select id="widgetPosition">
+            <option value="bottom-left">Bottom Left</option>
+            <option value="bottom-right">Bottom Right</option>
+          </select>
+        </div>
+      </div>
+
       <!-- Advanced -->
       <div class="section">
         <h2>Advanced</h2>
         <div class="field">
           <label>Z-Index</label>
           <input type="number" id="zIndex" value="9999" min="1">
+        </div>
+        <div class="checkbox-field" style="margin-bottom:12px;">
+          <input type="checkbox" id="showCountdown" checked>
+          <label>Show countdown (non-EU auto-accept)</label>
         </div>
         <div class="field">
           <label>Custom CSS (optional)</label>
@@ -492,11 +547,19 @@
 
     <!-- Preview Area -->
     <div class="preview-area">
+      <div id="countdown"></div>
+
       <div class="preview-header">
-        <h2>Generated Code</h2>
+        <h2>Live Demo & Code</h2>
         <div class="preview-actions">
-          <button class="btn btn-primary" onclick="copyCode()">Copy Code</button>
+          <button class="btn btn-primary" onclick="launchDemo()">▶ Launch Demo</button>
+          <button class="btn btn-secondary" onclick="resetDemo()">Reset</button>
+          <button class="btn btn-secondary" onclick="copyCode()">Copy Code</button>
         </div>
+      </div>
+
+      <div id="demo-status" class="demo-status">
+        <strong>Status:</strong> <span id="consent-status">Ready - click "Launch Demo"</span>
       </div>
 
       <!-- Live Banner Preview -->
@@ -754,6 +817,11 @@
   --ckb-btn-radius: ${parseInt(config.btnRadius)}px;
   --ckb-z: ${parseInt(config.zIndex)};${positionVars ? '\n  ' + positionVars.split(';').filter(s => s.trim()).join(';\n  ') + ';' : ''}`;
 
+      // Always show config block with callbacks
+      const configBlock = configObj.length > 0
+        ? configObj.join(',\n') + ','
+        : '';
+
       return `<span class="comment">&lt;!-- Add to &lt;head&gt; --&gt;</span>
 <span class="keyword">&lt;style&gt;</span>
 :root {
@@ -762,10 +830,9 @@ ${cssVars}
 <span class="keyword">&lt;/style&gt;</span>
 
 <span class="comment">&lt;!-- Add before &lt;/body&gt; --&gt;</span>
-${configObj.length > 0 ? `<span class="keyword">&lt;script&gt;</span>
+<span class="keyword">&lt;script&gt;</span>
 window.CookieBannerConfig = {
-${configObj.join(',\n')},
-${config.bannerMode === 'gdpr' ? `  onConsent: function(consent) {
+${configBlock}${config.bannerMode === 'gdpr' ? `  onConsent: function(consent) {
     <span class="comment">// consent = { essential: true, analytics: true/false, marketing: true/false, functional: true/false }</span>
     if (consent.analytics) { <span class="comment">/* Load analytics */</span> }
     if (consent.marketing) { <span class="comment">/* Load marketing scripts */</span> }
@@ -773,7 +840,7 @@ ${config.bannerMode === 'gdpr' ? `  onConsent: function(consent) {
   onReject: function() { <span class="comment">/* Respect choice */</span> }`}
 };
 <span class="keyword">&lt;/script&gt;</span>
-` : ''}<span class="keyword">&lt;script</span> <span class="property">src</span>=<span class="string">"https://unpkg.com/smallest-cookie-banner@latest/dist/cookie-banner.min.js"</span><span class="keyword">&gt;&lt;/script&gt;</span>`;
+<span class="keyword">&lt;script</span> <span class="property">src</span>=<span class="string">"https://unpkg.com/smallest-cookie-banner@latest/dist/cookie-banner.min.js"</span><span class="keyword">&gt;&lt;/script&gt;</span>`;
     }
 
     // Update code output
@@ -873,8 +940,207 @@ ${config.bannerMode === 'gdpr' ? `  onConsent: function(consent) {
       document.body.removeChild(textarea);
     }
 
+    // Widget toggle
+    document.getElementById('showWidget').addEventListener('change', function() {
+      document.getElementById('widgetPositionField').style.display = this.checked ? 'block' : 'none';
+      updatePreview();
+    });
+
     // Initial render
     updatePreview();
+  </script>
+
+  <!-- Load the actual cookie banner library -->
+  <script src="dist/cookie-banner.js"></script>
+
+  <script>
+    // Demo functionality
+    let currentBanner = null;
+    let countdownInterval = null;
+    const countdownEl = document.getElementById('countdown');
+
+    function clearCountdown() {
+      if (countdownInterval) {
+        clearInterval(countdownInterval);
+        countdownInterval = null;
+      }
+      countdownEl.style.display = 'none';
+    }
+
+    function startCountdown(ms) {
+      clearCountdown();
+      if (!document.getElementById('showCountdown').checked) return;
+
+      let remaining = ms;
+      countdownEl.style.display = 'block';
+
+      function tick() {
+        countdownEl.textContent = 'Auto-accept: ' + (remaining / 1000).toFixed(1) + 's';
+        remaining -= 100;
+        if (remaining < 0) clearCountdown();
+      }
+      tick();
+      countdownInterval = setInterval(tick, 100);
+    }
+
+    function updateConsentStatus(status) {
+      const statusEl = document.getElementById('demo-status');
+      const textEl = document.getElementById('consent-status');
+
+      statusEl.classList.remove('accepted', 'rejected');
+
+      if (status === true) {
+        statusEl.classList.add('accepted');
+        textEl.textContent = '✅ Accepted';
+      } else if (status === false) {
+        statusEl.classList.add('rejected');
+        textEl.textContent = '❌ Rejected';
+      } else {
+        textEl.textContent = '⏳ Pending';
+      }
+    }
+
+    function getDemoConfig() {
+      const config = getConfig();
+      const forceEU = config.mode === 'eu' ? true : config.mode === 'non-eu' ? false : undefined;
+
+      const demoConfig = {
+        mode: config.bannerMode,
+        forceEU: forceEU,
+        autoAcceptDelay: config.autoAcceptDelay,
+        msg: config.msg,
+        acceptText: config.bannerMode === 'gdpr' ? 'Accept All' : config.acceptText,
+        rejectText: config.bannerMode === 'gdpr' ? 'Reject All' : config.rejectText,
+        days: config.days,
+        onAccept: function() {
+          clearCountdown();
+          updateConsentStatus(true);
+        },
+        onReject: function() {
+          clearCountdown();
+          updateConsentStatus(false);
+        },
+        onConsent: function(state) {
+          clearCountdown();
+          updateConsentStatus(true);
+          console.log('Consent:', state);
+        }
+      };
+
+      // Add widget config
+      if (document.getElementById('showWidget').checked) {
+        demoConfig.widget = {
+          enabled: true,
+          position: document.getElementById('widgetPosition').value
+        };
+      }
+
+      // Add custom CSS via style property
+      let customStyle = '';
+      customStyle += `--ckb-bg: ${config.bgColor};`;
+      customStyle += `--ckb-color: ${config.textColor};`;
+      customStyle += `--ckb-btn-bg: ${config.btnBg};`;
+      customStyle += `--ckb-btn-color: ${config.btnColor};`;
+      customStyle += `--ckb-font: ${config.fontSize}px ${config.fontFamily};`;
+      customStyle += `--ckb-padding: ${config.padding}px 16px;`;
+      customStyle += `--ckb-btn-radius: ${config.btnRadius}px;`;
+      customStyle += `--ckb-z: ${config.zIndex};`;
+
+      // We'll inject this as a style element
+      demoConfig._customStyle = customStyle;
+      demoConfig._customCss = config.customCss;
+      demoConfig._position = config.position;
+
+      return demoConfig;
+    }
+
+    function launchDemo() {
+      resetDemo();
+
+      const config = getDemoConfig();
+      console.log('Launching demo with config:', config);
+
+      // Inject custom CSS variables
+      let styleEl = document.getElementById('demo-custom-style');
+      if (!styleEl) {
+        styleEl = document.createElement('style');
+        styleEl.id = 'demo-custom-style';
+        document.head.appendChild(styleEl);
+      }
+
+      let css = `:root { ${config._customStyle} }`;
+
+      // Position CSS
+      const positionCSS = {
+        'bottom': '',
+        'top': '#ckb { bottom: auto; top: 0; }',
+        'bottom-left': '#ckb { right: auto; left: 20px; bottom: 20px; width: 340px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); flex-direction: column; } #ckb p { min-width: auto; margin-bottom: 10px; }',
+        'bottom-right': '#ckb { left: auto; right: 20px; bottom: 20px; width: 340px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); flex-direction: column; } #ckb p { min-width: auto; margin-bottom: 10px; }',
+        'center': '#ckb { bottom: auto; top: 50%; left: 50%; right: auto; width: 400px; border-radius: 12px; box-shadow: 0 4px 40px rgba(0,0,0,0.3); flex-direction: column; text-align: center; transform: translate(-50%, -50%); } #ckb p { min-width: auto; margin-bottom: 12px; }'
+      };
+      css += positionCSS[config._position] || '';
+
+      if (config._customCss) {
+        css += config._customCss;
+      }
+
+      styleEl.textContent = css;
+
+      // Create and show banner
+      if (typeof window.createCookieBanner === 'function') {
+        currentBanner = window.createCookieBanner(config);
+        currentBanner.show();
+
+        updateConsentStatus(null);
+
+        // Start countdown for non-EU
+        const isNonEU = config.forceEU === false ||
+          (config.forceEU === undefined && window.CookieBannerModule && !window.CookieBannerModule.isEU());
+        if (isNonEU && config.autoAcceptDelay > 0) {
+          startCountdown(config.autoAcceptDelay);
+        }
+      } else {
+        alert('Library not loaded! Make sure dist/cookie-banner.js exists.');
+      }
+    }
+
+    function resetDemo() {
+      clearCountdown();
+
+      // Clear cookies
+      document.cookie.split(';').forEach(c => {
+        const name = c.trim().split('=')[0];
+        if (name) document.cookie = name + '=;expires=Thu,01 Jan 1970 00:00:00 GMT;path=/';
+      });
+
+      // Destroy current banner
+      if (currentBanner) {
+        currentBanner.destroy();
+        currentBanner = null;
+      }
+
+      // Clean up DOM
+      const banner = document.getElementById('ckb');
+      if (banner) banner.remove();
+      document.querySelectorAll('[id^="ckb-widget"]').forEach(w => w.remove());
+      document.querySelectorAll('style[id^="ckb-style"]').forEach(s => s.remove());
+
+      // Remove custom style
+      const customStyle = document.getElementById('demo-custom-style');
+      if (customStyle) customStyle.remove();
+
+      window.CookieBanner = undefined;
+
+      document.getElementById('consent-status').textContent = 'Ready - click "Launch Demo"';
+      document.getElementById('demo-status').classList.remove('accepted', 'rejected');
+    }
+
+    // Check if library loaded
+    if (typeof window.createCookieBanner === 'function') {
+      console.log('Cookie banner library loaded successfully');
+    } else {
+      console.warn('Cookie banner library not loaded');
+    }
   </script>
 </body>
 </html>

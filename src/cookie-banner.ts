@@ -106,6 +106,8 @@ export interface CookieBannerConfig {
   forceEU?: boolean;
   /** Milliseconds before auto-accept in non-EU mode (default: 5000, 0 to disable, max: 300000) */
   autoAcceptDelay?: number;
+  /** Auto-accept on scroll in non-EU mode (default: false) */
+  autoAcceptOnScroll?: boolean;
   /** Additional inline styles for the banner element (sanitized for security) */
   style?: string;
   /** Additional CSS rules to inject (sanitized for security) */
@@ -118,6 +120,8 @@ export interface CookieBannerConfig {
   policyVersion?: string;
   /** Consent widget configuration for managing preferences after consent */
   widget?: ConsentWidgetConfig;
+  /** Allow multiple banner instances (default: false - singleton behavior) */
+  allowMultiple?: boolean;
   /** Callback when user saves consent (receives consent record with metadata) */
   onConsent?: (consent: ConsentState, record?: ConsentRecord) => void;
   /** Callback when user accepts all */
@@ -560,9 +564,14 @@ function injectStyles(id: string, css: string, nonce?: string): void {
 // Cookie Banner Class (Framework-Friendly)
 // ============================================================================
 
+// Track active instance for singleton behavior
+let _activeInstance: CookieBannerInstance | null = null;
+
 /**
  * Create a new cookie banner instance
  * Framework-friendly: no global state, proper cleanup, SSR-safe
+ *
+ * By default, prevents duplicate banners. Set `config.allowMultiple = true` to override.
  */
 export function createCookieBanner(config: CookieBannerConfig = {}): CookieBannerInstance {
   // SSR: return no-op instance
@@ -582,6 +591,11 @@ export function createCookieBanner(config: CookieBannerConfig = {}): CookieBanne
       showWidget: () => {},
       hideWidget: () => {},
     };
+  }
+
+  // Singleton: prevent duplicate banners unless explicitly allowed
+  if (!config.allowMultiple && _activeInstance) {
+    return _activeInstance;
   }
 
   // Validate configuration
@@ -764,6 +778,12 @@ export function createCookieBanner(config: CookieBannerConfig = {}): CookieBanne
   }
 
   function createBannerElement(startExpanded = false): BannerElement {
+    // Failsafe: remove any existing banner to prevent duplicates
+    const existing = document.getElementById('ckb');
+    if (existing) {
+      existing.remove();
+    }
+
     // Inject sanitized styles
     const customCss = config.css ? sanitizeCss(config.css) : '';
     injectStyles(styleId, DEFAULT_CSS + customCss, config.cspNonce);
@@ -956,12 +976,15 @@ export function createCookieBanner(config: CookieBannerConfig = {}): CookieBanne
         timer = setTimeout(autoAccept, timeout);
       }
 
-      scrollHandler = (): void => {
-        if (timer) clearTimeout(timer);
-        autoAccept();
-      };
+      // Only add scroll listener if explicitly enabled (default: false)
+      if (config.autoAcceptOnScroll) {
+        scrollHandler = (): void => {
+          if (timer) clearTimeout(timer);
+          autoAccept();
+        };
 
-      document.addEventListener('scroll', scrollHandler, { once: true });
+        document.addEventListener('scroll', scrollHandler, { once: true });
+      }
     }
 
     // Cleanup function
@@ -1100,12 +1123,17 @@ export function createCookieBanner(config: CookieBannerConfig = {}): CookieBanne
 
     destroy(clearCookie = false) {
       this.hide();
+      this.hideWidget();
       const style = document.getElementById(styleId);
       if (style) style.remove();
       if (clearCookie) {
         deleteConsent(cookieName, cookieDomain);
         _status = null;
         _consentState = null;
+      }
+      // Clear singleton reference
+      if (_activeInstance === instance) {
+        _activeInstance = null;
       }
     },
 
@@ -1140,6 +1168,11 @@ export function createCookieBanner(config: CookieBannerConfig = {}): CookieBanne
     createWidget();
   }
 
+  // Set singleton reference (unless allowMultiple)
+  if (!config.allowMultiple) {
+    _activeInstance = instance;
+  }
+
   return instance;
 }
 
@@ -1148,10 +1181,10 @@ export function createCookieBanner(config: CookieBannerConfig = {}): CookieBanne
 // ============================================================================
 
 /**
- * Initialize with legacy global API (window.CookieBanner)
+ * Set up the global window.CookieBanner API
  * Called automatically when loaded via script tag
  */
-export function initLegacy(): LegacyCookieBannerAPI | null {
+export function setup(): LegacyCookieBannerAPI | null {
   if (!isBrowser) return null;
 
   const config = window.CookieBannerConfig || {};
@@ -1203,14 +1236,14 @@ let _initialized = false;
 function autoInit(): void {
   if (_initialized) return;
   _initialized = true;
-  initLegacy();
+  setup();
 }
 
 // Only auto-init if loaded as a script (not imported as module)
 if (
   isBrowser &&
   (typeof window.CookieBannerConfig !== 'undefined' ||
-    (document.currentScript && !document.currentScript.hasAttribute('type')))
+    (document.currentScript && document.currentScript.getAttribute('type') !== 'module'))
 ) {
   autoInit();
 }

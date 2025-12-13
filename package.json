@@ -1,6 +1,6 @@
 {
   "name": "smallest-cookie-banner",
-  "version": "1.0.1",
+  "version": "1.0.5",
   "description": "The smallest legally compliant cookie consent banner. ~1.5KB gzipped. Auto-detects EU for GDPR, implied consent elsewhere.",
   "main": "dist/cookie-banner.js",
   "module": "dist/cookie-banner.js",
@@ -11,7 +11,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc && terser dist/cookie-banner.js -o dist/cookie-banner.min.js -c -m --comments false",
+    "build": "tsc && node scripts/fix-umd.js && terser dist/cookie-banner.js -o dist/cookie-banner.min.js -c -m --comments false",
     "build:watch": "tsc --watch",
     "test": "jest --coverage",
     "test:watch": "jest --watch",

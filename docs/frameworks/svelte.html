@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Svelte - smallest-cookie-banner</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 40px 20px;
+      background: #fff;
+      color: #333;
+    }
+    h1 { font-size: 24px; margin-bottom: 8px; }
+    .framework { color: #666; font-size: 14px; margin-bottom: 24px; }
+    .status {
+      padding: 16px;
+      background: #f5f5f5;
+      border-radius: 8px;
+      margin-bottom: 24px;
+    }
+    .status strong { display: block; margin-bottom: 4px; }
+    button {
+      padding: 10px 20px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      background: #fff;
+      cursor: pointer;
+      margin-right: 8px;
+    }
+    button:hover { background: #f5f5f5; }
+    code {
+      display: block;
+      background: #f5f5f5;
+      padding: 16px;
+      border-radius: 8px;
+      margin-top: 24px;
+      font-size: 13px;
+      white-space: pre-wrap;
+    }
+    a { color: #0066cc; }
+    .note {
+      font-size: 13px;
+      color: #666;
+      margin-top: 16px;
+      padding: 12px;
+      background: #fffbe6;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+  <h1>smallest-cookie-banner</h1>
+  <p class="framework">Svelte 4/5</p>
+
+  <div class="status">
+    <strong>Consent Status:</strong>
+    <span id="status">Checking...</span>
+  </div>
+
+  <button onclick="resetConsent()">Reset Consent</button>
+  <a href="index.html">Back to frameworks</a>
+
+  <p class="note">This demo uses the library directly. In a real Svelte app, you'd import it as shown below.</p>
+
+  <code>&lt;script&gt;
+  import { onMount, onDestroy } from 'svelte';
+  import { createCookieBanner } from 'smallest-cookie-banner';
+
+  let banner;
+  let status = 'Pending';
+
+  onMount(() => {
+    banner = createCookieBanner({
+      msg: 'This site uses cookies.',
+      onAccept: () => status = 'Accepted',
+      onReject: () => status = 'Rejected',
+    });
+    banner.show();
+
+    if (banner.status !== null) {
+      status = banner.status ? 'Accepted' : 'Rejected';
+    }
+  });
+
+  onDestroy(() => {
+    banner?.destroy();
+  });
+&lt;/script&gt;
+
+&lt;p&gt;Status: {status}&lt;/p&gt;</code>
+
+  <!-- Cookie Banner -->
+  <script src="../cookie-banner.min.js"></script>
+
+  <script>
+    let banner = null;
+
+    function updateStatus() {
+      const s = banner ? banner.status : null;
+      document.getElementById('status').textContent =
+        s === true ? 'Accepted' : s === false ? 'Rejected' : 'Pending';
+    }
+
+    // Initialize
+    banner = window.createCookieBanner({
+      msg: 'This site uses cookies.',
+      onAccept: updateStatus,
+      onReject: updateStatus,
+    });
+    banner.show();
+    updateStatus();
+
+    function resetConsent() {
+      if (banner) {
+        banner.destroy(true);
+        banner = window.createCookieBanner({
+          msg: 'This site uses cookies.',
+          onAccept: updateStatus,
+          onReject: updateStatus,
+        });
+        banner.show();
+        updateStatus();
+      }
+    }
+  </script>
+</body>
+</html>

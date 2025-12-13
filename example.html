@@ -69,6 +69,45 @@
       padding: 20px;
       border-radius: 8px;
     }
+    .config-panel {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+    .config-panel h3 { margin-top: 0; }
+    .config-row {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin: 12px 0;
+    }
+    .config-row label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+    .config-row input[type="number"] {
+      width: 80px;
+      padding: 4px 8px;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+    }
+    #countdown {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: #1e293b;
+      color: #fff;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 14px;
+      z-index: 99999;
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -80,11 +119,42 @@
     <span id="consent-value">checking...</span>
   </div>
 
-  <h2>Controls</h2>
+  <div id="countdown"></div>
+
+  <div class="config-panel">
+    <h3>Configuration</h3>
+    <div class="config-row">
+      <strong>Mode:</strong>
+      <label><input type="radio" name="mode" value="minimal" checked> Minimal</label>
+      <label><input type="radio" name="mode" value="gdpr"> GDPR (categories)</label>
+    </div>
+    <div class="config-row">
+      <strong>Region:</strong>
+      <label><input type="radio" name="region" value="auto" checked> Auto-detect</label>
+      <label><input type="radio" name="region" value="eu"> Force EU</label>
+      <label><input type="radio" name="region" value="non-eu"> Force Non-EU</label>
+    </div>
+    <div class="config-row">
+      <strong>Auto-accept delay:</strong>
+      <label><input type="number" id="autoDelay" value="5000" min="0" max="60000" step="1000"> ms</label>
+      <span style="color:#666; font-size:13px">(0 = disabled, Non-EU only)</span>
+    </div>
+    <div class="config-row">
+      <label><input type="checkbox" id="showWidget"> Show widget after consent</label>
+      <label><input type="checkbox" id="showCountdown" checked> Show countdown</label>
+      <label><input type="checkbox" id="scrollAutoAccept"> Auto-accept on scroll (Non-EU)</label>
+    </div>
+    <div class="controls" style="margin-top: 16px;">
+      <button onclick="launchBanner()" style="background:#2563eb; color:#fff;">Launch Banner</button>
+      <button onclick="resetBanner()">Reset</button>
+    </div>
+  </div>
+
+  <h2>Legacy API Controls</h2>
   <div class="controls">
-    <button onclick="CookieBanner.reset()">Reset (Show Banner)</button>
-    <button onclick="CookieBanner.yes()">Accept Programmatically</button>
-    <button onclick="CookieBanner.no()">Reject Programmatically</button>
+    <button onclick="CookieBanner && CookieBanner.yes()">Accept (legacy)</button>
+    <button onclick="CookieBanner && CookieBanner.no()">Reject (legacy)</button>
+    <button onclick="CookieBanner && CookieBanner.reset()">Reset (legacy)</button>
     <button onclick="updateStatus()">Refresh Status</button>
   </div>
 
@@ -112,14 +182,14 @@
   <h2>How it works</h2>
   <ul>
     <li><strong>EU users</strong> (detected via timezone): See Accept + Reject buttons</li>
-    <li><strong>Non-EU users</strong>: See OK button, auto-accepts on scroll or after 5s</li>
+    <li><strong>Non-EU users</strong>: See OK button, auto-accepts after timer (scroll auto-accept optional)</li>
   </ul>
 
   <h2>Usage</h2>
   <pre>&lt;script src="dist/cookie-banner.min.js"&gt;&lt;/script&gt;</pre>
 
   <div class="scroll-helper">
-    <p>Scroll down to test auto-accept behavior (non-EU mode)</p>
+    <p>Scroll down to test scroll auto-accept (enable checkbox above, non-EU mode only)</p>
     <p style="margin-top: 50vh;">Keep scrolling...</p>
   </div>
 
@@ -179,23 +249,121 @@
       styleEl.textContent = themes[theme] || '';
     }
 
-    window.CookieBannerConfig = {
-      msg: 'This site uses cookies to enhance your experience.',
-      acceptText: 'Accept',
-      rejectText: 'Decline',
-      // forceEU: true, // Uncomment to always show reject button
-      onYes: function() {
-        console.log('User accepted cookies');
-        updateStatus();
-      },
-      onNo: function() {
-        console.log('User rejected cookies');
-        updateStatus();
+    // Countdown timer
+    let countdownInterval = null;
+    const countdownEl = document.getElementById('countdown');
+
+    function clearCountdown() {
+      if (countdownInterval) {
+        clearInterval(countdownInterval);
+        countdownInterval = null;
       }
-    };
+      countdownEl.style.display = 'none';
+    }
+
+    function startCountdown(ms) {
+      clearCountdown();
+      if (!document.getElementById('showCountdown').checked) return;
+
+      let remaining = ms;
+      countdownEl.style.display = 'block';
+
+      function tick() {
+        countdownEl.textContent = 'Auto-accept: ' + (remaining / 1000).toFixed(1) + 's';
+        remaining -= 100;
+        if (remaining < 0) clearCountdown();
+      }
+      tick();
+      countdownInterval = setInterval(tick, 100);
+    }
+
+    // Current banner instance
+    let currentBanner = null;
+
+    function getConfig() {
+      const mode = document.querySelector('input[name="mode"]:checked').value;
+      const region = document.querySelector('input[name="region"]:checked').value;
+      const autoDelay = parseInt(document.getElementById('autoDelay').value) || 5000;
+
+      return {
+        mode: mode,
+        forceEU: region === 'eu' ? true : region === 'non-eu' ? false : undefined,
+        autoAcceptDelay: autoDelay,
+        autoAcceptOnScroll: document.getElementById('scrollAutoAccept').checked,
+        msg: 'This site uses cookies to enhance your experience.',
+        acceptText: mode === 'gdpr' ? 'Accept All' : 'Accept',
+        rejectText: mode === 'gdpr' ? 'Reject All' : 'Decline',
+        widget: document.getElementById('showWidget').checked ? { enabled: true } : undefined,
+        onAccept: function() {
+          console.log('Accepted');
+          clearCountdown();
+          updateStatus();
+        },
+        onReject: function() {
+          console.log('Rejected');
+          clearCountdown();
+          updateStatus();
+        },
+        onConsent: function(state) {
+          console.log('Consent:', state);
+          clearCountdown();
+          updateStatus();
+        }
+      };
+    }
+
+    function launchBanner() {
+      resetBanner();
+
+      const config = getConfig();
+      console.log('Launching with config:', config);
+
+      currentBanner = window.createCookieBanner(config);
+      currentBanner.show();
+
+      // Start countdown for non-EU
+      const isNonEU = config.forceEU === false ||
+        (config.forceEU === undefined && !window.CookieBannerModule.isEU());
+      if (isNonEU && config.autoAcceptDelay > 0) {
+        startCountdown(config.autoAcceptDelay);
+      }
+
+      updateStatus();
+    }
+
+    function resetBanner() {
+      clearCountdown();
+
+      // Clear cookies
+      document.cookie.split(';').forEach(c => {
+        const name = c.trim().split('=')[0];
+        if (name) document.cookie = name + '=;expires=Thu,01 Jan 1970 00:00:00 GMT;path=/';
+      });
+
+      // Destroy current banner
+      if (currentBanner) {
+        currentBanner.destroy();
+        currentBanner = null;
+      }
+
+      // Clean up DOM
+      const banner = document.getElementById('ckb');
+      if (banner) banner.remove();
+      document.querySelectorAll('[id^="ckb-widget"]').forEach(w => w.remove());
+      document.querySelectorAll('style[id^="ckb-style"]').forEach(s => s.remove());
+
+      window.CookieBanner = undefined;
+      updateStatus();
+    }
 
     function updateStatus() {
-      const status = window.CookieBanner ? CookieBanner.ok : null;
+      let status = null;
+      if (currentBanner) {
+        status = currentBanner.status;
+      } else if (window.CookieBanner) {
+        status = CookieBanner.ok;
+      }
+
       const text = status === true ? '✅ Accepted' :
                    status === false ? '❌ Rejected' :
                    '⏳ Pending';
@@ -203,11 +371,12 @@
     }
   </script>
 
-  <!-- The cookie banner -->
+  <!-- The cookie banner library -->
   <script src="dist/cookie-banner.min.js"></script>
 
   <script>
     updateStatus();
+    console.log('Library loaded:', typeof window.createCookieBanner === 'function' ? 'OK' : 'FAILED');
   </script>
 </body>
 </html>

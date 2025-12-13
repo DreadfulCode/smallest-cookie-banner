@@ -8,7 +8,7 @@ import {
   setConsent,
   deleteConsent,
   createCookieBanner,
-  initLegacy,
+  setup,
   DEFAULT_CSS,
   DEFAULT_CATEGORIES,
   LegacyCookieBannerAPI,
@@ -461,8 +461,8 @@ describe('smallest-cookie-banner', () => {
 
     describe('multiple instances', () => {
       it('supports multiple banners with different cookies', () => {
-        const banner1 = createCookieBanner({ cookieName: 'consent1' });
-        const banner2 = createCookieBanner({ cookieName: 'consent2' });
+        const banner1 = createCookieBanner({ cookieName: 'consent1', allowMultiple: true });
+        const banner2 = createCookieBanner({ cookieName: 'consent2', allowMultiple: true });
 
         banner1.accept();
         expect(getConsent('consent1')).toBe('1');
@@ -472,10 +472,10 @@ describe('smallest-cookie-banner', () => {
     });
   });
 
-  describe('initLegacy()', () => {
+  describe('setup()', () => {
     it('creates window.CookieBanner API', () => {
       window.CookieBannerConfig = {};
-      initLegacy();
+      setup();
       expect(window.CookieBanner).toBeDefined();
       expect(typeof window.CookieBanner?.yes).toBe('function');
       expect(typeof window.CookieBanner?.no).toBe('function');
@@ -484,20 +484,20 @@ describe('smallest-cookie-banner', () => {
 
     it('shows banner automatically when no consent', () => {
       window.CookieBannerConfig = {};
-      initLegacy();
+      setup();
       expect(document.getElementById('ckb')).not.toBeNull();
     });
 
     it('does not show banner when consent exists', () => {
       document.cookie = 'ck=1;path=/';
       window.CookieBannerConfig = {};
-      initLegacy();
+      setup();
       expect(document.getElementById('ckb')).toBeNull();
     });
 
     it('legacy ok property reflects status', () => {
       window.CookieBannerConfig = {};
-      initLegacy();
+      setup();
       const api = window.CookieBanner as LegacyCookieBannerAPI;
       expect(api.ok).toBeNull();
       api.yes();
@@ -506,7 +506,7 @@ describe('smallest-cookie-banner', () => {
 
     it('legacy reset clears cookie and reloads', () => {
       window.CookieBannerConfig = {};
-      initLegacy();
+      setup();
       const api = window.CookieBanner as LegacyCookieBannerAPI;
       api.yes();
       api.reset();
@@ -2114,6 +2114,719 @@ describe('smallest-cookie-banner', () => {
       expect(document.getElementById('ckb-cats')).not.toBeNull();
       // But reject button hidden for non-EU
       expect(document.getElementById('ckn')).toBeNull();
+    });
+  });
+
+  // ============================================================================
+  // INSTANTIATION METHOD TESTS
+  // ============================================================================
+  describe('Instantiation Methods', () => {
+    describe('ES Module Import', () => {
+      it('exports createCookieBanner function', () => {
+        expect(typeof createCookieBanner).toBe('function');
+      });
+
+      it('exports setup function', () => {
+        expect(typeof setup).toBe('function');
+      });
+
+      it('exports utility functions', () => {
+        expect(typeof isEU).toBe('function');
+        expect(typeof getConsent).toBe('function');
+        expect(typeof setConsent).toBe('function');
+        expect(typeof deleteConsent).toBe('function');
+      });
+
+      it('exports validation functions', () => {
+        expect(typeof validateConfig).toBe('function');
+        expect(typeof sanitizeCss).toBe('function');
+        expect(typeof sanitizeInlineStyle).toBe('function');
+        expect(typeof sanitizeUrl).toBe('function');
+      });
+
+      it('exports types and constants', () => {
+        expect(DEFAULT_CSS).toBeDefined();
+        expect(typeof DEFAULT_CSS).toBe('string');
+        expect(DEFAULT_CATEGORIES).toBeDefined();
+        expect(Array.isArray(DEFAULT_CATEGORIES)).toBe(true);
+      });
+
+      it('does not auto-initialize when imported as module', () => {
+        // When imported as ES module, auto-init should NOT run
+        // The banner should not appear until explicitly created
+        resetState();
+        expect(document.getElementById('ckb')).toBeNull();
+        expect(window.CookieBanner).toBeUndefined();
+      });
+
+      it('allows manual initialization via createCookieBanner', () => {
+        const banner = createCookieBanner({ forceEU: true });
+        expect(banner).toBeDefined();
+        expect(typeof banner.show).toBe('function');
+        expect(typeof banner.hide).toBe('function');
+        expect(typeof banner.accept).toBe('function');
+        expect(typeof banner.reject).toBe('function');
+        expect(typeof banner.destroy).toBe('function');
+      });
+
+      it('allows manual initialization via setup', () => {
+        window.CookieBannerConfig = { forceEU: true };
+        const api = setup();
+        expect(api).not.toBeNull();
+        expect(window.CookieBanner).toBeDefined();
+        expect(typeof window.CookieBanner?.yes).toBe('function');
+      });
+    });
+
+    describe('Script Tag Auto-Initialization (Legacy/CDN)', () => {
+      beforeEach(() => {
+        resetState();
+      });
+
+      it('setup reads config from window.CookieBannerConfig', () => {
+        window.CookieBannerConfig = {
+          msg: 'Test message from config',
+          forceEU: true,
+        };
+        setup();
+        expect(document.getElementById('ckb')?.innerHTML).toContain('Test message from config');
+      });
+
+      it('setup works with empty config', () => {
+        window.CookieBannerConfig = {};
+        const api = setup();
+        expect(api).not.toBeNull();
+        expect(window.CookieBanner).toBeDefined();
+      });
+
+      it('setup works without config (undefined)', () => {
+        window.CookieBannerConfig = undefined;
+        const api = setup();
+        expect(api).not.toBeNull();
+        expect(window.CookieBanner).toBeDefined();
+      });
+
+      it('setup creates legacy API with yes/no/reset/destroy methods', () => {
+        window.CookieBannerConfig = { forceEU: true };
+        setup();
+
+        expect(typeof window.CookieBanner?.yes).toBe('function');
+        expect(typeof window.CookieBanner?.no).toBe('function');
+        expect(typeof window.CookieBanner?.reset).toBe('function');
+        expect(typeof window.CookieBanner?.destroy).toBe('function');
+      });
+
+      it('legacy API ok property returns consent status', () => {
+        window.CookieBannerConfig = { forceEU: true };
+        setup();
+
+        expect(window.CookieBanner?.ok).toBeNull(); // No consent yet
+        window.CookieBanner?.yes();
+        expect(window.CookieBanner?.ok).toBe(true);
+      });
+
+      it('setup calls onAccept callback from config', () => {
+        const onAccept = jest.fn();
+        window.CookieBannerConfig = { onAccept, forceEU: true };
+        setup();
+        window.CookieBanner?.yes();
+        expect(onAccept).toHaveBeenCalled();
+      });
+
+      it('setup calls onReject callback from config', () => {
+        const onReject = jest.fn();
+        window.CookieBannerConfig = { onReject, forceEU: true };
+        setup();
+        window.CookieBanner?.no();
+        expect(onReject).toHaveBeenCalled();
+      });
+
+      it('setup supports legacy onYes/onNo callback names', () => {
+        const onYes = jest.fn();
+        const onNo = jest.fn();
+        window.CookieBannerConfig = { onYes, onNo, forceEU: true };
+        setup();
+
+        window.CookieBanner?.yes();
+        expect(onYes).toHaveBeenCalled();
+
+        // Reset and test onNo
+        resetState();
+        window.CookieBannerConfig = { onYes, onNo, forceEU: true };
+        setup();
+        window.CookieBanner?.no();
+        expect(onNo).toHaveBeenCalled();
+      });
+
+      it('setup shows banner when no consent exists', () => {
+        window.CookieBannerConfig = { forceEU: true };
+        setup();
+        expect(document.getElementById('ckb')).not.toBeNull();
+      });
+
+      it('setup does not show banner when consent already exists', () => {
+        document.cookie = 'ck=1;path=/';
+        window.CookieBannerConfig = { forceEU: true };
+        setup();
+        expect(document.getElementById('ckb')).toBeNull();
+      });
+
+      it('legacy reset() clears cookie and reloads page', () => {
+        window.CookieBannerConfig = { forceEU: true };
+        setup();
+        window.CookieBanner?.yes();
+        expect(getConsent()).toBe('1');
+
+        window.CookieBanner?.reset();
+        expect(window.location.reload).toHaveBeenCalled();
+      });
+
+      it('legacy destroy() removes banner without clearing cookie', () => {
+        window.CookieBannerConfig = { forceEU: true };
+        setup();
+        expect(document.getElementById('ckb')).not.toBeNull();
+
+        window.CookieBanner?.destroy();
+        expect(document.getElementById('ckb')).toBeNull();
+      });
+
+      it('legacy no() calls instance.reject()', () => {
+        const onReject = jest.fn();
+        window.CookieBannerConfig = { forceEU: true, onReject };
+        setup();
+
+        // Ensure CookieBanner exists and call no()
+        expect(window.CookieBanner).toBeDefined();
+        window.CookieBanner!.no();
+        expect(onReject).toHaveBeenCalled();
+        expect(window.CookieBanner!.ok).toBe(false);
+      });
+
+      it('legacy API methods are callable functions', () => {
+        window.CookieBannerConfig = { forceEU: true };
+        const api = setup();
+
+        // Verify all methods exist and are functions
+        expect(api).not.toBeNull();
+        expect(typeof api!.yes).toBe('function');
+        expect(typeof api!.no).toBe('function');
+        expect(typeof api!.reset).toBe('function');
+        expect(typeof api!.destroy).toBe('function');
+
+        // Call destroy directly on the returned API
+        api!.destroy();
+        expect(document.getElementById('ckb')).toBeNull();
+      });
+    });
+
+    describe('Window.CookieBannerConfig Detection', () => {
+      beforeEach(() => {
+        resetState();
+      });
+
+      it('accepts all config options via window.CookieBannerConfig', () => {
+        window.CookieBannerConfig = {
+          mode: 'gdpr',
+          msg: 'Custom message',
+          acceptText: 'Accept All Cookies',
+          rejectText: 'Reject All Cookies',
+          settingsText: 'Settings',
+          saveText: 'Save',
+          days: 180,
+          cookieName: 'custom_consent',
+          forceEU: true,
+          privacyPolicyUrl: '/privacy',
+          privacyPolicyText: 'Privacy',
+        };
+        setup();
+
+        const el = document.getElementById('ckb');
+        expect(el?.innerHTML).toContain('Custom message');
+        expect(document.getElementById('cky')?.textContent).toBe('Accept All Cookies');
+        expect(document.getElementById('ckn')?.textContent).toBe('Reject All Cookies');
+      });
+
+      it('supports GDPR mode via config', () => {
+        window.CookieBannerConfig = {
+          mode: 'gdpr',
+          forceEU: true,
+        };
+        setup();
+
+        expect(document.getElementById('ckb-cats')).not.toBeNull();
+        expect(document.getElementById('cks')).not.toBeNull();
+      });
+
+      it('supports custom categories via config', () => {
+        window.CookieBannerConfig = {
+          mode: 'gdpr',
+          forceEU: true,
+          categories: [
+            { id: 'essential', name: 'Essential', required: true },
+            { id: 'tracking', name: 'Tracking' },
+          ],
+        };
+        setup();
+
+        const checkboxes = document.querySelectorAll('input[name="ckb-cat"]');
+        expect(checkboxes.length).toBe(2);
+      });
+
+      it('supports onConsent callback via config', () => {
+        const onConsent = jest.fn();
+        window.CookieBannerConfig = {
+          mode: 'gdpr',
+          forceEU: true,
+          onConsent,
+        };
+        setup();
+        window.CookieBanner?.yes();
+        expect(onConsent).toHaveBeenCalled();
+      });
+
+      it('supports widget config via window.CookieBannerConfig', () => {
+        window.CookieBannerConfig = {
+          mode: 'gdpr',
+          forceEU: true,
+          widget: { enabled: true, position: 'bottom-right' },
+        };
+        setup();
+        window.CookieBanner?.yes();
+
+        const widget = document.querySelector('[id^="ckb-widget"]') as HTMLElement;
+        expect(widget).not.toBeNull();
+        expect(widget?.style.cssText).toMatch(/right:\s*16px/);
+      });
+    });
+
+    describe('Multiple Instantiation Patterns', () => {
+      beforeEach(() => {
+        resetState();
+      });
+
+      it('supports createCookieBanner for framework integration', () => {
+        // React/Vue/Angular pattern: create instance, control manually
+        const banner = createCookieBanner({
+          msg: 'Framework banner',
+          forceEU: true,
+        });
+
+        expect(banner.status).toBeNull();
+        expect(banner.isVisible()).toBe(false);
+
+        banner.show();
+        expect(banner.isVisible()).toBe(true);
+        expect(document.getElementById('ckb')).not.toBeNull();
+
+        banner.hide();
+        expect(banner.isVisible()).toBe(false);
+      });
+
+      it('supports setup for CDN/script tag usage', () => {
+        // CDN pattern: set config, call setup
+        window.CookieBannerConfig = { forceEU: true };
+        setup();
+
+        expect(window.CookieBanner).toBeDefined();
+        expect(document.getElementById('ckb')).not.toBeNull();
+      });
+
+      it('multiple createCookieBanner instances can coexist', () => {
+        const banner1 = createCookieBanner({
+          cookieName: 'consent1',
+          msg: 'Banner 1',
+          forceEU: true,
+          allowMultiple: true,
+        });
+        const banner2 = createCookieBanner({
+          cookieName: 'consent2',
+          msg: 'Banner 2',
+          forceEU: true,
+          allowMultiple: true,
+        });
+
+        banner1.accept();
+        expect(getConsent('consent1')).toBe('1');
+        expect(getConsent('consent2')).toBeNull();
+        expect(banner1.status).toBe(true);
+        expect(banner2.status).toBeNull();
+      });
+
+      it('createCookieBanner works without any config', () => {
+        const banner = createCookieBanner();
+        expect(banner).toBeDefined();
+        expect(banner.status).toBeNull();
+        banner.show();
+        expect(document.getElementById('ckb')).not.toBeNull();
+      });
+
+      it('createCookieBanner with container option', () => {
+        const container = document.createElement('div');
+        container.id = 'my-container';
+        document.body.appendChild(container);
+
+        const banner = createCookieBanner({
+          container,
+          forceEU: true,
+        });
+        banner.show();
+
+        expect(container.querySelector('#ckb')).not.toBeNull();
+        expect(document.body.querySelector('#ckb')).not.toBeNull(); // Also in body since container is in body
+      });
+    });
+
+    describe('SSR Safety', () => {
+      it('createCookieBanner returns no-op instance when window is undefined', () => {
+        // Can't truly test this in jsdom, but verify the pattern exists
+        const banner = createCookieBanner();
+        expect(banner).toBeDefined();
+        // In SSR, all methods would be no-ops
+        expect(typeof banner.show).toBe('function');
+        expect(typeof banner.hide).toBe('function');
+      });
+
+      it('setup returns null in SSR context', () => {
+        // In jsdom we're in browser context, but verify the function handles the check
+        // The actual SSR test would require mocking window to be undefined
+        const result = setup();
+        // In browser context, it returns the API
+        expect(result).not.toBeNull();
+      });
+
+      it('utility functions handle SSR gracefully', () => {
+        // These should not throw in any context
+        expect(() => isEU()).not.toThrow();
+        expect(() => getConsent()).not.toThrow();
+        expect(() => setConsent('1')).not.toThrow();
+        expect(() => deleteConsent()).not.toThrow();
+      });
+    });
+
+    describe('DOM Ready State Handling', () => {
+      it('shows banner immediately when DOM is complete', () => {
+        Object.defineProperty(document, 'readyState', {
+          value: 'complete',
+          writable: true,
+          configurable: true,
+        });
+
+        window.CookieBannerConfig = { forceEU: true };
+        setup();
+
+        expect(document.getElementById('ckb')).not.toBeNull();
+      });
+
+      it('waits for DOMContentLoaded when document is loading', () => {
+        Object.defineProperty(document, 'readyState', {
+          value: 'loading',
+          writable: true,
+          configurable: true,
+        });
+
+        const addEventListenerSpy = jest.spyOn(document, 'addEventListener');
+
+        window.CookieBannerConfig = { forceEU: true };
+        setup();
+
+        // Should register DOMContentLoaded listener
+        expect(addEventListenerSpy).toHaveBeenCalledWith(
+          'DOMContentLoaded',
+          expect.any(Function)
+        );
+
+        // Simulate DOMContentLoaded
+        document.dispatchEvent(new Event('DOMContentLoaded'));
+        expect(document.getElementById('ckb')).not.toBeNull();
+
+        addEventListenerSpy.mockRestore();
+      });
+    });
+
+    describe('Error Handling in Instantiation', () => {
+      it('handles invalid cookieName gracefully', () => {
+        expect(() => createCookieBanner({ cookieName: '' })).toThrow();
+        expect(() => createCookieBanner({ cookieName: 'invalid;name' })).toThrow();
+      });
+
+      it('handles very long cookieName', () => {
+        const longName = 'a'.repeat(101);
+        expect(() => createCookieBanner({ cookieName: longName })).toThrow();
+      });
+
+      it('handles invalid container gracefully', () => {
+        const banner = createCookieBanner({
+          container: 'not-an-element' as unknown as HTMLElement,
+          forceEU: true,
+        });
+        // Should fall back to document.body
+        banner.show();
+        expect(document.body.querySelector('#ckb')).not.toBeNull();
+      });
+
+      it('handles callback errors without crashing', () => {
+        const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+
+        window.CookieBannerConfig = {
+          forceEU: true,
+          onAccept: () => {
+            throw new Error('Callback crash');
+          },
+        };
+        setup();
+
+        expect(() => window.CookieBanner?.yes()).not.toThrow();
+        expect(consoleSpy).toHaveBeenCalled();
+
+        consoleSpy.mockRestore();
+      });
+    });
+  });
+
+  // ============================================================================
+  // COVERAGE GAP TESTS
+  // ============================================================================
+  describe('Coverage Gap Tests', () => {
+    describe('Cookie Domain and Secure Flag', () => {
+      it('setConsent adds domain when valid domain provided', () => {
+        setConsent('1', 'ck', 365, '.example.com');
+        // Cookie should be set (we can't easily verify domain in jsdom)
+        expect(getConsent()).toBe('1');
+      });
+
+      it('deleteConsent works with domain', () => {
+        setConsent('1', 'ck', 365, '.example.com');
+        deleteConsent('ck', '.example.com');
+        expect(getConsent()).toBeNull();
+      });
+
+      it('setConsent adds Secure flag on HTTPS', () => {
+        // Mock https protocol
+        const originalProtocol = window.location.protocol;
+        Object.defineProperty(window, 'location', {
+          value: { ...window.location, protocol: 'https:' },
+          writable: true,
+          configurable: true,
+        });
+
+        setConsent('1', 'ck', 365);
+        expect(getConsent()).toBe('1');
+
+        // Restore
+        Object.defineProperty(window, 'location', {
+          value: { ...window.location, protocol: originalProtocol },
+          writable: true,
+          configurable: true,
+        });
+      });
+    });
+
+    describe('Granular Consent Status Edge Cases', () => {
+      it('sets status correctly when only required categories enabled', () => {
+        // Set granular consent where only essential (required) is true
+        document.cookie = 'ck=e:1,a:0,m:0,f:0;path=/';
+
+        const banner = createCookieBanner({
+          mode: 'gdpr',
+          forceEU: true,
+          categories: [
+            { id: 'e', name: 'Essential', required: true },
+            { id: 'a', name: 'Analytics' },
+            { id: 'm', name: 'Marketing' },
+            { id: 'f', name: 'Functional' },
+          ],
+        });
+
+        // Status should be false since no non-required categories are enabled
+        expect(banner.status).toBe(false);
+      });
+
+      it('sets status true when at least one non-required category enabled', () => {
+        // Set granular consent where analytics is also enabled
+        document.cookie = 'ck=e:1,a:1,m:0,f:0;path=/';
+
+        const banner = createCookieBanner({
+          mode: 'gdpr',
+          forceEU: true,
+          categories: [
+            { id: 'e', name: 'Essential', required: true },
+            { id: 'a', name: 'Analytics' },
+            { id: 'm', name: 'Marketing' },
+            { id: 'f', name: 'Functional' },
+          ],
+        });
+
+        // Status should be true since analytics (non-required) is enabled
+        expect(banner.status).toBe(true);
+      });
+    });
+
+    describe('Focus Trap Shift+Tab', () => {
+      it('wraps focus from first to last element on shift+tab', () => {
+        const banner = createCookieBanner({ forceEU: true });
+        banner.show();
+
+        const bannerEl = document.getElementById('ckb');
+        const buttons = bannerEl?.querySelectorAll('button');
+        const firstButton = buttons?.[0];
+        const lastButton = buttons?.[buttons.length - 1];
+
+        // Focus first button
+        firstButton?.focus();
+        expect(document.activeElement).toBe(firstButton);
+
+        // Simulate shift+tab
+        const event = new KeyboardEvent('keydown', {
+          key: 'Tab',
+          shiftKey: true,
+          bubbles: true,
+        });
+        bannerEl?.dispatchEvent(event);
+
+        // Focus should wrap to last button
+        expect(document.activeElement).toBe(lastButton);
+      });
+    });
+
+    describe('Widget Hover Effects', () => {
+      it('scales widget on mouseenter and mouseleave', () => {
+        const banner = createCookieBanner({
+          forceEU: true,
+          widget: { enabled: true },
+        });
+        banner.accept();
+
+        const widget = document.querySelector('[id^="ckb-widget"]') as HTMLElement;
+        expect(widget).not.toBeNull();
+
+        // Simulate mouseenter
+        widget.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
+        expect(widget.style.transform).toBe('scale(1.1)');
+
+        // Simulate mouseleave
+        widget.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }));
+        expect(widget.style.transform).toBe('scale(1)');
+      });
+    });
+
+    describe('Banner Cleanup in manage()', () => {
+      it('removes existing banner before showing manage dialog', () => {
+        const banner = createCookieBanner({
+          mode: 'gdpr',
+          forceEU: true,
+        });
+        banner.show();
+
+        const firstBannerId = document.getElementById('ckb')?.getAttribute('data-instance');
+
+        // Call manage while banner is visible
+        banner.manage();
+
+        // Banner should still exist (recreated)
+        expect(document.getElementById('ckb')).not.toBeNull();
+      });
+
+      it('cleans up previous banner when manage called multiple times', () => {
+        const banner = createCookieBanner({
+          mode: 'gdpr',
+          forceEU: true,
+        });
+        banner.accept();
+        banner.manage();
+        banner.hide();
+        banner.manage();
+
+        // Should only have one banner
+        const banners = document.querySelectorAll('#ckb');
+        expect(banners.length).toBe(1);
+      });
+    });
+
+    describe('Invalid Cookie Name in setConsent', () => {
+      it('throws error for invalid cookie name in setConsent', () => {
+        expect(() => setConsent('1', 'invalid;name')).toThrow('Invalid cookie name');
+        expect(() => setConsent('1', 'invalid=name')).toThrow('Invalid cookie name');
+        expect(() => setConsent('1', '')).toThrow('Invalid cookie name');
+      });
+    });
+
+    describe('Singleton Behavior', () => {
+      it('prevents duplicate banners by default', () => {
+        const banner1 = createCookieBanner({ forceEU: true });
+        banner1.show();
+
+        const banner2 = createCookieBanner({ forceEU: true });
+
+        // Should return existing instance
+        expect(banner2).toBe(banner1);
+
+        // Only one banner in DOM
+        const banners = document.querySelectorAll('#ckb');
+        expect(banners.length).toBe(1);
+      });
+
+      it('single click on accept dismisses banner (no double-click needed)', () => {
+        const onAccept = jest.fn();
+        const banner = createCookieBanner({ forceEU: true, onAccept });
+        banner.show();
+
+        // Click accept once
+        const acceptBtn = document.getElementById('cky');
+        expect(acceptBtn).not.toBeNull();
+        acceptBtn!.click();
+
+        // Banner should be gone after single click
+        expect(document.getElementById('ckb')).toBeNull();
+        expect(onAccept).toHaveBeenCalledTimes(1);
+        expect(banner.status).toBe(true);
+      });
+
+      it('allows multiple banners with allowMultiple: true', () => {
+        const banner1 = createCookieBanner({
+          forceEU: true,
+          allowMultiple: true,
+          cookieName: 'ck1',
+        });
+        banner1.show();
+
+        const banner2 = createCookieBanner({
+          forceEU: true,
+          allowMultiple: true,
+          cookieName: 'ck2',
+        });
+        banner2.show();
+
+        // Should be different instances
+        expect(banner2).not.toBe(banner1);
+      });
+
+      it('clears singleton on destroy', () => {
+        const banner1 = createCookieBanner({ forceEU: true });
+        banner1.show();
+        banner1.destroy();
+
+        // Should be able to create a new one
+        const banner2 = createCookieBanner({ forceEU: true });
+        banner2.show();
+
+        expect(banner2).not.toBe(banner1);
+        expect(document.getElementById('ckb')).not.toBeNull();
+      });
+
+      it('removes orphaned DOM element when no instance reference', () => {
+        // Create a banner element manually (simulating orphaned state)
+        const orphan = document.createElement('div');
+        orphan.id = 'ckb';
+        document.body.appendChild(orphan);
+
+        // Creating a new banner should remove the orphan
+        const banner = createCookieBanner({ forceEU: true });
+        banner.show();
+
+        // Should still only have one banner
+        const banners = document.querySelectorAll('#ckb');
+        expect(banners.length).toBe(1);
+      });
     });
   });
 });

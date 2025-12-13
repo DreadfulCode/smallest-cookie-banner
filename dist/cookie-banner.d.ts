@@ -90,6 +90,8 @@ export interface CookieBannerConfig {
     forceEU?: boolean;
     /** Milliseconds before auto-accept in non-EU mode (default: 5000, 0 to disable, max: 300000) */
     autoAcceptDelay?: number;
+    /** Auto-accept on scroll in non-EU mode (default: false) */
+    autoAcceptOnScroll?: boolean;
     /** Additional inline styles for the banner element (sanitized for security) */
     style?: string;
     /** Additional CSS rules to inject (sanitized for security) */
@@ -102,6 +104,8 @@ export interface CookieBannerConfig {
     policyVersion?: string;
     /** Consent widget configuration for managing preferences after consent */
     widget?: ConsentWidgetConfig;
+    /** Allow multiple banner instances (default: false - singleton behavior) */
+    allowMultiple?: boolean;
     /** Callback when user saves consent (receives consent record with metadata) */
     onConsent?: (consent: ConsentState, record?: ConsentRecord) => void;
     /** Callback when user accepts all */
@@ -209,11 +213,13 @@ export declare function encodeGranularConsent(state: ConsentState): string;
 /**
  * Create a new cookie banner instance
  * Framework-friendly: no global state, proper cleanup, SSR-safe
+ *
+ * By default, prevents duplicate banners. Set `config.allowMultiple = true` to override.
  */
 export declare function createCookieBanner(config?: CookieBannerConfig): CookieBannerInstance;
 /**
- * Initialize with legacy global API (window.CookieBanner)
+ * Set up the global window.CookieBanner API
  * Called automatically when loaded via script tag
  */
-export declare function initLegacy(): LegacyCookieBannerAPI | null;
+export declare function setup(): LegacyCookieBannerAPI | null;
 export {};
