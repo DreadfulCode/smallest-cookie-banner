@@ -1016,18 +1016,17 @@
         </h2>
         <div class="section-content">
           <div class="field">
-            <label>Region Mode</label>
+            <label>Consent Mode</label>
             <select id="mode">
-              <option value="auto">Auto-detect (EU vs non-EU)</option>
-              <option value="eu">Force EU mode (always show reject)</option>
-              <option value="non-eu">Force non-EU mode (auto-accept)</option>
+              <option value="eu">GDPR mode (accept/reject) — default</option>
+              <option value="non-eu">Minimal mode (OK button only)</option>
             </select>
           </div>
           <div class="field-row">
             <div class="field">
               <label>Auto-accept (ms)</label>
-              <input type="number" id="autoAcceptDelay" value="5000" min="0" step="1000">
-              <div class="help-text">Non-EU only. 0 = disabled</div>
+              <input type="number" id="autoAcceptDelay" value="0" min="0" step="1000">
+              <div class="help-text">Minimal mode only. 0 = disabled</div>
             </div>
             <div class="field">
               <label>Cookie expiry (days)</label>

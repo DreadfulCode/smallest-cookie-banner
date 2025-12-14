@@ -129,20 +129,19 @@
       <label><input type="radio" name="mode" value="gdpr"> GDPR (categories)</label>
     </div>
     <div class="config-row">
-      <strong>Region:</strong>
-      <label><input type="radio" name="region" value="auto" checked> Auto-detect</label>
-      <label><input type="radio" name="region" value="eu"> Force EU</label>
-      <label><input type="radio" name="region" value="non-eu"> Force Non-EU</label>
+      <strong>Consent:</strong>
+      <label><input type="radio" name="region" value="eu" checked> GDPR (accept/reject)</label>
+      <label><input type="radio" name="region" value="non-eu"> Minimal (OK only)</label>
     </div>
     <div class="config-row">
       <strong>Auto-accept delay:</strong>
-      <label><input type="number" id="autoDelay" value="5000" min="0" max="60000" step="1000"> ms</label>
-      <span style="color:#666; font-size:13px">(0 = disabled, Non-EU only)</span>
+      <label><input type="number" id="autoDelay" value="0" min="0" max="60000" step="1000"> ms</label>
+      <span style="color:#666; font-size:13px">(0 = disabled, Minimal mode only)</span>
     </div>
     <div class="config-row">
       <label><input type="checkbox" id="showWidget"> Show widget after consent</label>
-      <label><input type="checkbox" id="showCountdown" checked> Show countdown</label>
-      <label><input type="checkbox" id="scrollAutoAccept"> Auto-accept on scroll (Non-EU)</label>
+      <label><input type="checkbox" id="showCountdown"> Show countdown</label>
+      <label><input type="checkbox" id="scrollAutoAccept"> Auto-accept on scroll (Minimal)</label>
     </div>
     <div class="controls" style="margin-top: 16px;">
       <button onclick="launchBanner()" style="background:#2563eb; color:#fff;">Launch Banner</button>
@@ -189,7 +188,7 @@
   <pre>&lt;script src="dist/cookie-banner.min.js"&gt;&lt;/script&gt;</pre>
 
   <div class="scroll-helper">
-    <p>Scroll down to test scroll auto-accept (enable checkbox above, non-EU mode only)</p>
+    <p>Scroll down to test scroll auto-accept (enable checkbox above, Minimal mode only)</p>
     <p style="margin-top: 50vh;">Keep scrolling...</p>
   </div>
 
@@ -321,10 +320,8 @@
       currentBanner = window.createCookieBanner(config);
       currentBanner.show();
 
-      // Start countdown for non-EU
-      const isNonEU = config.forceEU === false ||
-        (config.forceEU === undefined && !window.CookieBannerModule.isEU());
-      if (isNonEU && config.autoAcceptDelay > 0) {
+      // Start countdown for Minimal mode
+      if (config.forceEU === false && config.autoAcceptDelay > 0) {
         startCountdown(config.autoAcceptDelay);
       }
 
