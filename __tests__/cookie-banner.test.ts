@@ -3289,4 +3289,167 @@ describe('smallest-cookie-banner', () => {
       });
     });
   });
+
+  // Tests for tabbed UI and GDPR mode features
+  describe('Tabbed UI toast mode', () => {
+    it('adds toast class when tabs.toast is true', () => {
+      const banner = createCookieBanner({
+        forceEU: true,
+        tabs: { enabled: true, toast: true },
+      });
+      banner.show();
+
+      const wrapper = shadowQuery('#ckb');
+      expect(wrapper?.classList.contains('toast')).toBe(true);
+      expect(wrapper?.classList.contains('tabbed')).toBe(true);
+    });
+
+    it('does not add toast class when tabs.toast is false', () => {
+      const banner = createCookieBanner({
+        forceEU: true,
+        tabs: { enabled: true, toast: false },
+      });
+      banner.show();
+
+      const wrapper = shadowQuery('#ckb');
+      expect(wrapper?.classList.contains('tabbed')).toBe(true);
+      expect(wrapper?.classList.contains('toast')).toBe(false);
+    });
+  });
+
+  describe('Tab switching', () => {
+    it('switches tabs when tab buttons are clicked', () => {
+      const banner = createCookieBanner({
+        forceEU: true,
+        tabs: { enabled: true },
+        mode: 'gdpr',
+      });
+      banner.show();
+
+      // Click on Details tab
+      const detailsTab = shadowQuery('.ckb-tab-btn[data-tab="details"]');
+      expect(detailsTab).not.toBeNull();
+      detailsTab?.click();
+
+      // Check that details panel is active
+      const detailsPanel = shadowQuery('#ckb-panel-details');
+      expect(detailsPanel?.classList.contains('active')).toBe(true);
+
+      // Check that consent panel is not active
+      const consentPanel = shadowQuery('#ckb-panel-consent');
+      expect(consentPanel?.classList.contains('active')).toBe(false);
+
+      // Click on About tab
+      const aboutTab = shadowQuery('.ckb-tab-btn[data-tab="about"]');
+      aboutTab?.click();
+
+      const aboutPanel = shadowQuery('#ckb-panel-about');
+      expect(aboutPanel?.classList.contains('active')).toBe(true);
+    });
+
+    it('updates aria-selected on tab buttons', () => {
+      const banner = createCookieBanner({
+        forceEU: true,
+        tabs: { enabled: true },
+        mode: 'gdpr',
+      });
+      banner.show();
+
+      const consentTab = shadowQuery('.ckb-tab-btn[data-tab="consent"]');
+      const detailsTab = shadowQuery('.ckb-tab-btn[data-tab="details"]');
+
+      // Initially consent tab should be selected
+      expect(consentTab?.getAttribute('aria-selected')).toBe('true');
+      expect(detailsTab?.getAttribute('aria-selected')).toBe('false');
+
+      // Click details tab
+      detailsTab?.click();
+
+      expect(consentTab?.getAttribute('aria-selected')).toBe('false');
+      expect(detailsTab?.getAttribute('aria-selected')).toBe('true');
+    });
+
+    it('minimal mode with tabs shows only Consent and About tabs (no Details)', () => {
+      const banner = createCookieBanner({
+        forceEU: true,
+        tabs: { enabled: true },
+        // No mode = minimal (default)
+      });
+      banner.show();
+
+      // Should have Consent and About tabs
+      const consentTab = shadowQuery('.ckb-tab-btn[data-tab="consent"]');
+      const aboutTab = shadowQuery('.ckb-tab-btn[data-tab="about"]');
+      expect(consentTab).not.toBeNull();
+      expect(aboutTab).not.toBeNull();
+
+      // Should NOT have Details tab (no categories in minimal mode)
+      const detailsTab = shadowQuery('.ckb-tab-btn[data-tab="details"]');
+      expect(detailsTab).toBeNull();
+    });
+
+    it('GDPR mode with tabs shows Consent, Details, and About tabs', () => {
+      const banner = createCookieBanner({
+        forceEU: true,
+        tabs: { enabled: true },
+        mode: 'gdpr',
+      });
+      banner.show();
+
+      // Should have all three tabs
+      const consentTab = shadowQuery('.ckb-tab-btn[data-tab="consent"]');
+      const detailsTab = shadowQuery('.ckb-tab-btn[data-tab="details"]');
+      const aboutTab = shadowQuery('.ckb-tab-btn[data-tab="about"]');
+
+      expect(consentTab).not.toBeNull();
+      expect(detailsTab).not.toBeNull();
+      expect(aboutTab).not.toBeNull();
+    });
+  });
+
+  describe('Settings and Save buttons in GDPR mode (non-tabbed)', () => {
+    it('shows categories when settings button is clicked', () => {
+      const banner = createCookieBanner({
+        forceEU: true,
+        mode: 'gdpr',
+        tabs: { enabled: false }, // Non-tabbed mode has settings button
+      });
+      banner.show();
+
+      const settingsBtn = shadowQuery('#cks');
+      expect(settingsBtn).not.toBeNull();
+
+      // Wrapper should not have expanded class initially
+      const wrapper = shadowQuery('#ckb');
+      expect(wrapper?.classList.contains('expanded')).toBe(false);
+
+      // Click settings button
+      settingsBtn?.click();
+
+      // Wrapper should now have expanded class
+      expect(wrapper?.classList.contains('expanded')).toBe(true);
+    });
+
+    it('saves preferences when save button is clicked', () => {
+      const onConsent = jest.fn();
+      const banner = createCookieBanner({
+        forceEU: true,
+        mode: 'gdpr',
+        tabs: { enabled: false }, // Non-tabbed mode has save button
+        onConsent,
+      });
+      banner.show();
+
+      // Expand categories first
+      const settingsBtn = shadowQuery('#cks');
+      settingsBtn?.click();
+
+      // Click save button
+      const saveBtn = shadowQuery('#cksv');
+      expect(saveBtn).not.toBeNull();
+      saveBtn?.click();
+
+      expect(onConsent).toHaveBeenCalled();
+    });
+  });
 });
