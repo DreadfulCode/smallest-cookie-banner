@@ -4,43 +4,204 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cookie Banner Configurator | smallest-cookie-banner</title>
+  <meta name="description" content="Visual configurator for the smallest legally compliant cookie consent banner. Customize colors, fonts, position, and generate code.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍪</text></svg>">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
-    body {
-      font-family: system-ui, -apple-system, sans-serif;
-      background: #f5f5f5;
-      min-height: 100vh;
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --bg: #f5f5f5;
+      --sidebar-bg: #fff;
+      --border: #e0e0e0;
+      --text: #333;
+      --text-muted: #666;
+      --code-bg: #1e1e1e;
     }
 
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      color: var(--text);
+    }
+
+    /* Hero */
+    .hero {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      padding: 24px 20px;
+      text-align: center;
+      color: #fff;
+    }
+
+    .hero-content {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .hero-tagline {
+      font-size: 18px;
+      font-weight: 500;
+      margin-bottom: 16px;
+      opacity: 0.95;
+    }
+
+    .hero-stats {
+      display: flex;
+      justify-content: center;
+      gap: 32px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .hero-stats .stat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .hero-stats .stat strong {
+      font-size: 24px;
+      font-weight: 700;
+      color: #4ade80;
+    }
+
+    .hero-stats .stat span {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      opacity: 0.7;
+    }
+
+    .hero-features {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .hero-features span {
+      background: rgba(255,255,255,0.1);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+    }
+
+    @media (max-width: 600px) {
+      .hero-stats { gap: 20px; }
+      .hero-stats .stat strong { font-size: 20px; }
+    }
+
+    /* Header */
+    .header {
+      background: var(--sidebar-bg);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header h1 {
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .header h1 span {
+      font-size: 24px;
+    }
+
+    .header-links {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .header-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .header-links a:hover {
+      color: var(--primary);
+    }
+
+    /* Layout */
     .layout {
       display: grid;
       grid-template-columns: 380px 1fr;
-      min-height: 100vh;
+      min-height: calc(100vh - 53px);
+    }
+
+    @media (max-width: 1000px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
     }
 
     /* Sidebar */
     .sidebar {
-      background: #fff;
-      border-right: 1px solid #e0e0e0;
+      background: var(--sidebar-bg);
+      border-right: 1px solid var(--border);
       padding: 20px;
       overflow-y: auto;
-      max-height: 100vh;
+      max-height: calc(100vh - 53px);
       position: sticky;
-      top: 0;
+      top: 53px;
     }
 
-    .sidebar h1 {
-      font-size: 18px;
-      margin-bottom: 4px;
+    @media (max-width: 1000px) {
+      .sidebar {
+        max-height: none;
+        position: relative;
+        top: 0;
+      }
     }
 
-    .sidebar .subtitle {
-      font-size: 12px;
-      color: #666;
+    /* Theme Presets */
+    .presets {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
       margin-bottom: 20px;
     }
 
+    .preset {
+      padding: 8px;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      text-align: center;
+      font-size: 11px;
+      transition: all 0.2s;
+    }
+
+    .preset:hover {
+      border-color: var(--primary);
+    }
+
+    .preset.active {
+      border-color: var(--primary);
+      background: rgba(37, 99, 235, 0.05);
+    }
+
+    .preset-preview {
+      height: 24px;
+      border-radius: 4px;
+      margin-bottom: 4px;
+    }
+
+    /* Sections */
     .section {
       margin-bottom: 24px;
       padding-bottom: 24px;
@@ -52,13 +213,22 @@
     }
 
     .section h2 {
-      font-size: 13px;
+      font-size: 12px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      color: #666;
+      color: var(--text-muted);
       margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
 
+    .section h2 svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    /* Form Fields */
     .field {
       margin-bottom: 12px;
     }
@@ -68,7 +238,7 @@
       font-size: 13px;
       font-weight: 500;
       margin-bottom: 4px;
-      color: #333;
+      color: var(--text);
     }
 
     .field input[type="text"],
@@ -81,13 +251,14 @@
       border-radius: 6px;
       font-size: 14px;
       font-family: inherit;
+      background: #fff;
     }
 
     .field input:focus,
     .field select:focus,
     .field textarea:focus {
       outline: none;
-      border-color: #2563eb;
+      border-color: var(--primary);
       box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
     }
 
@@ -99,6 +270,12 @@
     .field-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .field-row-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
       gap: 10px;
     }
 
@@ -115,10 +292,13 @@
       border-radius: 6px;
       padding: 2px;
       cursor: pointer;
+      background: #fff;
     }
 
     .color-field input[type="text"] {
       flex: 1;
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 13px;
     }
 
     .checkbox-field {
@@ -130,6 +310,7 @@
     .checkbox-field input {
       width: 18px;
       height: 18px;
+      accent-color: var(--primary);
     }
 
     .checkbox-field label {
@@ -137,27 +318,40 @@
       font-weight: normal;
     }
 
-    /* Preview area */
+    .help-text {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* Preview Area */
     .preview-area {
       padding: 20px;
       position: relative;
-      min-height: 100vh;
     }
 
     .preview-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 12px;
     }
 
     .preview-header h2 {
       font-size: 16px;
     }
 
+    .preview-controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
     .preview-actions {
       display: flex;
-      gap: 10px;
+      gap: 8px;
     }
 
     .btn {
@@ -168,21 +362,29 @@
       cursor: pointer;
       border: none;
       transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn svg {
+      width: 16px;
+      height: 16px;
     }
 
     .btn-primary {
-      background: #2563eb;
+      background: var(--primary);
       color: #fff;
     }
 
     .btn-primary:hover {
-      background: #1d4ed8;
+      background: var(--primary-hover);
     }
 
     .btn-secondary {
       background: #fff;
       border: 1px solid #ddd;
-      color: #333;
+      color: var(--text);
     }
 
     .btn-secondary:hover {
@@ -191,11 +393,11 @@
 
     /* Live Banner Preview */
     .banner-preview-container {
-      background: #f0f0f0;
+      background: #f5f5f5;
       border-radius: 12px;
       padding: 20px;
       margin-bottom: 20px;
-      min-height: 100px;
+      min-height: 120px;
       display: flex;
       align-items: flex-end;
       position: relative;
@@ -215,11 +417,11 @@
       width: 100%;
       display: flex;
       align-items: center;
-      gap: var(--preview-gap, 8px);
-      padding: var(--preview-padding, 8px 12px);
+      gap: var(--preview-gap, 12px);
+      padding: var(--preview-padding, 12px 16px);
       background: var(--preview-bg, #222);
       color: var(--preview-color, #fff);
-      font: var(--preview-font, 14px system-ui, sans-serif);
+      font: var(--preview-font, 14px/1.4 system-ui, sans-serif);
       border-radius: var(--preview-radius, 0);
       flex-wrap: wrap;
     }
@@ -231,7 +433,7 @@
     }
 
     .banner-preview button {
-      padding: var(--preview-btn-padding, 6px 12px);
+      padding: var(--preview-btn-padding, 10px 20px);
       border: none;
       border-radius: var(--preview-btn-radius, 4px);
       background: var(--preview-btn-bg, #fff);
@@ -241,15 +443,15 @@
     }
 
     .banner-preview .reject-btn {
-      background: transparent;
-      color: inherit;
+      background: var(--preview-reject-bg, transparent);
+      color: var(--preview-color, inherit);
       border: 1px solid currentColor;
     }
 
-    /* Code output */
+    /* Code Output */
     .code-output {
       margin-top: 20px;
-      background: #1e1e1e;
+      background: var(--code-bg);
       border-radius: 12px;
       overflow: hidden;
     }
@@ -262,12 +464,37 @@
       align-items: center;
     }
 
-    .code-header span {
-      color: #888;
-      font-size: 13px;
+    .tabs {
+      display: flex;
+      gap: 0;
     }
 
-    .code-header button {
+    .tab {
+      padding: 6px 14px;
+      background: transparent;
+      border: none;
+      color: #888;
+      font-size: 13px;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+
+    .tab:hover {
+      color: #ccc;
+    }
+
+    .tab.active {
+      color: #fff;
+      background: rgba(255,255,255,0.1);
+    }
+
+    .code-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .code-btn {
       background: #3d3d3d;
       border: none;
       color: #fff;
@@ -275,15 +502,25 @@
       border-radius: 4px;
       font-size: 12px;
       cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
     }
 
-    .code-header button:hover {
+    .code-btn:hover {
       background: #4d4d4d;
+    }
+
+    .code-btn svg {
+      width: 14px;
+      height: 14px;
     }
 
     .code-body {
       padding: 16px;
       overflow-x: auto;
+      max-height: 400px;
+      overflow-y: auto;
     }
 
     .code-body pre {
@@ -301,291 +538,676 @@
     .code-body .keyword { color: #569cd6; }
     .code-body .property { color: #9cdcfe; }
 
-    /* Tabs */
-    .tabs {
-      display: flex;
-      gap: 0;
-      margin-bottom: -1px;
-    }
-
-    .tab {
-      padding: 8px 16px;
-      background: transparent;
-      border: none;
-      color: #666;
-      font-size: 13px;
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-    }
-
-    .tab.active {
-      color: #2563eb;
-      border-bottom-color: #2563eb;
-    }
-
-    /* Demo status */
-    .demo-status {
-      background: #f0f9ff;
-      border: 1px solid #bae6fd;
-      border-radius: 8px;
+    .code-help {
       padding: 12px 16px;
-      margin-bottom: 16px;
-      font-size: 14px;
+      background: #2d2d2d;
+      border-top: 1px solid #3d3d3d;
+      font-size: 13px;
+      color: #aaa;
+      line-height: 1.6;
     }
 
-    .demo-status.accepted {
-      background: #dcfce7;
-      border-color: #86efac;
+    .code-help code {
+      background: #3d3d3d;
+      padding: 2px 6px;
+      border-radius: 3px;
+      color: #e0e0e0;
     }
 
-    .demo-status.rejected {
-      background: #fee2e2;
-      border-color: #fca5a5;
-    }
-
-    /* Countdown */
-    #countdown {
-      position: fixed;
-      top: 10px;
-      right: 10px;
-      background: #1e293b;
+    .code-help strong {
       color: #fff;
-      padding: 8px 14px;
-      border-radius: 6px;
-      font-family: monospace;
+    }
+
+    .code-body .number { color: #b5cea8; }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.2s;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal {
+      background: #fff;
+      border-radius: 12px;
+      max-width: 600px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      transform: translateY(20px);
+      transition: transform 0.2s;
+    }
+
+    .modal-overlay.active .modal {
+      transform: translateY(0);
+    }
+
+    .modal-header {
+      padding: 20px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-header h2 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #888;
+      padding: 4px 8px;
+    }
+
+    .modal-close:hover {
+      color: #333;
+    }
+
+    .modal-body {
+      padding: 20px;
+    }
+
+    .modal-body h3 {
       font-size: 14px;
-      z-index: 99999;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin: 20px 0 10px;
+    }
+
+    .modal-body h3:first-child {
+      margin-top: 0;
+    }
+
+    .modal-body ol {
+      padding-left: 24px;
+      line-height: 1.8;
+    }
+
+    .modal-body code {
+      background: #f5f5f5;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 13px;
+    }
+
+    .modal-body .note {
+      background: #f0f9ff;
+      border-left: 4px solid #3b82f6;
+      padding: 12px 16px;
+      margin: 16px 0;
+      border-radius: 0 8px 8px 0;
+    }
+
+    .modal-body a {
+      color: var(--primary);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .modal {
+        background: #2d2d2d;
+        color: #e0e0e0;
+      }
+      .modal-header {
+        border-color: #444;
+      }
+      .modal-close {
+        color: #aaa;
+      }
+      .modal-close:hover {
+        color: #fff;
+      }
+      .modal-body code {
+        background: #3d3d3d;
+        color: #e0e0e0;
+      }
+      .modal-body .note {
+        background: #1e3a4d;
+      }
+    }
+
+    /* Toast notification */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #333;
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.3s;
+      z-index: 1000;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Collapsible sections */
+    .section-toggle {
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .section-toggle::after {
+      content: '';
+      display: inline-block;
+      width: 0;
+      height: 0;
+      border-left: 4px solid transparent;
+      border-right: 4px solid transparent;
+      border-top: 5px solid currentColor;
+      margin-left: auto;
+      transition: transform 0.2s;
+    }
+
+    .section.collapsed .section-toggle::after {
+      transform: rotate(-90deg);
+    }
+
+    .section.collapsed .section-content {
       display: none;
     }
 
-    /* Responsive */
-    @media (max-width: 900px) {
-      .layout {
-        grid-template-columns: 1fr;
+    /* Range slider styling */
+    input[type="range"] {
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: #e0e0e0;
+      outline: none;
+      -webkit-appearance: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--primary);
+      cursor: pointer;
+    }
+
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1a1a1a;
+        --sidebar-bg: #242424;
+        --border: #333;
+        --text: #e0e0e0;
+        --text-muted: #999;
       }
-      .sidebar {
-        max-height: none;
-        position: relative;
+
+      .field input,
+      .field select,
+      .field textarea {
+        background: #333;
+        border-color: #444;
+        color: #e0e0e0;
       }
-      .preview-content {
-        height: 400px;
+
+      .preset {
+        border-color: #444;
+      }
+
+      .btn-secondary {
+        background: #333;
+        border-color: #444;
+        color: #e0e0e0;
       }
     }
   </style>
 </head>
 <body>
+  <header class="header">
+    <h1><span>🍪</span> Cookie Banner Configurator <a href="https://www.npmjs.com/package/smallest-cookie-banner" target="_blank" style="font-size:12px;background:#cb3837;color:#fff;padding:2px 8px;border-radius:4px;text-decoration:none;margin-left:8px;font-weight:normal;">v1.0.6</a></h1>
+    <div class="header-links">
+      <a href="https://vibecodingwithfred.com/blog/gdpr-cookie-banner-cdn/" target="_blank">
+        Read more about the library and see it in action on my blog
+      </a>
+      <a href="frameworks/">
+        Framework Examples
+      </a>
+      <a href="https://github.com/DreadfulCode/smallest-cookie-banner" target="_blank">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+        GitHub
+      </a>
+      <a href="https://www.npmjs.com/package/smallest-cookie-banner" target="_blank">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M0 7.334v8h6.666v1.332H12v-1.332h12v-8H0zm6.666 6.664H5.334v-4H3.999v4H1.335V8.667h5.331v5.331zm4 0v1.336H8.001V8.667h5.334v5.332h-2.669v-.001zm12.001 0h-1.33v-4h-1.336v4h-1.335v-4h-1.33v4h-2.671V8.667h8.002v5.331z"/></svg>
+        npm
+      </a>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <div class="hero">
+    <div class="hero-content">
+      <p class="hero-tagline">The smallest legally compliant cookie consent banner in existence.</p>
+      <div class="hero-stats">
+        <div class="stat"><strong>~6KB</strong><span>gzipped</span></div>
+        <div class="stat"><strong>0</strong><span>dependencies</span></div>
+        <div class="stat"><strong>260</strong><span>tests</span></div>
+        <div class="stat"><strong>100%</strong><span>TypeScript</span></div>
+      </div>
+      <div class="hero-features">
+        <span>GDPR/CCPA Compliant</span>
+        <span>WCAG 2.1 AA</span>
+        <span>Full i18n</span>
+        <span>React/Vue/Angular/Vanilla</span>
+      </div>
+    </div>
+  </div>
+
   <div class="layout">
     <!-- Sidebar Controls -->
     <div class="sidebar">
-      <h1>Cookie Banner Configurator</h1>
-      <p class="subtitle">Customize and generate your code</p>
+      <!-- Banner Mode - FIRST CHOICE -->
+      <div class="section" style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); margin: -20px -20px 20px -20px; padding: 20px; border-radius: 0;">
+        <h2 style="color: #0369a1;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+          Banner Mode
+        </h2>
+        <div class="field" style="margin-bottom: 0;">
+          <select id="bannerMode" style="font-size: 15px; padding: 10px 12px; font-weight: 500;">
+            <option value="minimal">Minimal - Simple Accept/Reject</option>
+            <option value="gdpr">GDPR - Granular Consent Categories</option>
+          </select>
+          <div class="help-text" style="margin-top: 8px;">
+            <strong>Minimal:</strong> Quick accept/reject buttons<br>
+            <strong>GDPR:</strong> Cookie categories (analytics, marketing, etc.)
+          </div>
+        </div>
+      </div>
+
+      <!-- Theme Presets -->
+      <div class="section">
+        <h2>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/></svg>
+          Theme Presets
+        </h2>
+        <div class="presets">
+          <div class="preset active" data-preset="dark" onclick="applyPreset('dark')">
+            <div class="preset-preview" style="background:#222"></div>
+            Dark
+          </div>
+          <div class="preset" data-preset="light" onclick="applyPreset('light')">
+            <div class="preset-preview" style="background:#fff;border:1px solid #ddd"></div>
+            Light
+          </div>
+          <div class="preset" data-preset="minimal" onclick="applyPreset('minimal')">
+            <div class="preset-preview" style="background:#f8f8f8;border:1px solid #e0e0e0"></div>
+            Minimal
+          </div>
+        </div>
+        <div class="quick-colors" style="display:flex;gap:12px;margin-top:16px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:80px;">
+            <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Background</label>
+            <input type="color" id="quickBgColor" value="#222222" style="width:100%;height:36px;border:1px solid #ddd;border-radius:6px;padding:2px;cursor:pointer;">
+          </div>
+          <div style="flex:1;min-width:80px;">
+            <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Text</label>
+            <input type="color" id="quickTextColor" value="#ffffff" style="width:100%;height:36px;border:1px solid #ddd;border-radius:6px;padding:2px;cursor:pointer;">
+          </div>
+          <div style="flex:1;min-width:80px;">
+            <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Button BG</label>
+            <input type="color" id="quickBtnBg" value="#ffffff" style="width:100%;height:36px;border:1px solid #ddd;border-radius:6px;padding:2px;cursor:pointer;">
+          </div>
+          <div style="flex:1;min-width:80px;">
+            <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Button Text</label>
+            <input type="color" id="quickBtnColor" value="#222222" style="width:100%;height:36px;border:1px solid #ddd;border-radius:6px;padding:2px;cursor:pointer;">
+          </div>
+        </div>
+      </div>
 
       <!-- Text Content -->
       <div class="section">
-        <h2>Text Content</h2>
-        <div class="field">
-          <label>Message</label>
-          <textarea id="msg">We use cookies to enhance your experience.</textarea>
-        </div>
-        <div class="field-row">
+        <h2 class="section-toggle" onclick="toggleSection(this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
+          Text Content
+        </h2>
+        <div class="section-content">
           <div class="field">
-            <label>Accept Button</label>
-            <input type="text" id="acceptText" value="Accept">
+            <label>Language Preset</label>
+            <select id="languagePreset" onchange="applyLanguage(this.value)">
+              <option value="en">English</option>
+              <option value="nl">Nederlands (Dutch)</option>
+              <option value="de">Deutsch (German)</option>
+              <option value="fr">Français (French)</option>
+              <option value="es">Español (Spanish)</option>
+              <option value="it">Italiano (Italian)</option>
+              <option value="pt">Português (Portuguese)</option>
+              <option value="pl">Polski (Polish)</option>
+              <option value="ru">Русский (Russian)</option>
+              <option value="uk">Українська (Ukrainian)</option>
+              <option value="zh">中文 (Chinese)</option>
+              <option value="ja">日本語 (Japanese)</option>
+              <option value="ko">한국어 (Korean)</option>
+              <option value="ar">العربية (Arabic) ← RTL</option>
+              <option value="he">עברית (Hebrew) ← RTL</option>
+              <option value="custom">Custom</option>
+            </select>
           </div>
           <div class="field">
-            <label>Reject Button</label>
-            <input type="text" id="rejectText" value="Decline">
+            <label>Message</label>
+            <textarea id="msg">We use cookies to enhance your experience.</textarea>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>Accept Button</label>
+              <input type="text" id="acceptText" value="Accept">
+            </div>
+            <div class="field">
+              <label>Reject Button</label>
+              <input type="text" id="rejectText" value="Decline">
+            </div>
+          </div>
+          <!-- GDPR-specific text options -->
+          <div id="gdpr-text-options" style="display:none;margin-top:12px;padding-top:12px;border-top:1px dashed #ddd;">
+            <div class="help-text" style="margin-bottom:8px;color:#0369a1;font-weight:500;">GDPR Mode Text Options:</div>
+            <div class="field-row">
+              <div class="field">
+                <label>Customize Button</label>
+                <input type="text" id="settingsText" value="Customize">
+              </div>
+              <div class="field">
+                <label>Save Button</label>
+                <input type="text" id="saveText" value="Save Preferences">
+              </div>
+            </div>
+            <div class="field">
+              <label>Privacy Link Text</label>
+              <input type="text" id="privacyPolicyText" value="Privacy Policy">
+            </div>
           </div>
         </div>
       </div>
 
       <!-- Behavior -->
       <div class="section">
-        <h2>Behavior</h2>
-        <div class="field">
-          <label>Banner Mode</label>
-          <select id="bannerMode">
-            <option value="minimal">Minimal (simple accept/reject)</option>
-            <option value="gdpr">GDPR (granular consent categories)</option>
-          </select>
-        </div>
-        <div class="checkbox-field" style="margin-bottom:12px;">
-          <input type="checkbox" id="enableTabs" checked>
-          <label>Enable Tabbed UI (Consent/Details/About)</label>
-        </div>
-        <div class="field">
-          <label>Region Mode</label>
-          <select id="mode">
-            <option value="auto">Auto-detect (EU vs non-EU)</option>
-            <option value="eu">Force EU mode (always show reject)</option>
-            <option value="non-eu">Force non-EU mode (auto-accept)</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>Auto-accept delay (non-EU, ms)</label>
-          <input type="number" id="autoAcceptDelay" value="5000" min="0" step="1000">
-        </div>
-        <div class="field">
-          <label>Cookie expiry (days)</label>
-          <input type="number" id="days" value="365" min="1">
+        <h2 class="section-toggle" onclick="toggleSection(this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          Behavior
+        </h2>
+        <div class="section-content">
+          <div class="field">
+            <label>Region Mode</label>
+            <select id="mode">
+              <option value="auto">Auto-detect (EU vs non-EU)</option>
+              <option value="eu">Force EU mode (always show reject)</option>
+              <option value="non-eu">Force non-EU mode (auto-accept)</option>
+            </select>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>Auto-accept (ms)</label>
+              <input type="number" id="autoAcceptDelay" value="5000" min="0" step="1000">
+              <div class="help-text">Non-EU only. 0 = disabled</div>
+            </div>
+            <div class="field">
+              <label>Cookie expiry (days)</label>
+              <input type="number" id="days" value="365" min="1" max="3650">
+            </div>
+          </div>
+          <div class="field">
+            <label>Privacy Policy URL</label>
+            <input type="text" id="privacyUrl" placeholder="https://example.com/privacy (optional)">
+          </div>
+          <div class="field">
+            <label>Terms URL</label>
+            <input type="text" id="termsUrl" placeholder="https://example.com/terms (optional)">
+          </div>
         </div>
       </div>
 
       <!-- Position -->
       <div class="section">
-        <h2>Position</h2>
-        <div class="field">
-          <label>Position</label>
-          <select id="position">
-            <option value="bottom">Bottom (full width)</option>
-            <option value="top">Top (full width)</option>
-            <option value="bottom-left">Bottom Left (toast)</option>
-            <option value="bottom-right">Bottom Right (toast)</option>
-            <option value="center">Center (modal)</option>
-          </select>
+        <h2 class="section-toggle" onclick="toggleSection(this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 15h18"/></svg>
+          Position
+        </h2>
+        <div class="section-content">
+          <div class="field">
+            <label>Position</label>
+            <select id="position">
+              <option value="bottom">Bottom (full width)</option>
+              <option value="top">Top (full width)</option>
+              <option value="bottom-left">Bottom Left (toast)</option>
+              <option value="bottom-right">Bottom Right (toast)</option>
+              <option value="center">Center (modal)</option>
+            </select>
+          </div>
         </div>
       </div>
 
       <!-- Colors -->
       <div class="section">
-        <h2>Colors</h2>
-        <div class="field">
-          <label>Background</label>
-          <div class="color-field">
-            <input type="color" id="bgColor" value="#222222">
-            <input type="text" id="bgColorText" value="#222222">
+        <h2 class="section-toggle" onclick="toggleSection(this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0110 10"/><path d="M12 2a10 10 0 00-10 10"/></svg>
+          Colors
+        </h2>
+        <div class="section-content">
+          <div class="field">
+            <label>Background</label>
+            <div class="color-field">
+              <input type="color" id="bgColor" value="#222222">
+              <input type="text" id="bgColorText" value="#222222">
+            </div>
           </div>
-        </div>
-        <div class="field">
-          <label>Text Color</label>
-          <div class="color-field">
-            <input type="color" id="textColor" value="#ffffff">
-            <input type="text" id="textColorText" value="#ffffff">
+          <div class="field">
+            <label>Text Color</label>
+            <div class="color-field">
+              <input type="color" id="textColor" value="#ffffff">
+              <input type="text" id="textColorText" value="#ffffff">
+            </div>
           </div>
-        </div>
-        <div class="field">
-          <label>Accept Button Background</label>
-          <div class="color-field">
-            <input type="color" id="btnBg" value="#ffffff">
-            <input type="text" id="btnBgText" value="#ffffff">
+          <div class="field">
+            <label>Accept Button Background</label>
+            <div class="color-field">
+              <input type="color" id="btnBg" value="#ffffff">
+              <input type="text" id="btnBgText" value="#ffffff">
+            </div>
           </div>
-        </div>
-        <div class="field">
-          <label>Accept Button Text</label>
-          <div class="color-field">
-            <input type="color" id="btnColor" value="#222222">
-            <input type="text" id="btnColorText" value="#222222">
+          <div class="field">
+            <label>Accept Button Text</label>
+            <div class="color-field">
+              <input type="color" id="btnColor" value="#222222">
+              <input type="text" id="btnColorText" value="#222222">
+            </div>
+          </div>
+          <div class="field">
+            <label>Reject Button Background</label>
+            <div class="color-field">
+              <input type="color" id="rejectBg" value="#222222">
+              <input type="text" id="rejectBgText" value="transparent">
+            </div>
+            <div class="help-text">Use "transparent" for outline style</div>
+          </div>
+          <div class="field">
+            <label>Focus Ring Color</label>
+            <div class="color-field">
+              <input type="color" id="focusColor" value="#4299e1">
+              <input type="text" id="focusColorText" value="#4299e1">
+            </div>
           </div>
         </div>
       </div>
 
       <!-- Typography -->
       <div class="section">
-        <h2>Typography</h2>
-        <div class="field">
-          <label>Font Family</label>
-          <select id="fontFamily">
-            <option value="system-ui, -apple-system, sans-serif">System (Default)</option>
-            <option value="Arial, sans-serif">Arial</option>
-            <option value="'Helvetica Neue', Helvetica, sans-serif">Helvetica</option>
-            <option value="Georgia, serif">Georgia</option>
-            <option value="'Times New Roman', serif">Times New Roman</option>
-            <option value="Monaco, 'Courier New', monospace">Monospace</option>
-          </select>
-        </div>
-        <div class="field-row">
+        <h2 class="section-toggle" onclick="toggleSection(this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>
+          Typography
+        </h2>
+        <div class="section-content">
           <div class="field">
-            <label>Font Size (px)</label>
-            <input type="number" id="fontSize" value="14" min="10" max="24">
+            <label>Font Family</label>
+            <select id="fontFamily">
+              <option value="inherit">Inherit from page</option>
+              <option value="system-ui, -apple-system, sans-serif" selected>System (Default)</option>
+              <option value="Arial, sans-serif">Arial</option>
+              <option value="'Helvetica Neue', Helvetica, sans-serif">Helvetica</option>
+              <option value="'Segoe UI', sans-serif">Segoe UI</option>
+              <option value="Georgia, serif">Georgia</option>
+              <option value="'Times New Roman', serif">Times New Roman</option>
+              <option value="Monaco, 'Courier New', monospace">Monospace</option>
+            </select>
           </div>
-          <div class="field">
-            <label>Border Radius (px)</label>
-            <input type="number" id="borderRadius" value="0" min="0" max="24">
-          </div>
-        </div>
-        <div class="field-row">
-          <div class="field">
-            <label>Padding (px)</label>
-            <input type="number" id="padding" value="12" min="4" max="32">
-          </div>
-          <div class="field">
-            <label>Button Radius (px)</label>
-            <input type="number" id="btnRadius" value="4" min="0" max="24">
+          <div class="field-row">
+            <div class="field">
+              <label>Font Size (px)</label>
+              <input type="number" id="fontSize" value="14" min="10" max="24">
+            </div>
+            <div class="field">
+              <label>Line Height</label>
+              <input type="text" id="lineHeight" value="1.4">
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Widget -->
+      <!-- Spacing -->
       <div class="section">
-        <h2>Widget</h2>
-        <div class="checkbox-field">
-          <input type="checkbox" id="showWidget">
-          <label>Show widget after consent</label>
+        <h2 class="section-toggle" onclick="toggleSection(this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/></svg>
+          Spacing & Borders
+        </h2>
+        <div class="section-content">
+          <div class="field-row">
+            <div class="field">
+              <label>Padding (px)</label>
+              <input type="number" id="padding" value="12" min="4" max="32">
+            </div>
+            <div class="field">
+              <label>Gap (px)</label>
+              <input type="number" id="gap" value="12" min="0" max="32">
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>Banner Radius (px)</label>
+              <input type="number" id="borderRadius" value="0" min="0" max="24">
+            </div>
+            <div class="field">
+              <label>Button Radius (px)</label>
+              <input type="number" id="btnRadius" value="4" min="0" max="24">
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>Button Padding H (px)</label>
+              <input type="number" id="btnPaddingH" value="20" min="8" max="40">
+            </div>
+            <div class="field">
+              <label>Button Padding V (px)</label>
+              <input type="number" id="btnPaddingV" value="10" min="4" max="24">
+            </div>
+          </div>
         </div>
-        <div class="field" id="widgetPositionField" style="display:none; margin-top:12px;">
-          <label>Widget Position</label>
-          <select id="widgetPosition">
-            <option value="bottom-left">Bottom Left</option>
-            <option value="bottom-right">Bottom Right</option>
-          </select>
+      </div>
+
+      <!-- Animation -->
+      <div class="section">
+        <h2 class="section-toggle" onclick="toggleSection(this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          Animation
+        </h2>
+        <div class="section-content">
+          <div class="field">
+            <label>Animation</label>
+            <select id="animation">
+              <option value="none">None (instant)</option>
+              <option value="fade">Fade in</option>
+              <option value="slide-up">Slide up</option>
+              <option value="slide-down">Slide down</option>
+            </select>
+            <div class="help-text">Respects prefers-reduced-motion</div>
+          </div>
         </div>
       </div>
 
       <!-- Advanced -->
       <div class="section">
-        <h2>Advanced</h2>
-        <div class="field">
-          <label>Z-Index</label>
-          <input type="number" id="zIndex" value="9999" min="1">
-        </div>
-        <div class="checkbox-field" style="margin-bottom:12px;">
-          <input type="checkbox" id="showCountdown" checked>
-          <label>Show countdown (non-EU auto-accept)</label>
-        </div>
-        <div class="field">
-          <label>Custom CSS (optional)</label>
-          <textarea id="customCss" placeholder="#ckb { box-shadow: 0 0 20px rgba(0,0,0,0.2); }"></textarea>
+        <h2 class="section-toggle" onclick="toggleSection(this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+          Advanced
+        </h2>
+        <div class="section-content">
+          <div class="field">
+            <label>Z-Index</label>
+            <input type="number" id="zIndex" value="9999" min="1">
+          </div>
+          <div class="field">
+            <label>Custom CSS</label>
+            <textarea id="customCss" placeholder="#ckb { box-shadow: 0 0 20px rgba(0,0,0,0.2); }"></textarea>
+            <div class="help-text">CSS is sanitized for security</div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Preview Area -->
+    <!-- Code Output Area -->
     <div class="preview-area">
-      <div id="countdown"></div>
-
       <div class="preview-header">
-        <h2>Live Demo & Code</h2>
+        <h2>Generated Code</h2>
         <div class="preview-actions">
-          <button class="btn btn-primary" onclick="launchDemo()">▶ Launch Demo</button>
-          <button class="btn btn-secondary" onclick="resetDemo()">Reset</button>
-          <button class="btn btn-secondary" onclick="copyCode()">Copy Code</button>
+          <button class="btn btn-secondary" onclick="showHelpModal()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            How to Use
+          </button>
+          <button class="btn btn-primary" onclick="copyCode()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            Copy Code
+          </button>
         </div>
-      </div>
-
-      <div id="demo-status" class="demo-status">
-        <strong>Status:</strong> <span id="consent-status">Ready - click "Launch Demo"</span>
       </div>
 
       <!-- Live Banner Preview -->
       <div class="banner-preview-container" id="banner-preview-container">
         <h3>Live Preview</h3>
         <div class="banner-preview" id="banner-preview">
-          <p id="preview-msg">We use cookies to enhance your experience.</p>
+          <p id="preview-msg"><span id="preview-msg-text">We use cookies to enhance your experience.</span> <span id="preview-links" style="display:none;font-size:12px;opacity:0.8;"></span></p>
           <div id="preview-categories" style="display:none;width:100%;padding:12px 0;border-top:1px solid rgba(255,255,255,0.2);margin-top:8px;">
             <label style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;cursor:pointer;">
-              <input type="checkbox" checked disabled style="width:18px;height:18px;">
+              <input type="checkbox" checked disabled style="width:20px;height:20px;">
               <div><div style="font-weight:600">Essential <span style="opacity:0.6;font-size:11px">(Required)</span></div><div style="font-size:12px;opacity:0.8">Required for the website to function</div></div>
             </label>
             <label style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;cursor:pointer;">
-              <input type="checkbox" style="width:18px;height:18px;">
+              <input type="checkbox" style="width:20px;height:20px;">
               <div><div style="font-weight:600">Analytics</div><div style="font-size:12px;opacity:0.8">Help us understand how visitors use our site</div></div>
             </label>
             <label style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;cursor:pointer;">
-              <input type="checkbox" style="width:18px;height:18px;">
+              <input type="checkbox" style="width:20px;height:20px;">
               <div><div style="font-weight:600">Marketing</div><div style="font-size:12px;opacity:0.8">Used to deliver relevant ads</div></div>
             </label>
+            <label style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;cursor:pointer;">
+              <input type="checkbox" style="width:20px;height:20px;">
+              <div><div style="font-weight:600">Functional</div><div style="font-size:12px;opacity:0.8">Enable enhanced features and personalization</div></div>
+            </label>
           </div>
-          <button class="settings-btn" id="preview-settings" style="display:none;background:transparent;color:inherit;border:1px solid currentColor;">Customize</button>
+          <button class="settings-btn" id="preview-settings" onclick="togglePreviewCategories()" style="display:none;background:transparent;color:inherit;border:1px solid currentColor;">Customize</button>
+          <button class="save-btn" id="preview-save" style="display:none;">Save Preferences</button>
           <button class="reject-btn" id="preview-reject">Decline</button>
           <button id="preview-accept">Accept</button>
         </div>
@@ -595,19 +1217,70 @@
         <div class="code-header">
           <div class="tabs">
             <button class="tab active" onclick="showTab('html')">HTML</button>
-            <button class="tab" onclick="showTab('css')">CSS Variables</button>
+            <button class="tab" onclick="showTab('css')">CSS Only</button>
+            <button class="tab" onclick="showTab('json')">JSON Config</button>
           </div>
-          <button onclick="copyCode()">Copy</button>
+          <div class="code-actions">
+            <button class="code-btn" onclick="downloadConfig()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+              Download
+            </button>
+            <button class="code-btn" onclick="copyCode()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+              Copy
+            </button>
+          </div>
         </div>
         <div class="code-body">
           <pre id="code-output"></pre>
+        </div>
+        <div class="code-help">
+          <strong>How to use:</strong>
+          Copy code → paste <code>&lt;style&gt;</code> in <code>&lt;head&gt;</code>, <code>&lt;script&gt;</code> before <code>&lt;/body&gt;</code>
         </div>
       </div>
     </div>
   </div>
 
+  <div class="toast" id="toast"></div>
+
+  <!-- Help Modal -->
+  <div class="modal-overlay" id="help-modal" onclick="hideHelpModal(event)">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Quick Start Guide</h2>
+        <button class="modal-close" onclick="hideHelpModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <h3>Installation</h3>
+        <ol>
+          <li>Copy the generated code using the <strong>Copy Code</strong> button</li>
+          <li>Paste the <code>&lt;style&gt;</code> section into your HTML's <code>&lt;head&gt;</code></li>
+          <li>Paste the <code>&lt;script&gt;</code> section just before <code>&lt;/body&gt;</code></li>
+        </ol>
+
+        <div class="note">
+          <strong>That's it!</strong> The banner will automatically appear when visitors land on your site and haven't made a choice yet.
+        </div>
+
+        <h3>For npm users</h3>
+        <ol>
+          <li>Install: <code>npm install smallest-cookie-banner</code></li>
+          <li>Import: <code>import { createCookieBanner } from 'smallest-cookie-banner'</code></li>
+          <li>Initialize: <code>createCookieBanner(config).show()</code></li>
+        </ol>
+
+        <h3>GDPR Mode</h3>
+        <p>For full GDPR compliance with granular consent categories, set <strong>Banner Mode</strong> to "GDPR" in the Behavior section. This shows users checkboxes for each cookie type (Essential, Analytics, Marketing, Functional).</p>
+
+        <h3>Documentation</h3>
+        <p><a href="https://github.com/DreadfulCode/smallest-cookie-banner" target="_blank">View full documentation on GitHub →</a></p>
+      </div>
+    </div>
+  </div>
+
   <script>
-    // Security: Escape functions for different contexts
+    // Security: Escape functions
     function escapeHtml(str) {
       const div = document.createElement('div');
       div.textContent = str;
@@ -626,26 +1299,52 @@
     }
 
     function escapeCss(str) {
-      // Remove dangerous CSS patterns
       return str
-        .replace(/<[^>]*>/g, '') // Remove HTML tags
-        .replace(/@\s*i\s*m\s*p\s*o\s*r\s*t\b[^;]*(;|$)/gi, '') // Remove @import
-        .replace(/e\s*x\s*p\s*r\s*e\s*s\s*s\s*i\s*o\s*n\s*\([^)]*\)/gi, '') // Remove expression()
-        .replace(/javascript\s*:/gi, '') // Remove javascript:
-        .replace(/behavior\s*:[^;]*(;|$)/gi, '') // Remove behavior:
-        .replace(/-moz-binding\s*:[^;]*(;|$)/gi, ''); // Remove -moz-binding
+        .replace(/<[^>]*>/g, '')
+        .replace(/@\s*i\s*m\s*p\s*o\s*r\s*t\b[^;]*(;|$)/gi, '')
+        .replace(/e\s*x\s*p\s*r\s*e\s*s\s*s\s*i\s*o\s*n\s*\([^)]*\)/gi, '')
+        .replace(/javascript\s*:/gi, '')
+        .replace(/behavior\s*:[^;]*(;|$)/gi, '')
+        .replace(/-moz-binding\s*:[^;]*(;|$)/gi, '');
     }
 
     // State
     let currentTab = 'html';
 
-    // Get all input elements
+    // Theme presets
+    const presets = {
+      dark: {
+        bgColor: '#222222',
+        textColor: '#ffffff',
+        btnBg: '#ffffff',
+        btnColor: '#222222',
+        rejectBg: 'transparent',
+        focusColor: '#4299e1'
+      },
+      light: {
+        bgColor: '#ffffff',
+        textColor: '#333333',
+        btnBg: '#2563eb',
+        btnColor: '#ffffff',
+        rejectBg: 'transparent',
+        focusColor: '#2563eb'
+      },
+      minimal: {
+        bgColor: '#f8f8f8',
+        textColor: '#333333',
+        btnBg: '#333333',
+        btnColor: '#ffffff',
+        rejectBg: 'transparent',
+        focusColor: '#333333'
+      }
+    };
+
+    // Get all inputs
     const inputs = {
       msg: document.getElementById('msg'),
       acceptText: document.getElementById('acceptText'),
       rejectText: document.getElementById('rejectText'),
       bannerMode: document.getElementById('bannerMode'),
-      enableTabs: document.getElementById('enableTabs'),
       mode: document.getElementById('mode'),
       autoAcceptDelay: document.getElementById('autoAcceptDelay'),
       days: document.getElementById('days'),
@@ -658,31 +1357,48 @@
       btnBgText: document.getElementById('btnBgText'),
       btnColor: document.getElementById('btnColor'),
       btnColorText: document.getElementById('btnColorText'),
+      rejectBg: document.getElementById('rejectBg'),
+      rejectBgText: document.getElementById('rejectBgText'),
+      focusColor: document.getElementById('focusColor'),
+      focusColorText: document.getElementById('focusColorText'),
       fontFamily: document.getElementById('fontFamily'),
       fontSize: document.getElementById('fontSize'),
-      borderRadius: document.getElementById('borderRadius'),
+      lineHeight: document.getElementById('lineHeight'),
       padding: document.getElementById('padding'),
+      gap: document.getElementById('gap'),
+      borderRadius: document.getElementById('borderRadius'),
       btnRadius: document.getElementById('btnRadius'),
+      btnPaddingH: document.getElementById('btnPaddingH'),
+      btnPaddingV: document.getElementById('btnPaddingV'),
+      animation: document.getElementById('animation'),
       zIndex: document.getElementById('zIndex'),
       customCss: document.getElementById('customCss'),
+      privacyUrl: document.getElementById('privacyUrl'),
+      termsUrl: document.getElementById('termsUrl'),
+      settingsText: document.getElementById('settingsText'),
+      saveText: document.getElementById('saveText'),
+      privacyPolicyText: document.getElementById('privacyPolicyText'),
     };
 
-    // Sync color inputs
-    [
-      ['bgColor', 'bgColorText'],
-      ['textColor', 'textColorText'],
-      ['btnBg', 'btnBgText'],
-      ['btnColor', 'btnColorText']
-    ].forEach(([colorKey, textKey]) => {
-      const colorInput = inputs[colorKey];
-      const textInput = inputs[textKey];
+    // Show/hide GDPR text options based on banner mode
+    const gdprTextOptions = document.getElementById('gdpr-text-options');
+    inputs.bannerMode?.addEventListener('change', () => {
+      const isGdpr = inputs.bannerMode.value === 'gdpr';
+      if (gdprTextOptions) gdprTextOptions.style.display = isGdpr ? 'block' : 'none';
+      updatePreview();
+    });
 
-      colorInput.addEventListener('input', () => {
+    // Sync color inputs
+    ['bgColor', 'textColor', 'btnBg', 'btnColor', 'rejectBg', 'focusColor'].forEach(name => {
+      const colorInput = inputs[name];
+      const textInput = inputs[name + 'Text'];
+
+      colorInput?.addEventListener('input', () => {
         textInput.value = colorInput.value;
         updatePreview();
       });
 
-      textInput.addEventListener('input', () => {
+      textInput?.addEventListener('input', () => {
         if (/^#[0-9a-f]{6}$/i.test(textInput.value)) {
           colorInput.value = textInput.value;
         }
@@ -690,10 +1406,43 @@
       });
     });
 
-    // Add event listeners to all inputs
+    // Quick color pickers - sync with main color inputs
+    const quickColors = {
+      quickBgColor: ['bgColor', 'bgColorText'],
+      quickTextColor: ['textColor', 'textColorText'],
+      quickBtnBg: ['btnBg', 'btnBgText'],
+      quickBtnColor: ['btnColor', 'btnColorText']
+    };
+
+    Object.entries(quickColors).forEach(([quickId, [colorId, textId]]) => {
+      const quickInput = document.getElementById(quickId);
+      const colorInput = inputs[colorId];
+      const textInput = inputs[textId];
+
+      // Quick picker changes main inputs
+      quickInput?.addEventListener('input', () => {
+        if (colorInput) colorInput.value = quickInput.value;
+        if (textInput) textInput.value = quickInput.value;
+        updatePreview();
+      });
+
+      // Main inputs change quick picker
+      colorInput?.addEventListener('input', () => {
+        if (quickInput) quickInput.value = colorInput.value;
+      });
+      textInput?.addEventListener('input', () => {
+        if (quickInput && /^#[0-9a-f]{6}$/i.test(textInput.value)) {
+          quickInput.value = textInput.value;
+        }
+      });
+    });
+
+    // Add listeners to all inputs
     Object.values(inputs).forEach(input => {
-      input.addEventListener('input', updatePreview);
-      input.addEventListener('change', updatePreview);
+      if (input) {
+        input.addEventListener('input', updatePreview);
+        input.addEventListener('change', updatePreview);
+      }
     });
 
     // Get current config
@@ -703,23 +1452,264 @@
         acceptText: inputs.acceptText.value,
         rejectText: inputs.rejectText.value,
         bannerMode: inputs.bannerMode.value,
-        enableTabs: inputs.enableTabs.checked,
         mode: inputs.mode.value,
-        autoAcceptDelay: parseInt(inputs.autoAcceptDelay.value),
-        days: parseInt(inputs.days.value),
+        autoAcceptDelay: parseInt(inputs.autoAcceptDelay.value) || 5000,
+        days: parseInt(inputs.days.value) || 365,
         position: inputs.position.value,
         bgColor: inputs.bgColorText.value,
         textColor: inputs.textColorText.value,
         btnBg: inputs.btnBgText.value,
         btnColor: inputs.btnColorText.value,
+        rejectBg: inputs.rejectBgText.value,
+        focusColor: inputs.focusColorText.value,
         fontFamily: inputs.fontFamily.value,
-        fontSize: parseInt(inputs.fontSize.value),
-        borderRadius: parseInt(inputs.borderRadius.value),
-        padding: parseInt(inputs.padding.value),
-        btnRadius: parseInt(inputs.btnRadius.value),
-        zIndex: parseInt(inputs.zIndex.value),
+        fontSize: parseInt(inputs.fontSize.value) || 14,
+        lineHeight: inputs.lineHeight.value || '1.4',
+        padding: parseInt(inputs.padding.value) || 12,
+        gap: parseInt(inputs.gap.value) || 12,
+        borderRadius: parseInt(inputs.borderRadius.value) || 0,
+        btnRadius: parseInt(inputs.btnRadius.value) || 4,
+        btnPaddingH: parseInt(inputs.btnPaddingH.value) || 20,
+        btnPaddingV: parseInt(inputs.btnPaddingV.value) || 10,
+        animation: inputs.animation.value,
+        zIndex: parseInt(inputs.zIndex.value) || 9999,
         customCss: inputs.customCss.value,
+        privacyUrl: inputs.privacyUrl.value.trim(),
+        termsUrl: inputs.termsUrl.value.trim(),
+        settingsText: inputs.settingsText.value,
+        saveText: inputs.saveText.value,
+        privacyPolicyText: inputs.privacyPolicyText.value,
       };
+    }
+
+    // Toggle preview categories (for GDPR mode demo)
+    let previewCategoriesExpanded = false;
+    function togglePreviewCategories() {
+      previewCategoriesExpanded = !previewCategoriesExpanded;
+      const categories = document.getElementById('preview-categories');
+      const saveBtn = document.getElementById('preview-save');
+      const settingsBtn = document.getElementById('preview-settings');
+      categories.style.display = previewCategoriesExpanded ? 'block' : 'none';
+      saveBtn.style.display = previewCategoriesExpanded ? 'inline-block' : 'none';
+      settingsBtn.textContent = previewCategoriesExpanded ? 'Hide Options' : 'Customize';
+    }
+
+    // Apply preset
+    function applyPreset(name) {
+      const preset = presets[name];
+      if (!preset) return;
+
+      document.querySelectorAll('.preset').forEach(p => p.classList.remove('active'));
+      document.querySelector(`[data-preset="${name}"]`)?.classList.add('active');
+
+      // Helper to safely set values
+      const setColor = (textInput, colorInput, value) => {
+        if (textInput) textInput.value = value;
+        if (colorInput && value.startsWith('#')) colorInput.value = value;
+      };
+
+      setColor(inputs.bgColorText, inputs.bgColor, preset.bgColor);
+      setColor(inputs.textColorText, inputs.textColor, preset.textColor);
+      setColor(inputs.btnBgText, inputs.btnBg, preset.btnBg);
+      setColor(inputs.btnColorText, inputs.btnColor, preset.btnColor);
+      setColor(inputs.rejectBgText, inputs.rejectBg, preset.rejectBg);
+      setColor(inputs.focusColorText, inputs.focusColor, preset.focusColor);
+
+      // Update quick color pickers
+      const quickBg = document.getElementById('quickBgColor');
+      const quickText = document.getElementById('quickTextColor');
+      const quickBtnBg = document.getElementById('quickBtnBg');
+      const quickBtnColor = document.getElementById('quickBtnColor');
+      if (quickBg && preset.bgColor.startsWith('#')) quickBg.value = preset.bgColor;
+      if (quickText && preset.textColor.startsWith('#')) quickText.value = preset.textColor;
+      if (quickBtnBg && preset.btnBg.startsWith('#')) quickBtnBg.value = preset.btnBg;
+      if (quickBtnColor && preset.btnColor.startsWith('#')) quickBtnColor.value = preset.btnColor;
+
+      updatePreview();
+    }
+
+    // Language presets
+    const languages = {
+      en: {
+        msg: 'We use cookies to enhance your experience.',
+        acceptText: 'Accept',
+        rejectText: 'Decline',
+        settingsText: 'Customize',
+        saveText: 'Save Preferences',
+        privacyPolicyText: 'Privacy Policy',
+        requiredLabel: '(Required)',
+        dir: 'ltr'
+      },
+      nl: {
+        msg: 'Wij gebruiken cookies om uw ervaring te verbeteren.',
+        acceptText: 'Accepteren',
+        rejectText: 'Weigeren',
+        settingsText: 'Aanpassen',
+        saveText: 'Voorkeuren opslaan',
+        privacyPolicyText: 'Privacybeleid',
+        requiredLabel: '(Vereist)',
+        dir: 'ltr'
+      },
+      de: {
+        msg: 'Wir verwenden Cookies, um Ihre Erfahrung zu verbessern.',
+        acceptText: 'Akzeptieren',
+        rejectText: 'Ablehnen',
+        settingsText: 'Anpassen',
+        saveText: 'Einstellungen speichern',
+        privacyPolicyText: 'Datenschutz',
+        requiredLabel: '(Erforderlich)',
+        dir: 'ltr'
+      },
+      fr: {
+        msg: 'Nous utilisons des cookies pour améliorer votre expérience.',
+        acceptText: 'Accepter',
+        rejectText: 'Refuser',
+        settingsText: 'Personnaliser',
+        saveText: 'Enregistrer',
+        privacyPolicyText: 'Politique de confidentialité',
+        requiredLabel: '(Requis)',
+        dir: 'ltr'
+      },
+      es: {
+        msg: 'Usamos cookies para mejorar tu experiencia.',
+        acceptText: 'Aceptar',
+        rejectText: 'Rechazar',
+        settingsText: 'Personalizar',
+        saveText: 'Guardar preferencias',
+        privacyPolicyText: 'Política de privacidad',
+        requiredLabel: '(Requerido)',
+        dir: 'ltr'
+      },
+      it: {
+        msg: 'Utilizziamo i cookie per migliorare la tua esperienza.',
+        acceptText: 'Accetta',
+        rejectText: 'Rifiuta',
+        settingsText: 'Personalizza',
+        saveText: 'Salva preferenze',
+        privacyPolicyText: 'Privacy Policy',
+        requiredLabel: '(Obbligatorio)',
+        dir: 'ltr'
+      },
+      pt: {
+        msg: 'Usamos cookies para melhorar sua experiência.',
+        acceptText: 'Aceitar',
+        rejectText: 'Recusar',
+        settingsText: 'Personalizar',
+        saveText: 'Salvar preferências',
+        privacyPolicyText: 'Política de Privacidade',
+        requiredLabel: '(Obrigatório)',
+        dir: 'ltr'
+      },
+      pl: {
+        msg: 'Używamy plików cookie, aby poprawić Twoje wrażenia.',
+        acceptText: 'Akceptuj',
+        rejectText: 'Odrzuć',
+        settingsText: 'Dostosuj',
+        saveText: 'Zapisz preferencje',
+        privacyPolicyText: 'Polityka prywatności',
+        requiredLabel: '(Wymagane)',
+        dir: 'ltr'
+      },
+      ru: {
+        msg: 'Мы используем файлы cookie для улучшения вашего опыта.',
+        acceptText: 'Принять',
+        rejectText: 'Отклонить',
+        settingsText: 'Настроить',
+        saveText: 'Сохранить настройки',
+        privacyPolicyText: 'Политика конфиденциальности',
+        requiredLabel: '(Обязательно)',
+        dir: 'ltr'
+      },
+      uk: {
+        msg: 'Ми використовуємо файли cookie для покращення вашого досвіду.',
+        acceptText: 'Прийняти',
+        rejectText: 'Відхилити',
+        settingsText: 'Налаштувати',
+        saveText: 'Зберегти налаштування',
+        privacyPolicyText: 'Політика конфіденційності',
+        requiredLabel: '(Обов\'язково)',
+        dir: 'ltr'
+      },
+      zh: {
+        msg: '我们使用cookies来提升您的体验。',
+        acceptText: '接受',
+        rejectText: '拒绝',
+        settingsText: '自定义',
+        saveText: '保存设置',
+        privacyPolicyText: '隐私政策',
+        requiredLabel: '(必需)',
+        dir: 'ltr'
+      },
+      ja: {
+        msg: 'このサイトはクッキーを使用しています。',
+        acceptText: '同意する',
+        rejectText: '拒否する',
+        settingsText: 'カスタマイズ',
+        saveText: '設定を保存',
+        privacyPolicyText: 'プライバシーポリシー',
+        requiredLabel: '(必須)',
+        dir: 'ltr'
+      },
+      ko: {
+        msg: '저희는 경험을 향상시키기 위해 쿠키를 사용합니다.',
+        acceptText: '동의',
+        rejectText: '거부',
+        settingsText: '사용자 정의',
+        saveText: '설정 저장',
+        privacyPolicyText: '개인정보처리방침',
+        requiredLabel: '(필수)',
+        dir: 'ltr'
+      },
+      ar: {
+        msg: 'نستخدم ملفات تعريف الارتباط لتحسين تجربتك.',
+        acceptText: 'قبول',
+        rejectText: 'رفض',
+        settingsText: 'تخصيص',
+        saveText: 'حفظ التفضيلات',
+        privacyPolicyText: 'سياسة الخصوصية',
+        requiredLabel: '(مطلوب)',
+        dir: 'rtl'
+      },
+      he: {
+        msg: 'אנחנו משתמשים בעוגיות כדי לשפר את החוויה שלך.',
+        acceptText: 'אישור',
+        rejectText: 'דחייה',
+        settingsText: 'התאמה אישית',
+        saveText: 'שמור העדפות',
+        privacyPolicyText: 'מדיניות פרטיות',
+        requiredLabel: '(נדרש)',
+        dir: 'rtl'
+      }
+    };
+
+    // Apply language preset
+    function applyLanguage(lang) {
+      if (lang === 'custom') return;
+      const l = languages[lang];
+      if (!l) return;
+
+      if (inputs.msg) inputs.msg.value = l.msg;
+      if (inputs.acceptText) inputs.acceptText.value = l.acceptText;
+      if (inputs.rejectText) inputs.rejectText.value = l.rejectText;
+
+      const settingsText = document.getElementById('settingsText');
+      const saveText = document.getElementById('saveText');
+      const privacyPolicyText = document.getElementById('privacyPolicyText');
+
+      if (settingsText) settingsText.value = l.settingsText;
+      if (saveText) saveText.value = l.saveText;
+      if (privacyPolicyText) privacyPolicyText.value = l.privacyPolicyText;
+
+      // Store required label and direction for code generation
+      window._langRequiredLabel = l.requiredLabel;
+      window._langDir = l.dir;
+
+      updatePreview();
+    }
+
+    // Toggle section collapse
+    function toggleSection(header) {
+      header.closest('.section').classList.toggle('collapsed');
     }
 
     // Generate position CSS
@@ -734,66 +1724,93 @@
       return positions[position] || '';
     }
 
+    // Generate animation CSS
+    function getAnimationCSS(animation) {
+      const animations = {
+        'none': '',
+        'fade': `
+          @keyframes ckb-fade { from { opacity: 0; } to { opacity: 1; } }
+          #ckb { animation: ckb-fade 0.3s ease; }`,
+        'slide-up': `
+          @keyframes ckb-slide-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
+          #ckb { animation: ckb-slide-up 0.3s ease; }`,
+        'slide-down': `
+          @keyframes ckb-slide-down { from { transform: translateY(-100%); } to { transform: translateY(0); } }
+          #ckb { animation: ckb-slide-down 0.3s ease; }`,
+      };
+      return animations[animation] || '';
+    }
+
     // Generate output code
     function generateOutputCode(config) {
       const forceEU = config.mode === 'eu' ? 'true' : config.mode === 'non-eu' ? 'false' : null;
-
       let positionVars = getPositionCSS(config.position);
       let extraCSS = '';
+      const animationCSS = getAnimationCSS(config.animation);
 
       if (config.position === 'bottom-left' || config.position === 'bottom-right') {
-        extraCSS = `
-#ckb {
-  width: 340px;
-  border-radius: ${config.borderRadius}px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-  flex-direction: column;
-}
-#ckb p { min-width: auto; margin-bottom: 10px; }`;
+        extraCSS = `\n#ckb { width: 340px; border-radius: ${config.borderRadius}px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); flex-direction: column; }\n#ckb p { min-width: auto; margin-bottom: 10px; }`;
       }
-
       if (config.position === 'center') {
-        extraCSS = `
-#ckb {
-  width: 400px;
-  border-radius: ${config.borderRadius}px;
-  box-shadow: 0 4px 40px rgba(0,0,0,0.3);
-  flex-direction: column;
-  text-align: center;
-  transform: translate(-50%, -50%);
-}
-#ckb p { min-width: auto; margin-bottom: 12px; }`;
+        extraCSS = `\n#ckb { width: 400px; border-radius: ${config.borderRadius}px; box-shadow: 0 4px 40px rgba(0,0,0,0.3); flex-direction: column; text-align: center; transform: translate(-50%, -50%); }\n#ckb p { min-width: auto; margin-bottom: 12px; }`;
       }
 
-      if (currentTab === 'css') {
-        // Sanitize values for CSS tab
-        const cssBgColor = escapeHtml(config.bgColor);
-        const cssTextColor = escapeHtml(config.textColor);
-        const cssBtnBg = escapeHtml(config.btnBg);
-        const cssBtnColor = escapeHtml(config.btnColor);
-        const cssFontFamily = escapeHtml(config.fontFamily);
-        const cssCustomCss = escapeCss(config.customCss);
+      const fontValue = config.fontFamily === 'inherit' ? 'inherit' : `${config.fontSize}px/${config.lineHeight} ${config.fontFamily}`;
 
+      // JSON tab
+      if (currentTab === 'json') {
+        const jsonConfig = {};
+        if (config.bannerMode === 'gdpr') jsonConfig.mode = 'gdpr';
+        jsonConfig.msg = config.msg;
+        jsonConfig.acceptText = config.acceptText;
+        jsonConfig.rejectText = config.rejectText;
+        if (forceEU !== null) jsonConfig.forceEU = forceEU === 'true';
+        if (config.autoAcceptDelay !== 5000) jsonConfig.autoAcceptDelay = config.autoAcceptDelay;
+        if (config.days !== 365) jsonConfig.days = config.days;
+
+        let jsonOutput = `<span class="comment">// Configuration object</span>
+<span class="keyword">window</span>.<span class="property">CookieBannerConfig</span> = ${JSON.stringify(jsonConfig, null, 2)
+          .replace(/"([^"]+)":/g, '<span class="property">"$1"</span>:')
+          .replace(/: "([^"]+)"/g, ': <span class="string">"$1"</span>')
+          .replace(/: (\d+)/g, ': <span class="number">$1</span>')
+          .replace(/: (true|false)/g, ': <span class="keyword">$1</span>')};`;
+
+        if (config.bannerMode === 'gdpr') {
+          jsonOutput += `
+
+<span class="comment">// GDPR mode provides granular consent</span>
+<span class="comment">// Use onConsent to handle category-specific choices:</span>
+<span class="comment">// onConsent: function(consent) {</span>
+<span class="comment">//   if (consent.analytics) loadAnalytics();</span>
+<span class="comment">//   if (consent.marketing) loadMarketing();</span>
+<span class="comment">// }</span>`;
+        }
+        return jsonOutput;
+      }
+
+      // CSS tab
+      if (currentTab === 'css') {
         return `<span class="comment">/* Add to your CSS */</span>
 <span class="keyword">:root</span> {
-  <span class="property">--ckb-bg</span>: <span class="string">${cssBgColor}</span>;
-  <span class="property">--ckb-color</span>: <span class="string">${cssTextColor}</span>;
-  <span class="property">--ckb-btn-bg</span>: <span class="string">${cssBtnBg}</span>;
-  <span class="property">--ckb-btn-color</span>: <span class="string">${cssBtnColor}</span>;
-  <span class="property">--ckb-font</span>: <span class="string">${parseInt(config.fontSize)}px ${cssFontFamily}</span>;
-  <span class="property">--ckb-padding</span>: <span class="string">${parseInt(config.padding)}px 16px</span>;
-  <span class="property">--ckb-btn-radius</span>: <span class="string">${parseInt(config.btnRadius)}px</span>;
-  <span class="property">--ckb-z</span>: <span class="string">${parseInt(config.zIndex)}</span>;${positionVars ? '\n  ' + positionVars.split(';').filter(s => s.trim()).join(';\n  ') + ';' : ''}
-}${extraCSS}${cssCustomCss ? '\n\n' + cssCustomCss : ''}`;
+  <span class="property">--ckb-bg</span>: <span class="string">${escapeHtml(config.bgColor)}</span>;
+  <span class="property">--ckb-color</span>: <span class="string">${escapeHtml(config.textColor)}</span>;
+  <span class="property">--ckb-btn-bg</span>: <span class="string">${escapeHtml(config.btnBg)}</span>;
+  <span class="property">--ckb-btn-color</span>: <span class="string">${escapeHtml(config.btnColor)}</span>;
+  <span class="property">--ckb-reject-bg</span>: <span class="string">${escapeHtml(config.rejectBg)}</span>;
+  <span class="property">--ckb-focus-color</span>: <span class="string">${escapeHtml(config.focusColor)}</span>;
+  <span class="property">--ckb-font</span>: <span class="string">${fontValue}</span>;
+  <span class="property">--ckb-padding</span>: <span class="string">${config.padding}px 16px</span>;
+  <span class="property">--ckb-gap</span>: <span class="string">${config.gap}px</span>;
+  <span class="property">--ckb-btn-padding</span>: <span class="string">${config.btnPaddingV}px ${config.btnPaddingH}px</span>;
+  <span class="property">--ckb-btn-radius</span>: <span class="string">${config.btnRadius}px</span>;
+  <span class="property">--ckb-z</span>: <span class="string">${config.zIndex}</span>;${positionVars ? '\n  ' + positionVars.split(';').filter(s => s.trim()).join(';\n  ') + ';' : ''}
+}${extraCSS}${animationCSS}${config.customCss ? '\n\n' + escapeCss(config.customCss) : ''}`;
       }
 
-      // HTML tab - use proper escaping for all user inputs
+      // HTML tab
       let configObj = [];
       if (config.bannerMode === 'gdpr') {
         configObj.push(`  mode: 'gdpr'`);
-      }
-      if (!config.enableTabs) {
-        configObj.push(`  tabs: { enabled: false }`);
       }
       if (config.msg !== 'We use cookies to enhance your experience.') {
         configObj.push(`  msg: '${escapeJs(config.msg)}'`);
@@ -813,40 +1830,55 @@
       if (config.days !== 365) {
         configObj.push(`  days: ${config.days}`);
       }
+      // Privacy policy URL (library uses privacyPolicyUrl)
+      if (config.privacyUrl) {
+        configObj.push(`  privacyPolicyUrl: '${escapeJs(config.privacyUrl)}'`);
+      }
+      // GDPR-specific options
+      if (config.bannerMode === 'gdpr') {
+        if (config.settingsText !== 'Customize') {
+          configObj.push(`  settingsText: '${escapeJs(config.settingsText)}'`);
+        }
+        if (config.saveText !== 'Save Preferences') {
+          configObj.push(`  saveText: '${escapeJs(config.saveText)}'`);
+        }
+      }
+      if (config.privacyUrl && config.privacyPolicyText !== 'Privacy Policy') {
+        configObj.push(`  privacyPolicyText: '${escapeJs(config.privacyPolicyText)}'`);
+      }
+      // Language-specific options
+      if (window._langRequiredLabel && window._langRequiredLabel !== '(Required)') {
+        configObj.push(`  requiredLabel: '${escapeJs(window._langRequiredLabel)}'`);
+      }
+      if (window._langDir === 'rtl') {
+        configObj.push(`  dir: 'rtl'`);
+      }
 
-      // Sanitize CSS values for output
-      const safeBgColor = escapeHtml(config.bgColor);
-      const safeTextColor = escapeHtml(config.textColor);
-      const safeBtnBg = escapeHtml(config.btnBg);
-      const safeBtnColor = escapeHtml(config.btnColor);
-      const safeFontFamily = escapeHtml(config.fontFamily);
-      const safeCustomCss = escapeCss(config.customCss);
-
-      let cssVars = `  --ckb-bg: ${safeBgColor};
-  --ckb-color: ${safeTextColor};
-  --ckb-btn-bg: ${safeBtnBg};
-  --ckb-btn-color: ${safeBtnColor};
-  --ckb-font: ${parseInt(config.fontSize)}px ${safeFontFamily};
-  --ckb-padding: ${parseInt(config.padding)}px 16px;
-  --ckb-btn-radius: ${parseInt(config.btnRadius)}px;
-  --ckb-z: ${parseInt(config.zIndex)};${positionVars ? '\n  ' + positionVars.split(';').filter(s => s.trim()).join(';\n  ') + ';' : ''}`;
-
-      // Always show config block with callbacks
-      const configBlock = configObj.length > 0
-        ? configObj.join(',\n') + ','
-        : '';
+      let cssVars = `  --ckb-bg: ${escapeHtml(config.bgColor)};
+  --ckb-color: ${escapeHtml(config.textColor)};
+  --ckb-btn-bg: ${escapeHtml(config.btnBg)};
+  --ckb-btn-color: ${escapeHtml(config.btnColor)};
+  --ckb-reject-bg: ${escapeHtml(config.rejectBg)};
+  --ckb-focus-color: ${escapeHtml(config.focusColor)};
+  --ckb-font: ${fontValue};
+  --ckb-padding: ${config.padding}px 16px;
+  --ckb-gap: ${config.gap}px;
+  --ckb-btn-padding: ${config.btnPaddingV}px ${config.btnPaddingH}px;
+  --ckb-btn-radius: ${config.btnRadius}px;
+  --ckb-z: ${config.zIndex};${positionVars ? '\n  ' + positionVars.split(';').filter(s => s.trim()).join(';\n  ') + ';' : ''}`;
 
       return `<span class="comment">&lt;!-- Add to &lt;head&gt; --&gt;</span>
 <span class="keyword">&lt;style&gt;</span>
 :root {
 ${cssVars}
-}${extraCSS}${safeCustomCss ? '\n' + safeCustomCss : ''}
+}${extraCSS}${animationCSS}${config.customCss ? '\n' + escapeCss(config.customCss) : ''}
 <span class="keyword">&lt;/style&gt;</span>
 
 <span class="comment">&lt;!-- Add before &lt;/body&gt; --&gt;</span>
-<span class="keyword">&lt;script&gt;</span>
+${configObj.length > 0 ? `<span class="keyword">&lt;script&gt;</span>
 window.CookieBannerConfig = {
-${configBlock}${config.bannerMode === 'gdpr' ? `  onConsent: function(consent) {
+${configObj.join(',\n')},
+${config.bannerMode === 'gdpr' ? `  onConsent: function(consent) {
     <span class="comment">// consent = { essential: true, analytics: true/false, marketing: true/false, functional: true/false }</span>
     if (consent.analytics) { <span class="comment">/* Load analytics */</span> }
     if (consent.marketing) { <span class="comment">/* Load marketing scripts */</span> }
@@ -854,31 +1886,46 @@ ${configBlock}${config.bannerMode === 'gdpr' ? `  onConsent: function(consent) {
   onReject: function() { <span class="comment">/* Respect choice */</span> }`}
 };
 <span class="keyword">&lt;/script&gt;</span>
-<span class="keyword">&lt;script</span> <span class="property">src</span>=<span class="string">"https://unpkg.com/smallest-cookie-banner@latest/dist/cookie-banner.min.js"</span><span class="keyword">&gt;&lt;/script&gt;</span>`;
+` : ''}<span class="keyword">&lt;script</span> <span class="property">src</span>=<span class="string">"https://unpkg.com/smallest-cookie-banner@latest/dist/cookie-banner.min.js"</span><span class="keyword">&gt;&lt;/script&gt;</span>`;
     }
 
-    // Update code output
+    // Update preview
     function updatePreview() {
       const config = getConfig();
 
       // Update live banner preview
       const container = document.getElementById('banner-preview-container');
+      const banner = document.getElementById('banner-preview');
+      const fontValue = config.fontFamily === 'inherit' ? 'inherit' : `${config.fontSize}px/${config.lineHeight} ${config.fontFamily}`;
 
       container.style.setProperty('--preview-bg', config.bgColor);
       container.style.setProperty('--preview-color', config.textColor);
       container.style.setProperty('--preview-btn-bg', config.btnBg);
       container.style.setProperty('--preview-btn-color', config.btnColor);
-      container.style.setProperty('--preview-font', `${config.fontSize}px ${config.fontFamily}`);
+      container.style.setProperty('--preview-reject-bg', config.rejectBg);
+      container.style.setProperty('--preview-font', fontValue);
       container.style.setProperty('--preview-padding', `${config.padding}px 16px`);
-      container.style.setProperty('--preview-gap', '8px');
-      container.style.setProperty('--preview-btn-padding', '6px 12px');
+      container.style.setProperty('--preview-gap', `${config.gap}px`);
+      container.style.setProperty('--preview-btn-padding', `${config.btnPaddingV}px ${config.btnPaddingH}px`);
       container.style.setProperty('--preview-btn-radius', `${config.btnRadius}px`);
       container.style.setProperty('--preview-radius', `${config.borderRadius}px`);
 
       // Update text content
-      document.getElementById('preview-msg').textContent = config.msg;
+      document.getElementById('preview-msg-text').textContent = config.msg;
       document.getElementById('preview-accept').textContent = config.acceptText;
       document.getElementById('preview-reject').textContent = config.rejectText;
+
+      // Update privacy/terms links
+      const linksSpan = document.getElementById('preview-links');
+      let linksHtml = [];
+      if (config.privacyUrl) linksHtml.push(`<a href="#" style="color:inherit;text-decoration:underline;">${config.privacyPolicyText || 'Privacy Policy'}</a>`);
+      if (config.termsUrl) linksHtml.push(`<a href="#" style="color:inherit;text-decoration:underline;">Terms</a>`);
+      if (linksHtml.length > 0) {
+        linksSpan.innerHTML = 'See our ' + linksHtml.join(' and ') + '.';
+        linksSpan.style.display = 'inline';
+      } else {
+        linksSpan.style.display = 'none';
+      }
 
       // Show/hide reject button based on mode
       const rejectBtn = document.getElementById('preview-reject');
@@ -886,19 +1933,20 @@ ${configBlock}${config.bannerMode === 'gdpr' ? `  onConsent: function(consent) {
 
       // Show/hide GDPR elements based on banner mode
       const isGdpr = config.bannerMode === 'gdpr';
-      document.getElementById('preview-categories').style.display = isGdpr ? 'block' : 'none';
+      // Reset expanded state when mode changes
+      if (!isGdpr) previewCategoriesExpanded = false;
+      // Categories start collapsed in GDPR mode, shown via Customize button
+      document.getElementById('preview-categories').style.display = (isGdpr && previewCategoriesExpanded) ? 'block' : 'none';
       document.getElementById('preview-settings').style.display = isGdpr ? 'inline-block' : 'none';
+      document.getElementById('preview-save').style.display = (isGdpr && previewCategoriesExpanded) ? 'inline-block' : 'none';
+      // Use custom settings text
+      const hideText = 'Hide Options';
+      document.getElementById('preview-settings').textContent = previewCategoriesExpanded ? hideText : config.settingsText;
+      document.getElementById('preview-save').textContent = config.saveText;
 
-      // Update button text for GDPR mode
-      if (isGdpr) {
-        document.getElementById('preview-accept').textContent = 'Accept All';
-        if (config.mode !== 'non-eu') {
-          document.getElementById('preview-reject').textContent = 'Reject All';
-        }
-      } else {
-        document.getElementById('preview-accept').textContent = config.acceptText;
-        document.getElementById('preview-reject').textContent = config.rejectText;
-      }
+      // Update button text - use custom text for both modes
+      document.getElementById('preview-accept').textContent = config.acceptText;
+      document.getElementById('preview-reject').textContent = config.rejectText;
 
       // Update code output
       document.getElementById('code-output').innerHTML = generateOutputCode(config);
@@ -908,11 +1956,11 @@ ${configBlock}${config.bannerMode === 'gdpr' ? `  onConsent: function(consent) {
     function showTab(tab) {
       currentTab = tab;
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      document.querySelector(`.tab[onclick="showTab('${tab}')"]`).classList.add('active');
+      document.querySelector(`.tab[onclick="showTab('${tab}')"]`)?.classList.add('active');
       document.getElementById('code-output').innerHTML = generateOutputCode(getConfig());
     }
 
-    // Copy code with fallback
+    // Copy code
     function copyCode() {
       const config = getConfig();
       let code = generateOutputCode(config)
@@ -921,215 +1969,73 @@ ${configBlock}${config.bannerMode === 'gdpr' ? `  onConsent: function(consent) {
         .replace(/&lt;/g, '<')
         .replace(/&gt;/g, '>');
 
-      const showSuccess = () => {
-        const btn = document.querySelector('.code-header button');
-        btn.textContent = 'Copied!';
-        setTimeout(() => btn.textContent = 'Copy', 2000);
-      };
-
-      // Try modern clipboard API first, fallback to execCommand
       if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(code).then(showSuccess).catch(() => {
-          // Fallback for older browsers or non-HTTPS
-          fallbackCopy(code, showSuccess);
-        });
+        navigator.clipboard.writeText(code).then(() => showToast('Code copied to clipboard!'));
       } else {
-        fallbackCopy(code, showSuccess);
+        fallbackCopy(code);
       }
     }
 
-    function fallbackCopy(text, onSuccess) {
+    function fallbackCopy(text) {
       const textarea = document.createElement('textarea');
       textarea.value = text;
-      textarea.style.position = 'fixed';
-      textarea.style.opacity = '0';
+      textarea.style.cssText = 'position:fixed;opacity:0';
       document.body.appendChild(textarea);
       textarea.select();
       try {
         document.execCommand('copy');
-        onSuccess();
+        showToast('Code copied to clipboard!');
       } catch (err) {
-        console.error('Copy failed:', err);
+        showToast('Copy failed');
       }
       document.body.removeChild(textarea);
     }
 
-    // Widget toggle
-    document.getElementById('showWidget').addEventListener('change', function() {
-      document.getElementById('widgetPositionField').style.display = this.checked ? 'block' : 'none';
-      updatePreview();
+    // Download config
+    function downloadConfig() {
+      const config = getConfig();
+      const data = {
+        version: '1.0',
+        config: config,
+        generated: new Date().toISOString()
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'cookie-banner-config.json';
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Config downloaded!');
+    }
+
+    // Help modal functions
+    function showHelpModal() {
+      document.getElementById('help-modal').classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function hideHelpModal(event) {
+      if (event && event.target !== event.currentTarget) return;
+      document.getElementById('help-modal').classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    // Close modal on escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') hideHelpModal();
     });
 
-    // Initial render
+    // Show toast notification
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+
+    // Initialize
     updatePreview();
-  </script>
-
-  <!-- Load the actual cookie banner library -->
-  <script src="cookie-banner.js"></script>
-
-  <script>
-    // Demo functionality
-    let currentBanner = null;
-    let countdownInterval = null;
-    const countdownEl = document.getElementById('countdown');
-
-    function clearCountdown() {
-      if (countdownInterval) {
-        clearInterval(countdownInterval);
-        countdownInterval = null;
-      }
-      countdownEl.style.display = 'none';
-    }
-
-    function startCountdown(ms) {
-      clearCountdown();
-      if (!document.getElementById('showCountdown').checked) return;
-
-      let remaining = ms;
-      countdownEl.style.display = 'block';
-
-      function tick() {
-        countdownEl.textContent = 'Auto-accept: ' + (remaining / 1000).toFixed(1) + 's';
-        remaining -= 100;
-        if (remaining < 0) clearCountdown();
-      }
-      tick();
-      countdownInterval = setInterval(tick, 100);
-    }
-
-    function updateConsentStatus(status) {
-      const statusEl = document.getElementById('demo-status');
-      const textEl = document.getElementById('consent-status');
-
-      statusEl.classList.remove('accepted', 'rejected');
-
-      if (status === true) {
-        statusEl.classList.add('accepted');
-        textEl.textContent = '✅ Accepted';
-      } else if (status === false) {
-        statusEl.classList.add('rejected');
-        textEl.textContent = '❌ Rejected';
-      } else {
-        textEl.textContent = '⏳ Pending';
-      }
-    }
-
-    function getDemoConfig() {
-      const config = getConfig();
-      const forceEU = config.mode === 'eu' ? true : config.mode === 'non-eu' ? false : undefined;
-
-      const isToast = ['bottom-left', 'bottom-right', 'center'].includes(config.position);
-      const demoConfig = {
-        mode: config.bannerMode,
-        tabs: { enabled: config.enableTabs, toast: isToast },
-        forceEU: forceEU,
-        autoAcceptDelay: config.autoAcceptDelay,
-        msg: config.msg,
-        acceptText: config.bannerMode === 'gdpr' ? 'Accept All' : config.acceptText,
-        rejectText: config.bannerMode === 'gdpr' ? 'Reject All' : config.rejectText,
-        days: config.days,
-        onAccept: function() {
-          clearCountdown();
-          updateConsentStatus(true);
-        },
-        onReject: function() {
-          clearCountdown();
-          updateConsentStatus(false);
-        },
-        onConsent: function(state) {
-          clearCountdown();
-          updateConsentStatus(true);
-          console.log('Consent:', state);
-        }
-      };
-
-      // Add widget config
-      if (document.getElementById('showWidget').checked) {
-        demoConfig.widget = {
-          enabled: true,
-          position: document.getElementById('widgetPosition').value
-        };
-      }
-
-      // Build CSS for Shadow DOM (external styles don't work)
-      let css = '';
-      css += `#ckb{--ckb-bg:${config.bgColor};--ckb-color:${config.textColor};--ckb-btn-bg:${config.btnBg};--ckb-btn-color:${config.btnColor};--ckb-font:${config.fontSize}px ${config.fontFamily};--ckb-padding:${config.padding}px 16px;--ckb-btn-radius:${config.btnRadius}px;--ckb-z:${config.zIndex};}`;
-
-      // Position CSS
-      if (config.position === 'top') {
-        css += '#ckb{bottom:auto;top:0;}';
-      } else if (config.position === 'bottom-left') {
-        css += '#ckb{right:auto;left:20px;bottom:20px;width:340px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15);}#ckb p{min-width:auto;}';
-      } else if (config.position === 'bottom-right') {
-        css += '#ckb{left:auto;right:20px;bottom:20px;width:340px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15);}#ckb p{min-width:auto;}';
-      } else if (config.position === 'center') {
-        css += '#ckb{bottom:auto;top:50%;left:50%;right:auto;width:400px;border-radius:12px;box-shadow:0 4px 40px rgba(0,0,0,0.3);transform:translate(-50%,-50%);}#ckb p{min-width:auto;}';
-      }
-
-      if (config.customCss) {
-        css += config.customCss;
-      }
-
-      demoConfig.css = css;
-
-      return demoConfig;
-    }
-
-    function launchDemo() {
-      resetDemo();
-
-      const config = getDemoConfig();
-      console.log('Launching demo with config:', config);
-
-      // Create and show banner (CSS is passed via config.css for Shadow DOM)
-      if (typeof window.createCookieBanner === 'function') {
-        currentBanner = window.createCookieBanner(config);
-        currentBanner.show();
-
-        updateConsentStatus(null);
-
-        // Start countdown for non-EU
-        const isNonEU = config.forceEU === false ||
-          (config.forceEU === undefined && window.CookieBannerModule && !window.CookieBannerModule.isEU());
-        if (isNonEU && config.autoAcceptDelay > 0) {
-          startCountdown(config.autoAcceptDelay);
-        }
-      } else {
-        alert('Library not loaded! Make sure dist/cookie-banner.js exists.');
-      }
-    }
-
-    function resetDemo() {
-      clearCountdown();
-
-      // Clear cookies
-      document.cookie.split(';').forEach(c => {
-        const name = c.trim().split('=')[0];
-        if (name) document.cookie = name + '=;expires=Thu,01 Jan 1970 00:00:00 GMT;path=/';
-      });
-
-      // Destroy current banner
-      if (currentBanner) {
-        currentBanner.destroy();
-        currentBanner = null;
-      }
-
-      // Clean up DOM (v2.0 uses web components)
-      document.querySelectorAll('cookie-banner-element, #ckb, [id^="ckb-widget"]').forEach(el => el.remove());
-      document.querySelectorAll('style[id^="ckb-style"]').forEach(s => s.remove());
-
-      window.CookieBanner = undefined;
-
-      document.getElementById('consent-status').textContent = 'Ready - click "Launch Demo"';
-      document.getElementById('demo-status').classList.remove('accepted', 'rejected');
-    }
-
-    // Check if library loaded
-    if (typeof window.createCookieBanner === 'function') {
-      console.log('Cookie banner library loaded successfully');
-    } else {
-      console.warn('Cookie banner library not loaded');
-    }
   </script>
 </body>
 </html>
