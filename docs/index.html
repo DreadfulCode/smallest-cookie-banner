@@ -426,10 +426,13 @@
       flex-wrap: wrap;
     }
 
+    .banner-preview #preview-tabs {
+      width: 100%;
+      margin-bottom: 8px;
+    }
+
     .banner-preview p {
       margin: 0;
-      flex: 1;
-      min-width: 200px;
     }
 
     .banner-preview button {
@@ -1253,38 +1256,38 @@
             <a href="#" onclick="showPreviewTab('details');return false;" class="preview-tab-btn" style="color:inherit;text-decoration:none;margin-right:8px;">Details</a>
             <a href="#" onclick="showPreviewTab('about');return false;" class="preview-tab-btn" style="color:inherit;text-decoration:none;">About</a>
           </nav>
-          <div id="preview-tab-consent">
+          <div id="preview-tab-consent" style="flex:1;min-width:200px;">
             <p id="preview-msg"><span id="preview-msg-text">We use cookies to enhance your experience.</span> <span id="preview-links" style="display:none;font-size:12px;opacity:0.8;"></span></p>
-            <div id="preview-categories" style="display:none;width:100%;padding:12px 0;border-top:1px solid rgba(255,255,255,0.2);margin-top:8px;">
-              <label style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;cursor:pointer;">
-                <input type="checkbox" checked disabled style="width:20px;height:20px;">
-                <div><div style="font-weight:600">Essential <span style="opacity:0.6;font-size:11px">(Required)</span></div><div style="font-size:12px;opacity:0.8">Required for the website to function</div></div>
-              </label>
-              <label style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;cursor:pointer;">
-                <input type="checkbox" style="width:20px;height:20px;">
-                <div><div style="font-weight:600">Analytics</div><div style="font-size:12px;opacity:0.8">Help us understand how visitors use our site</div></div>
-              </label>
-              <label style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;cursor:pointer;">
-                <input type="checkbox" style="width:20px;height:20px;">
-                <div><div style="font-weight:600">Marketing</div><div style="font-size:12px;opacity:0.8">Used to deliver relevant ads</div></div>
-              </label>
-              <label style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;cursor:pointer;">
-                <input type="checkbox" style="width:20px;height:20px;">
-                <div><div style="font-weight:600">Functional</div><div style="font-size:12px;opacity:0.8">Enable enhanced features and personalization</div></div>
-              </label>
-            </div>
-            <button class="settings-btn" id="preview-settings" onclick="togglePreviewCategories()" style="display:none;background:transparent;color:inherit;border:1px solid currentColor;">Customize</button>
-            <button class="save-btn" id="preview-save" style="display:none;">Save Preferences</button>
-            <button class="reject-btn" id="preview-reject">Decline</button>
-            <button id="preview-accept">Accept</button>
           </div>
-          <div id="preview-tab-details" style="display:none;font-size:12px;opacity:0.9;">
+          <div id="preview-tab-details" style="display:none;flex:1;min-width:200px;font-size:12px;opacity:0.9;">
             <p>Cookies are small text files stored on your device. We use different types of cookies:</p>
             <ul style="margin:8px 0;padding-left:20px;"><li>Essential: Required for site functionality</li><li>Analytics: Help us improve our site</li><li>Marketing: Used for targeted advertising</li></ul>
           </div>
-          <div id="preview-tab-about" style="display:none;font-size:12px;opacity:0.9;">
-            <p>This cookie consent solution is powered by <a href="https://github.com/AshleyFoster/smallest-cookie-banner" target="_blank" style="color:inherit;">smallest-cookie-banner</a>.</p>
+          <div id="preview-tab-about" style="display:none;flex:1;min-width:200px;font-size:12px;opacity:0.9;">
+            <p>This cookie consent solution is powered by <a href="https://github.com/DreadfulCode/smallest-cookie-banner" target="_blank" style="color:inherit;">smallest-cookie-banner</a>.</p>
           </div>
+          <div id="preview-categories" style="display:none;width:100%;padding:12px 0;border-top:1px solid rgba(255,255,255,0.2);margin-top:8px;">
+            <label style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;cursor:pointer;">
+              <input type="checkbox" checked disabled style="width:20px;height:20px;">
+              <div><div style="font-weight:600">Essential <span style="opacity:0.6;font-size:11px">(Required)</span></div><div style="font-size:12px;opacity:0.8">Required for the website to function</div></div>
+            </label>
+            <label style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;cursor:pointer;">
+              <input type="checkbox" style="width:20px;height:20px;">
+              <div><div style="font-weight:600">Analytics</div><div style="font-size:12px;opacity:0.8">Help us understand how visitors use our site</div></div>
+            </label>
+            <label style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;cursor:pointer;">
+              <input type="checkbox" style="width:20px;height:20px;">
+              <div><div style="font-weight:600">Marketing</div><div style="font-size:12px;opacity:0.8">Used to deliver relevant ads</div></div>
+            </label>
+            <label style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;cursor:pointer;">
+              <input type="checkbox" style="width:20px;height:20px;">
+              <div><div style="font-weight:600">Functional</div><div style="font-size:12px;opacity:0.8">Enable enhanced features and personalization</div></div>
+            </label>
+          </div>
+          <button class="settings-btn" id="preview-settings" onclick="togglePreviewCategories()" style="display:none;background:transparent;color:inherit;border:1px solid currentColor;">Customize</button>
+          <button class="save-btn" id="preview-save" style="display:none;">Save Preferences</button>
+          <button class="reject-btn" id="preview-reject">Decline</button>
+          <button id="preview-accept">Accept</button>
         </div>
       </div>
 
