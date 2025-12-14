@@ -1250,31 +1250,45 @@
 
       <!-- Live Banner Preview -->
       <div class="banner-preview-container" id="banner-preview-container">
-        <h3>Live Preview</h3>
+        <h3>Live Preview <button onclick="launchDemo()" style="margin-left:10px;font-size:11px;padding:4px 10px;background:#4f46e5;color:#fff;border:none;border-radius:4px;cursor:pointer;">Try Demo</button></h3>
         <div class="banner-preview" id="banner-preview">
-          <p id="preview-msg"><span id="preview-msg-text">We use cookies to enhance your experience.</span> <span id="preview-links" style="display:none;font-size:12px;opacity:0.8;"></span></p>
-          <div id="preview-categories" style="display:none;width:100%;padding:12px 0;border-top:1px solid rgba(255,255,255,0.2);margin-top:8px;">
-            <label style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;cursor:pointer;">
-              <input type="checkbox" checked disabled style="width:20px;height:20px;">
-              <div><div style="font-weight:600">Essential <span style="opacity:0.6;font-size:11px">(Required)</span></div><div style="font-size:12px;opacity:0.8">Required for the website to function</div></div>
-            </label>
-            <label style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;cursor:pointer;">
-              <input type="checkbox" style="width:20px;height:20px;">
-              <div><div style="font-weight:600">Analytics</div><div style="font-size:12px;opacity:0.8">Help us understand how visitors use our site</div></div>
-            </label>
-            <label style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;cursor:pointer;">
-              <input type="checkbox" style="width:20px;height:20px;">
-              <div><div style="font-weight:600">Marketing</div><div style="font-size:12px;opacity:0.8">Used to deliver relevant ads</div></div>
-            </label>
-            <label style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;cursor:pointer;">
-              <input type="checkbox" style="width:20px;height:20px;">
-              <div><div style="font-weight:600">Functional</div><div style="font-size:12px;opacity:0.8">Enable enhanced features and personalization</div></div>
-            </label>
+          <nav id="preview-tabs" style="display:none;font-size:11px;opacity:0.7;margin-bottom:8px;">
+            <a href="#" onclick="showPreviewTab('consent');return false;" class="preview-tab-btn active" style="color:inherit;text-decoration:underline;margin-right:8px;">Consent</a>
+            <a href="#" onclick="showPreviewTab('details');return false;" class="preview-tab-btn" style="color:inherit;text-decoration:none;margin-right:8px;">Details</a>
+            <a href="#" onclick="showPreviewTab('about');return false;" class="preview-tab-btn" style="color:inherit;text-decoration:none;">About</a>
+          </nav>
+          <div id="preview-tab-consent">
+            <p id="preview-msg"><span id="preview-msg-text">We use cookies to enhance your experience.</span> <span id="preview-links" style="display:none;font-size:12px;opacity:0.8;"></span></p>
+            <div id="preview-categories" style="display:none;width:100%;padding:12px 0;border-top:1px solid rgba(255,255,255,0.2);margin-top:8px;">
+              <label style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;cursor:pointer;">
+                <input type="checkbox" checked disabled style="width:20px;height:20px;">
+                <div><div style="font-weight:600">Essential <span style="opacity:0.6;font-size:11px">(Required)</span></div><div style="font-size:12px;opacity:0.8">Required for the website to function</div></div>
+              </label>
+              <label style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;cursor:pointer;">
+                <input type="checkbox" style="width:20px;height:20px;">
+                <div><div style="font-weight:600">Analytics</div><div style="font-size:12px;opacity:0.8">Help us understand how visitors use our site</div></div>
+              </label>
+              <label style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;cursor:pointer;">
+                <input type="checkbox" style="width:20px;height:20px;">
+                <div><div style="font-weight:600">Marketing</div><div style="font-size:12px;opacity:0.8">Used to deliver relevant ads</div></div>
+              </label>
+              <label style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;cursor:pointer;">
+                <input type="checkbox" style="width:20px;height:20px;">
+                <div><div style="font-weight:600">Functional</div><div style="font-size:12px;opacity:0.8">Enable enhanced features and personalization</div></div>
+              </label>
+            </div>
+            <button class="settings-btn" id="preview-settings" onclick="togglePreviewCategories()" style="display:none;background:transparent;color:inherit;border:1px solid currentColor;">Customize</button>
+            <button class="save-btn" id="preview-save" style="display:none;">Save Preferences</button>
+            <button class="reject-btn" id="preview-reject">Decline</button>
+            <button id="preview-accept">Accept</button>
           </div>
-          <button class="settings-btn" id="preview-settings" onclick="togglePreviewCategories()" style="display:none;background:transparent;color:inherit;border:1px solid currentColor;">Customize</button>
-          <button class="save-btn" id="preview-save" style="display:none;">Save Preferences</button>
-          <button class="reject-btn" id="preview-reject">Decline</button>
-          <button id="preview-accept">Accept</button>
+          <div id="preview-tab-details" style="display:none;font-size:12px;opacity:0.9;">
+            <p>Cookies are small text files stored on your device. We use different types of cookies:</p>
+            <ul style="margin:8px 0;padding-left:20px;"><li>Essential: Required for site functionality</li><li>Analytics: Help us improve our site</li><li>Marketing: Used for targeted advertising</li></ul>
+          </div>
+          <div id="preview-tab-about" style="display:none;font-size:12px;opacity:0.9;">
+            <p>This cookie consent solution is powered by <a href="https://github.com/AshleyFoster/smallest-cookie-banner" target="_blank" style="color:inherit;">smallest-cookie-banner</a>.</p>
+          </div>
         </div>
       </div>
 
@@ -2032,6 +2046,9 @@ ${config.bannerMode === 'gdpr' ? `  onConsent: function(consent) {
       document.getElementById('preview-accept').textContent = config.acceptText;
       document.getElementById('preview-reject').textContent = config.rejectText;
 
+      // Show/hide tabs based on enableTabs setting
+      document.getElementById('preview-tabs').style.display = config.enableTabs ? 'block' : 'none';
+
       // Update code output
       document.getElementById('code-output').innerHTML = generateOutputCode(config);
     }
@@ -2042,6 +2059,18 @@ ${config.bannerMode === 'gdpr' ? `  onConsent: function(consent) {
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       document.querySelector(`.tab[onclick="showTab('${tab}')"]`)?.classList.add('active');
       document.getElementById('code-output').innerHTML = generateOutputCode(getConfig());
+    }
+
+    // Show preview tab (for the live preview)
+    function showPreviewTab(tab) {
+      document.querySelectorAll('.preview-tab-btn').forEach(btn => {
+        btn.style.textDecoration = 'none';
+        btn.classList.remove('active');
+      });
+      document.querySelector(`.preview-tab-btn[onclick*="${tab}"]`).style.textDecoration = 'underline';
+      document.getElementById('preview-tab-consent').style.display = tab === 'consent' ? 'block' : 'none';
+      document.getElementById('preview-tab-details').style.display = tab === 'details' ? 'block' : 'none';
+      document.getElementById('preview-tab-about').style.display = tab === 'about' ? 'block' : 'none';
     }
 
     // Copy code
