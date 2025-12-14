@@ -60,13 +60,25 @@
   <script>
     // Configure before loading
     window.CookieBannerConfig = {
-      msg: 'We use cookies to improve your experience.',
+      msg: 'We use cookies to improve your experience and analyze site traffic.',
       acceptText: 'Accept All',
       rejectText: 'Reject All',
       forceEU: true, // Set to false to test non-EU mode
       mode: 'gdpr', // or 'minimal'
       privacyPolicyUrl: '/privacy',
       privacyPolicyText: 'Privacy Policy',
+      // Enable tabbed UI (v2.0 feature)
+      tabs: {
+        enabled: true,
+        consentLabel: 'Consent',
+        detailsLabel: 'Details',
+        aboutLabel: 'About'
+      },
+      categories: [
+        { id: 'essential', name: 'Essential', description: 'Required for site functionality', required: true },
+        { id: 'analytics', name: 'Analytics', description: 'Help us understand how visitors use our site' },
+        { id: 'marketing', name: 'Marketing', description: 'Used for targeted advertising' }
+      ],
       widget: { enabled: true, position: 'bottom-left' },
       onAccept: () => console.log('✅ User accepted cookies'),
       onReject: () => console.log('❌ User rejected cookies'),

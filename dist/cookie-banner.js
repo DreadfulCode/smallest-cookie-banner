@@ -39,7 +39,7 @@
 })(function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    exports.DEFAULT_CSS = exports.DEFAULT_CATEGORIES = void 0;
+    exports.DEFAULT_CSS = exports.DEFAULT_ABOUT_CONTENT = exports.DEFAULT_CATEGORIES = void 0;
     exports.sanitizeCss = sanitizeCss;
     exports.sanitizeUrl = sanitizeUrl;
     exports.sanitizeInlineStyle = sanitizeInlineStyle;
@@ -71,9 +71,15 @@
     const DEFAULT_AUTO_ACCEPT_DELAY = 5000;
     const COOKIE_NAME_REGEX = /^[a-zA-Z0-9_-]+$/;
     const DOMAIN_REGEX = /^\.?[a-zA-Z0-9][a-zA-Z0-9-]*(\.[a-zA-Z0-9][a-zA-Z0-9-]*)*$/;
+    /** Default About tab content - cookie law boilerplate (concise) */
+    exports.DEFAULT_ABOUT_CONTENT = `<p>Cookies are small text files stored on your device to improve your experience.</p>
+<p>We require your consent for non-essential cookies per GDPR Art. 6. You can change your preferences at any time.</p>
+<p style="margin-top:10px;font-size:10px;opacity:0.5">Powered by <a href="https://github.com/DreadfulCode/smallest-cookie-banner" target="_blank" rel="noopener" style="color:inherit">smallest-cookie-banner</a></p>`;
     /** Default CSS - uses CSS custom properties for easy overrides */
     /** Includes WCAG 2.1 AA compliant touch targets (44x44px min) */
-    exports.DEFAULT_CSS = `#ckb{position:var(--ckb-position,fixed);bottom:var(--ckb-bottom,0);top:var(--ckb-top,auto);left:var(--ckb-left,0);right:var(--ckb-right,0);padding:var(--ckb-padding,12px 16px);background:var(--ckb-bg,#222);color:var(--ckb-color,#fff);font:var(--ckb-font,14px/1.4 system-ui,sans-serif);display:flex;align-items:center;gap:var(--ckb-gap,12px);z-index:var(--ckb-z,9999);flex-wrap:wrap}#ckb:focus{outline:2px solid var(--ckb-focus-color,#4299e1);outline-offset:2px}#ckb p{margin:0;flex:1;min-width:200px}#ckb a{color:inherit}#ckb button{min-height:44px;min-width:44px;padding:var(--ckb-btn-padding,10px 20px);border:var(--ckb-btn-border,none);border-radius:var(--ckb-btn-radius,4px);background:var(--ckb-btn-bg,#fff);color:var(--ckb-btn-color,#222);font:inherit;cursor:pointer;touch-action:manipulation}#ckb button:focus{outline:2px solid var(--ckb-focus-color,#4299e1);outline-offset:2px}#ckb button:hover{opacity:0.9}#ckb #ckn{background:var(--ckb-reject-bg,transparent);color:var(--ckb-reject-color,inherit);border:var(--ckb-reject-border,1px solid currentColor)}#ckb #cks{background:var(--ckb-settings-bg,transparent);color:var(--ckb-settings-color,inherit);border:var(--ckb-settings-border,1px solid currentColor)}#ckb-cats{display:none;width:100%;padding:12px 0;border-top:1px solid rgba(255,255,255,0.2);margin-top:8px}#ckb.expanded #ckb-cats{display:block}#ckb-cats label{display:flex;align-items:flex-start;gap:10px;padding:8px 0;cursor:pointer}#ckb-cats input[type=checkbox]{width:20px;height:20px;margin:2px 0;accent-color:var(--ckb-btn-bg,#fff)}#ckb-cats .cat-info{flex:1}#ckb-cats .cat-name{font-weight:600}#ckb-cats .cat-desc{font-size:12px;opacity:0.8;margin-top:2px}#ckb-cats .cat-req{opacity:0.6;font-size:11px}@media(prefers-reduced-motion:reduce){#ckb,#ckb *{transition:none!important;animation:none!important}}`;
+    exports.DEFAULT_CSS = `#ckb{position:var(--ckb-position,fixed);bottom:var(--ckb-bottom,0);top:var(--ckb-top,auto);left:var(--ckb-left,0);right:var(--ckb-right,0);padding:var(--ckb-padding,12px 16px);background:var(--ckb-bg,#222);color:var(--ckb-color,#fff);font:var(--ckb-font,14px/1.4 system-ui,sans-serif);display:flex;align-items:center;gap:var(--ckb-gap,12px);z-index:var(--ckb-z,9999);flex-wrap:wrap}#ckb:focus{outline:2px solid var(--ckb-focus-color,#4299e1);outline-offset:2px}#ckb p{margin:0;flex:1;min-width:200px}#ckb a{color:inherit}#ckb button{min-height:44px;min-width:44px;padding:var(--ckb-btn-padding,10px 20px);border:var(--ckb-btn-border,none);border-radius:var(--ckb-btn-radius,4px);background:var(--ckb-btn-bg,#fff);color:var(--ckb-btn-color,#222);font:inherit;cursor:pointer;touch-action:manipulation}#ckb button:focus{outline:2px solid var(--ckb-focus-color,#4299e1);outline-offset:2px}#ckb button:hover{opacity:0.9}#ckb #ckn{background:var(--ckb-reject-bg,transparent);color:var(--ckb-reject-color,inherit);border:var(--ckb-reject-border,1px solid currentColor)}#ckb #cks{background:var(--ckb-settings-bg,transparent);color:var(--ckb-settings-color,inherit);border:var(--ckb-settings-border,1px solid currentColor)}#ckb-cats{display:none;width:100%;padding:12px 0;border-top:1px solid rgba(255,255,255,0.2);margin-top:8px}#ckb.expanded #ckb-cats{display:block}#ckb-cats label{display:flex;align-items:flex-start;gap:10px;padding:8px 0;cursor:pointer}#ckb-cats input[type=checkbox]{width:20px;height:20px;margin:2px 0;accent-color:var(--ckb-btn-bg,#fff)}#ckb-cats .cat-info{flex:1}#ckb-cats .cat-name{font-weight:600}#ckb-cats .cat-desc{font-size:12px;opacity:0.8;margin-top:2px}#ckb-cats .cat-req{opacity:0.6;font-size:11px}@media(prefers-reduced-motion:reduce){#ckb,#ckb *{transition:none!important;animation:none!important}}` +
+        /* Tabbed UI CSS */
+        `.ckb-tabs{width:100%}.ckb-tab-nav{display:block;font-size:11px;opacity:0.7;margin-bottom:6px}.ckb-tab-btn{all:unset!important;display:inline!important;background:none!important;border:none!important;color:inherit!important;padding:0!important;margin:0 4px!important;cursor:pointer!important;font-size:11px!important;min-height:0!important;min-width:0!important;text-decoration:none;opacity:0.8}.ckb-tab-btn:hover{text-decoration:underline!important;opacity:1!important}.ckb-tab-btn.active{text-decoration:underline!important;opacity:1!important}.ckb-tab-btn:focus{outline:1px dotted!important}.ckb-tab-panel{display:none}.ckb-tab-panel.active{display:block}.ckb-tab-panel p{margin:0 0 6px;font-size:13px}.ckb-tab-panel p:last-child{margin-bottom:0}.ckb-tab-panel label{display:flex;align-items:flex-start;gap:8px;padding:6px 0;cursor:pointer}.ckb-tab-panel input[type=checkbox]{width:18px;height:18px;margin:2px 0;accent-color:var(--ckb-btn-bg,#fff);flex-shrink:0}.ckb-about-content{font-size:10px;line-height:1.4;opacity:0.8}.ckb-about-content p{margin:0 0 6px}.ckb-about-content strong{font-weight:600}#ckb.tabbed{flex-direction:column;align-items:stretch}#ckb.tabbed .ckb-buttons{display:flex;gap:10px;justify-content:flex-end;margin-top:8px}`;
     // ============================================================================
     // SSR Safety
     // ============================================================================
@@ -606,6 +612,7 @@
             }
         }
         function createBannerElement(startExpanded = false) {
+            var _a, _b, _c, _d, _e;
             // Failsafe: remove any existing banner to prevent duplicates
             const existing = document.querySelector(COMPONENT_NAME);
             if (existing) {
@@ -648,18 +655,22 @@
             const settingsText = escapeHtml(config.settingsText || 'Customize');
             const saveText = escapeHtml(config.saveText || 'Save Preferences');
             const privacyText = escapeHtml(config.privacyPolicyText || 'Privacy Policy');
+            // Tab configuration - tabs enabled by default (disable with tabs: { enabled: false })
+            const tabsEnabled = ((_a = config.tabs) === null || _a === void 0 ? void 0 : _a.enabled) !== false;
+            const consentLabel = escapeHtml(((_b = config.tabs) === null || _b === void 0 ? void 0 : _b.consentLabel) || 'Consent');
+            const detailsLabel = escapeHtml(((_c = config.tabs) === null || _c === void 0 ? void 0 : _c.detailsLabel) || 'Details');
+            const aboutLabel = escapeHtml(((_d = config.tabs) === null || _d === void 0 ? void 0 : _d.aboutLabel) || 'About');
+            const aboutContent = ((_e = config.tabs) === null || _e === void 0 ? void 0 : _e.aboutContent) || exports.DEFAULT_ABOUT_CONTENT;
             // Build privacy policy link if URL provided (sanitize to prevent javascript: XSS)
             const sanitizedPrivacyUrl = sanitizeUrl(config.privacyPolicyUrl || '');
             const privacyLink = sanitizedPrivacyUrl
                 ? ` <a href="${escapeHtml(sanitizedPrivacyUrl)}" target="_blank" rel="noopener">${privacyText}</a>`
                 : '';
-            // Build HTML based on mode
-            let html = `<p id="${msgId}">${msg}${privacyLink}</p>`;
+            // Build categories HTML (used in both tabbed and non-tabbed modes)
+            let catsHtml = '';
             if (hasCategories) {
-                // GDPR mode: Settings button + categories panel + Accept All / Reject All / Save
                 const cats = categories;
-                // Build categories HTML
-                let catsHtml = '<div id="ckb-cats">';
+                catsHtml = tabsEnabled ? '' : '<div id="ckb-cats">';
                 for (let c = 0; c < cats.length; c++) {
                     const cat = cats[c];
                     const isRequired = cat.required === true;
@@ -681,7 +692,44 @@
           </div>
         </label>`;
                 }
-                catsHtml += '</div>';
+                if (!tabsEnabled)
+                    catsHtml += '</div>';
+            }
+            // Build HTML based on mode
+            let html = '';
+            if (tabsEnabled) {
+                // Tabbed UI mode
+                wrapper.classList.add('tabbed');
+                // Only show Details tab if there are categories (GDPR mode)
+                const detailsTab = hasCategories
+                    ? `<button type="button" class="ckb-tab-btn" role="tab" aria-selected="false" aria-controls="ckb-panel-details" data-tab="details">${detailsLabel}</button>`
+                    : '';
+                const detailsPanel = hasCategories
+                    ? `<div id="ckb-panel-details" class="ckb-tab-panel" role="tabpanel">${catsHtml}</div>`
+                    : '';
+                html = `<div class="ckb-tabs">
+        <nav class="ckb-tab-nav" role="tablist">
+          <button type="button" class="ckb-tab-btn active" role="tab" aria-selected="true" aria-controls="ckb-panel-consent" data-tab="consent">${consentLabel}</button>
+          ${detailsTab}
+          <button type="button" class="ckb-tab-btn" role="tab" aria-selected="false" aria-controls="ckb-panel-about" data-tab="about">${aboutLabel}</button>
+        </nav>
+        <div id="ckb-panel-consent" class="ckb-tab-panel active" role="tabpanel">
+          <p id="${msgId}">${msg}</p>
+        </div>
+        ${detailsPanel}
+        <div id="ckb-panel-about" class="ckb-tab-panel" role="tabpanel">
+          <div class="ckb-about-content">${aboutContent}</div>
+          ${sanitizedPrivacyUrl ? `<p><a href="${escapeHtml(sanitizedPrivacyUrl)}" target="_blank" rel="noopener">${privacyText}</a></p>` : ''}
+        </div>
+      </div>
+      <div class="ckb-buttons">
+        ${inEU ? `<button type="button" id="ckn">${rejectText}</button>` : ''}
+        <button type="button" id="cky">${acceptText}</button>
+      </div>`;
+            }
+            else if (hasCategories) {
+                // GDPR mode (non-tabbed): Settings button + categories panel + Accept All / Reject All / Save
+                html = `<p id="${msgId}">${msg}${privacyLink}</p>`;
                 html += catsHtml;
                 html += `<button type="button" id="cks">${settingsText}</button>`;
                 html += `<button type="button" id="cksv" style="display:none">${saveText}</button>`;
@@ -690,6 +738,7 @@
             }
             else {
                 // Minimal mode: simple Accept/Reject
+                html = `<p id="${msgId}">${msg}${privacyLink}</p>`;
                 const minimalRejectText = escapeHtml(config.rejectText || '\u2717');
                 html += inEU ? `<button type="button" id="ckn">${minimalRejectText}</button>` : '';
                 html += `<button type="button" id="cky">${escapeHtml(config.acceptText || 'OK')}</button>`;
@@ -755,6 +804,31 @@
             }
             if (saveEl) {
                 saveEl.addEventListener('click', handleSaveClick);
+            }
+            // Tab switching (tabbed UI mode)
+            if (tabsEnabled) {
+                const tabBtns = shadow.querySelectorAll('.ckb-tab-btn');
+                const tabPanels = shadow.querySelectorAll('.ckb-tab-panel');
+                const handleTabClick = (e) => {
+                    const btn = e.currentTarget;
+                    const tabId = btn.getAttribute('data-tab');
+                    // Update tab buttons
+                    for (let t = 0; t < tabBtns.length; t++) {
+                        const tabBtn = tabBtns[t];
+                        const isActive = tabBtn.getAttribute('data-tab') === tabId;
+                        tabBtn.classList.toggle('active', isActive);
+                        tabBtn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+                    }
+                    // Update tab panels
+                    for (let p = 0; p < tabPanels.length; p++) {
+                        const panel = tabPanels[p];
+                        const isActive = panel.id === `ckb-panel-${tabId}`;
+                        panel.classList.toggle('active', isActive);
+                    }
+                };
+                for (let t = 0; t < tabBtns.length; t++) {
+                    tabBtns[t].addEventListener('click', handleTabClick);
+                }
             }
             // Keyboard navigation
             const handleKeydown = (e) => {
@@ -1023,10 +1097,55 @@
     // ============================================================================
     // Track if already initialized to prevent double-init
     let _initialized = false;
+    /**
+     * Parse config from script tag data attributes
+     * Supports: data-force-eu, data-tabs, data-msg, data-accept-text, data-reject-text, etc.
+     */
+    function parseDataAttributes(script) {
+        const config = {};
+        // Boolean attributes (presence = true)
+        if (script.hasAttribute('data-force-eu'))
+            config.forceEU = true;
+        if (script.hasAttribute('data-tabs'))
+            config.tabs = { enabled: true };
+        if (script.hasAttribute('data-gdpr'))
+            config.mode = 'gdpr';
+        // String attributes
+        const msg = script.getAttribute('data-msg');
+        if (msg)
+            config.msg = msg;
+        const acceptText = script.getAttribute('data-accept-text');
+        if (acceptText)
+            config.acceptText = acceptText;
+        const rejectText = script.getAttribute('data-reject-text');
+        if (rejectText)
+            config.rejectText = rejectText;
+        const privacyUrl = script.getAttribute('data-privacy-url');
+        if (privacyUrl)
+            config.privacyPolicyUrl = privacyUrl;
+        const cookieName = script.getAttribute('data-cookie-name');
+        if (cookieName)
+            config.cookieName = cookieName;
+        // Number attributes
+        const days = script.getAttribute('data-days');
+        if (days)
+            config.days = parseInt(days, 10);
+        return config;
+    }
     function autoInit() {
         if (_initialized)
             return;
         _initialized = true;
+        // Merge data attributes with window.CookieBannerConfig
+        let config = window.CookieBannerConfig || {};
+        // Parse data attributes from current script tag
+        const script = document.currentScript;
+        if (script) {
+            const dataConfig = parseDataAttributes(script);
+            config = Object.assign(Object.assign({}, dataConfig), config); // window config overrides data attributes
+        }
+        // Set merged config back
+        window.CookieBannerConfig = config;
         setup();
     }
     // Only auto-init if loaded as a script (not imported as module)

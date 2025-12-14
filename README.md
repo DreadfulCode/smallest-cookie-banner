@@ -2,20 +2,18 @@
 
 **The smallest legally compliant cookie consent banner in existence.**
 
-[![Live Demo](https://img.shields.io/badge/🍪_Live_Demo-Configurator-4ade80?style=for-the-badge)](https://dreadfulcode.github.io/smallest-cookie-banner/) [![npm](https://img.shields.io/badge/npm-smallest--cookie--banner-cb3837?style=for-the-badge&logo=npm)](https://www.npmjs.com/package/smallest-cookie-banner) [![Size](https://img.shields.io/badge/size-~6KB_gzip-blue?style=for-the-badge)](https://github.com/DreadfulCode/smallest-cookie-banner) [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-3178c6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/) [![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)](LICENSE)
+[![Live Demo](https://img.shields.io/badge/🍪_Live_Demo-Configurator-4ade80?style=for-the-badge)](https://dreadfulcode.github.io/smallest-cookie-banner/) [![npm](https://img.shields.io/badge/npm-smallest--cookie--banner-cb3837?style=for-the-badge&logo=npm)](https://www.npmjs.com/package/smallest-cookie-banner) [![Size](https://img.shields.io/badge/size-~7KB_gzip-blue?style=for-the-badge)](https://github.com/DreadfulCode/smallest-cookie-banner) [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-3178c6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/) [![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)](LICENSE)
 
-~6KB minified + gzipped. Zero dependencies. TypeScript. Works with React, Vue, Angular, Svelte, or vanilla JS.
+~7KB minified + gzipped. Zero dependencies. TypeScript. Works with React, Vue, Angular, Svelte, or vanilla JS.
 
 **[Read more about the library and see it in action on my blog](https://vibecodingwithfred.com/blog/gdpr-cookie-banner-cdn/)**
 
 If you use this library and want a mention here, send me your URL!
 
-> ⚠️ **Alpha Version** — This project is in active development and has not been tested in all browsers yet. Use in production at your own discretion. Please [report issues](https://github.com/DreadfulCode/smallest-cookie-banner/issues) if you encounter bugs.
-
 ## Features
 
 ### Minimal
-- **~6KB gzipped** — still smaller than most images
+- **~7KB gzipped** — still smaller than most images
 - **Zero dependencies** — no bloat, no supply chain risk
 - **No external requests** — works offline, no tracking
 
@@ -29,7 +27,7 @@ If you use this library and want a mention here, send me your URL!
 - **Geo-aware** — auto-detects EU users via timezone for GDPR
 - **Implied consent** — auto-accepts in regions where it's legal (USA, Asia, etc.)
 - **TypeScript** — full type definitions included
-- **Well-tested** — 264 tests, TDD approach
+- **Well-tested** — 283 tests, TDD approach
 - **CSS Encapsulation** — Web Components with Shadow DOM (v2.0)
 
 ### Compliant & Accessible

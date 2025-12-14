@@ -409,6 +409,10 @@
             <option value="gdpr">GDPR (granular consent categories)</option>
           </select>
         </div>
+        <div class="checkbox-field" style="margin-bottom:12px;">
+          <input type="checkbox" id="enableTabs" checked>
+          <label>Enable Tabbed UI (Consent/Details/About)</label>
+        </div>
         <div class="field">
           <label>Region Mode</label>
           <select id="mode">
@@ -641,6 +645,7 @@
       acceptText: document.getElementById('acceptText'),
       rejectText: document.getElementById('rejectText'),
       bannerMode: document.getElementById('bannerMode'),
+      enableTabs: document.getElementById('enableTabs'),
       mode: document.getElementById('mode'),
       autoAcceptDelay: document.getElementById('autoAcceptDelay'),
       days: document.getElementById('days'),
@@ -693,6 +698,7 @@
         acceptText: inputs.acceptText.value,
         rejectText: inputs.rejectText.value,
         bannerMode: inputs.bannerMode.value,
+        enableTabs: inputs.enableTabs.checked,
         mode: inputs.mode.value,
         autoAcceptDelay: parseInt(inputs.autoAcceptDelay.value),
         days: parseInt(inputs.days.value),
@@ -780,6 +786,9 @@
       let configObj = [];
       if (config.bannerMode === 'gdpr') {
         configObj.push(`  mode: 'gdpr'`);
+      }
+      if (!config.enableTabs) {
+        configObj.push(`  tabs: { enabled: false }`);
       }
       if (config.msg !== 'We use cookies to enhance your experience.') {
         configObj.push(`  msg: '${escapeJs(config.msg)}'`);
@@ -1006,6 +1015,7 @@ ${configBlock}${config.bannerMode === 'gdpr' ? `  onConsent: function(consent) {
 
       const demoConfig = {
         mode: config.bannerMode,
+        tabs: { enabled: config.enableTabs },
         forceEU: forceEU,
         autoAcceptDelay: config.autoAcceptDelay,
         msg: config.msg,

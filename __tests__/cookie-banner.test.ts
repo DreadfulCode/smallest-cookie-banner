@@ -503,7 +503,7 @@ describe('smallest-cookie-banner', () => {
         expect(requiredSpan?.textContent).toBe('(Obligatoire)');
       });
 
-      it('supports full French localization', () => {
+      it('supports full French localization (non-tabbed)', () => {
         const banner = createCookieBanner({
           mode: 'gdpr',
           msg: 'Nous utilisons des cookies pour améliorer votre expérience.',
@@ -516,6 +516,7 @@ describe('smallest-cookie-banner', () => {
           requiredLabel: '(Obligatoire)',
           privacyPolicyUrl: '/politique-confidentialite',
           forceEU: true,
+          tabs: { enabled: false }, // Test non-tabbed mode
         });
         banner.show();
         expect(shadowQuery('#ckb')?.innerHTML).toContain('Nous utilisons des cookies');
@@ -1189,30 +1190,31 @@ describe('smallest-cookie-banner', () => {
       });
     });
 
-    describe('GDPR banner rendering', () => {
-      it('shows categories panel in GDPR mode', () => {
-        const banner = createCookieBanner({ mode: 'gdpr', forceEU: true });
+    describe('GDPR banner rendering (non-tabbed)', () => {
+      it('shows categories panel in GDPR mode (non-tabbed)', () => {
+        const banner = createCookieBanner({ mode: 'gdpr', forceEU: true, tabs: { enabled: false } });
         banner.show();
         expect(shadowQuery('#ckb-cats')).not.toBeNull();
       });
 
-      it('shows categories when categories array is provided', () => {
+      it('shows categories when categories array is provided (non-tabbed)', () => {
         const banner = createCookieBanner({
           categories: DEFAULT_CATEGORIES,
           forceEU: true,
+          tabs: { enabled: false },
         });
         banner.show();
         expect(shadowQuery('#ckb-cats')).not.toBeNull();
       });
 
-      it('shows settings button in GDPR mode', () => {
-        const banner = createCookieBanner({ mode: 'gdpr', forceEU: true });
+      it('shows settings button in GDPR mode (non-tabbed)', () => {
+        const banner = createCookieBanner({ mode: 'gdpr', forceEU: true, tabs: { enabled: false } });
         banner.show();
         expect(shadowQuery('#cks')).not.toBeNull();
       });
 
-      it('shows save button (hidden initially) in GDPR mode', () => {
-        const banner = createCookieBanner({ mode: 'gdpr', forceEU: true });
+      it('shows save button (hidden initially) in GDPR mode (non-tabbed)', () => {
+        const banner = createCookieBanner({ mode: 'gdpr', forceEU: true, tabs: { enabled: false } });
         banner.show();
         const saveBtn = shadowQuery('#cksv');
         expect(saveBtn).not.toBeNull();
@@ -1254,8 +1256,8 @@ describe('smallest-cookie-banner', () => {
     });
 
     describe('GDPR settings toggle', () => {
-      it('toggles expanded class on settings click', () => {
-        const banner = createCookieBanner({ mode: 'gdpr', forceEU: true });
+      it('toggles expanded class on settings click (non-tabbed)', () => {
+        const banner = createCookieBanner({ mode: 'gdpr', forceEU: true, tabs: { enabled: false } });
         banner.show();
         const settingsBtn = shadowQuery('#cks');
         const el = shadowQuery('#ckb');
@@ -1265,8 +1267,8 @@ describe('smallest-cookie-banner', () => {
         expect(el?.classList.contains('expanded')).toBe(true);
       });
 
-      it('shows save button and hides settings when expanded', () => {
-        const banner = createCookieBanner({ mode: 'gdpr', forceEU: true });
+      it('shows save button and hides settings when expanded (non-tabbed)', () => {
+        const banner = createCookieBanner({ mode: 'gdpr', forceEU: true, tabs: { enabled: false } });
         banner.show();
         const settingsBtn = shadowQuery('#cks');
         const saveBtn = shadowQuery('#cksv');
@@ -1306,9 +1308,9 @@ describe('smallest-cookie-banner', () => {
         expect(consent.functional).toBe(false);
       });
 
-      it('Save Preferences saves checkbox states', () => {
+      it('Save Preferences saves checkbox states (non-tabbed)', () => {
         const onConsent = jest.fn();
-        const banner = createCookieBanner({ mode: 'gdpr', forceEU: true, onConsent });
+        const banner = createCookieBanner({ mode: 'gdpr', forceEU: true, onConsent, tabs: { enabled: false } });
         banner.show();
 
         // Expand settings
@@ -1724,13 +1726,14 @@ describe('smallest-cookie-banner', () => {
         expect(shadowQuery('#ckb')?.classList.contains('expanded')).toBe(true);
       });
 
-      it('records method as "widget" when consent changed via widget', () => {
+      it('records method as "widget" when consent changed via widget (non-tabbed)', () => {
         const onConsent = jest.fn();
         const banner = createCookieBanner({
           mode: 'gdpr',
           forceEU: true,
           widget: { enabled: true },
           onConsent,
+          tabs: { enabled: false },
         });
         banner.show();
         banner.accept();
@@ -1769,7 +1772,21 @@ describe('smallest-cookie-banner', () => {
   // PRIVACY POLICY URL SANITIZATION TESTS
   // ============================================================================
   describe('Privacy Policy URL Sanitization', () => {
-    it('sanitizes javascript: URLs in privacyPolicyUrl', () => {
+    it('sanitizes javascript: URLs in privacyPolicyUrl (non-tabbed)', () => {
+      const banner = createCookieBanner({
+        mode: 'gdpr',
+        forceEU: true,
+        privacyPolicyUrl: 'javascript:alert(document.cookie)',
+        tabs: { enabled: false },
+      });
+      banner.show();
+
+      const link = shadowQuery('#ckb a');
+      // Link should not be rendered since URL is blocked
+      expect(link).toBeNull();
+    });
+
+    it('sanitizes javascript: URLs in privacyPolicyUrl (tabbed)', () => {
       const banner = createCookieBanner({
         mode: 'gdpr',
         forceEU: true,
@@ -1777,9 +1794,11 @@ describe('smallest-cookie-banner', () => {
       });
       banner.show();
 
-      const link = shadowQuery('#ckb a');
-      // Link should not be rendered since URL is blocked
-      expect(link).toBeNull();
+      // In tabbed mode, only the powered-by link exists in About tab
+      const aboutLinks = shadowQueryAll('#ckb-panel-about a');
+      // All links should be the powered-by link, not the blocked javascript: URL
+      expect(aboutLinks.length).toBe(1);
+      expect(aboutLinks[0]?.getAttribute('href')).toContain('github.com');
     });
 
     it('allows valid https URLs in privacyPolicyUrl', () => {
@@ -1811,10 +1830,18 @@ describe('smallest-cookie-banner', () => {
   // COMPREHENSIVE CONFIG OPTIONS TESTS - MINIMAL MODE
   // ============================================================================
   describe('Minimal Mode Config Options', () => {
-    it('uses default button text in minimal mode', () => {
+    it('uses default button text in minimal mode (tabbed)', () => {
       const banner = createCookieBanner({ forceEU: true });
       banner.show();
-      // Minimal mode defaults: "OK" for accept, "✗" for reject
+      // Tabbed minimal mode uses "Accept All" / "Reject All"
+      expect(shadowQuery('#cky')?.textContent).toBe('Accept All');
+      expect(shadowQuery('#ckn')?.textContent).toBe('Reject All');
+    });
+
+    it('uses default button text in minimal mode (non-tabbed)', () => {
+      const banner = createCookieBanner({ forceEU: true, tabs: { enabled: false } });
+      banner.show();
+      // Non-tabbed minimal mode defaults: "OK" for accept, "✗" for reject
       expect(shadowQuery('#cky')?.textContent).toBe('OK');
       expect(shadowQuery('#ckn')?.textContent).toBe('✗');
     });
@@ -1847,11 +1874,25 @@ describe('smallest-cookie-banner', () => {
       expect(link).not.toBeNull();
     });
 
-    it('supports privacyPolicyText in minimal mode', () => {
+    it('supports privacyPolicyText in minimal mode (tabbed)', () => {
       const banner = createCookieBanner({
         privacyPolicyUrl: '/privacy',
         privacyPolicyText: 'Read our policy',
         forceEU: true,
+      });
+      banner.show();
+      // Privacy link is in the About tab panel (last link)
+      const aboutLinks = shadowQueryAll('#ckb-panel-about a');
+      const privacyLink = aboutLinks[aboutLinks.length - 1];
+      expect(privacyLink?.textContent).toBe('Read our policy');
+    });
+
+    it('supports privacyPolicyText in minimal mode (non-tabbed)', () => {
+      const banner = createCookieBanner({
+        privacyPolicyUrl: '/privacy',
+        privacyPolicyText: 'Read our policy',
+        forceEU: true,
+        tabs: { enabled: false },
       });
       banner.show();
       const link = shadowQuery('#ckb a');
@@ -1903,7 +1944,7 @@ describe('smallest-cookie-banner', () => {
       expect(widget).not.toBeNull();
     });
 
-    it('supports full minimal mode localization', () => {
+    it('supports full minimal mode localization (non-tabbed)', () => {
       const banner = createCookieBanner({
         msg: 'Utilizamos cookies.',
         acceptText: 'Aceptar',
@@ -1912,6 +1953,7 @@ describe('smallest-cookie-banner', () => {
         privacyPolicyText: 'Política de privacidad',
         bannerAriaLabel: 'Aviso de cookies',
         forceEU: true,
+        tabs: { enabled: false },
       });
       banner.show();
       expect(shadowQuery('#ckb')?.innerHTML).toContain('Utilizamos cookies');
@@ -1926,12 +1968,22 @@ describe('smallest-cookie-banner', () => {
   // COMPREHENSIVE CONFIG OPTIONS TESTS - GDPR MODE
   // ============================================================================
   describe('GDPR Mode Config Options', () => {
-    it('uses default button text in GDPR mode', () => {
-      const banner = createCookieBanner({ mode: 'gdpr', forceEU: true });
+    it('uses default button text in GDPR mode (non-tabbed)', () => {
+      const banner = createCookieBanner({ mode: 'gdpr', forceEU: true, tabs: { enabled: false } });
       banner.show();
       expect(shadowQuery('#cky')?.textContent).toBe('Accept All');
       expect(shadowQuery('#ckn')?.textContent).toBe('Reject All');
       expect(shadowQuery('#cks')?.textContent).toBe('Customize');
+    });
+
+    it('uses default button text in GDPR mode (tabbed)', () => {
+      const banner = createCookieBanner({ mode: 'gdpr', forceEU: true });
+      banner.show();
+      // Tabbed mode only has Accept/Reject buttons
+      expect(shadowQuery('#cky')?.textContent).toBe('Accept All');
+      expect(shadowQuery('#ckn')?.textContent).toBe('Reject All');
+      // No settings button in tabbed mode - tabs replace it
+      expect(shadowQuery('#cks')).toBeNull();
     });
 
     it('supports custom acceptText in GDPR mode', () => {
@@ -1954,21 +2006,23 @@ describe('smallest-cookie-banner', () => {
       expect(shadowQuery('#ckn')?.textContent).toBe('Deny All');
     });
 
-    it('supports custom settingsText in GDPR mode', () => {
+    it('supports custom settingsText in non-tabbed GDPR mode', () => {
       const banner = createCookieBanner({
         mode: 'gdpr',
         settingsText: 'Manage Preferences',
         forceEU: true,
+        tabs: { enabled: false },
       });
       banner.show();
       expect(shadowQuery('#cks')?.textContent).toBe('Manage Preferences');
     });
 
-    it('supports custom saveText in GDPR mode', () => {
+    it('supports custom saveText in non-tabbed GDPR mode', () => {
       const banner = createCookieBanner({
         mode: 'gdpr',
         saveText: 'Confirm Selection',
         forceEU: true,
+        tabs: { enabled: false },
       });
       banner.show();
       // Expand to see save button
@@ -1987,7 +2041,7 @@ describe('smallest-cookie-banner', () => {
       expect(link).not.toBeNull();
     });
 
-    it('supports privacyPolicyText in GDPR mode', () => {
+    it('supports privacyPolicyText in GDPR mode with tabbed UI', () => {
       const banner = createCookieBanner({
         mode: 'gdpr',
         privacyPolicyUrl: '/privacy',
@@ -1995,8 +2049,10 @@ describe('smallest-cookie-banner', () => {
         forceEU: true,
       });
       banner.show();
-      const link = shadowQuery('#ckb a');
-      expect(link?.textContent).toBe('View Privacy Policy');
+      // Privacy link is in the About tab panel
+      const aboutLinks = shadowQueryAll('#ckb-panel-about a');
+      const privacyLink = aboutLinks[aboutLinks.length - 1]; // Last link is privacy
+      expect(privacyLink?.textContent).toBe('View Privacy Policy');
     });
 
     it('supports bannerAriaLabel in GDPR mode', () => {
@@ -2019,31 +2075,38 @@ describe('smallest-cookie-banner', () => {
       expect(shadowQuery('.cat-req')?.textContent).toBe('(Mandatory)');
     });
 
-    it('shows categories panel in GDPR mode', () => {
+    it('shows categories in tabbed GDPR mode', () => {
       const banner = createCookieBanner({ mode: 'gdpr', forceEU: true });
       banner.show();
-      expect(shadowQuery('#ckb-cats')).not.toBeNull();
+      // With tabbed UI, categories are in the Details tab
+      const checkboxes = shadowQueryAll('input[name="ckb-cat"]');
+      expect(checkboxes.length).toBe(4); // DEFAULT_CATEGORIES
     });
 
-    it('shows settings and save buttons in GDPR mode', () => {
+    it('shows tabbed navigation in GDPR mode', () => {
       const banner = createCookieBanner({ mode: 'gdpr', forceEU: true });
       banner.show();
-      expect(shadowQuery('#cks')).not.toBeNull();
-      expect(shadowQuery('#cksv')).not.toBeNull();
+      // Tabbed UI is shown by default
+      expect(shadowQuery('.ckb-tab-nav')).not.toBeNull();
+      expect(shadowQueryAll('.ckb-tab-btn').length).toBe(3);
     });
 
-    it('supports full GDPR mode localization (German)', () => {
+    it('supports full GDPR mode localization (German) with tabbed UI', () => {
       const banner = createCookieBanner({
         mode: 'gdpr',
         msg: 'Wir verwenden Cookies.',
         acceptText: 'Alle akzeptieren',
         rejectText: 'Alle ablehnen',
-        settingsText: 'Anpassen',
-        saveText: 'Einstellungen speichern',
         privacyPolicyUrl: '/datenschutz',
         privacyPolicyText: 'Datenschutzerklärung',
         bannerAriaLabel: 'Cookie-Einwilligung',
         requiredLabel: '(Erforderlich)',
+        tabs: {
+          enabled: true,
+          consentLabel: 'Zustimmung',
+          detailsLabel: 'Details',
+          aboutLabel: 'Info',
+        },
         categories: [
           { id: 'essential', name: 'Notwendig', description: 'Für die Funktion erforderlich', required: true },
           { id: 'analytics', name: 'Analyse', description: 'Hilft uns die Nutzung zu verstehen' },
@@ -2054,8 +2117,15 @@ describe('smallest-cookie-banner', () => {
       expect(shadowQuery('#ckb')?.innerHTML).toContain('Wir verwenden Cookies');
       expect(shadowQuery('#cky')?.textContent).toBe('Alle akzeptieren');
       expect(shadowQuery('#ckn')?.textContent).toBe('Alle ablehnen');
-      expect(shadowQuery('#cks')?.textContent).toBe('Anpassen');
-      expect(shadowQuery('#ckb a')?.textContent).toBe('Datenschutzerklärung');
+      // Tab labels are localized
+      const tabs = shadowQueryAll('.ckb-tab-btn');
+      expect(tabs[0]?.textContent).toBe('Zustimmung');
+      expect(tabs[1]?.textContent).toBe('Details');
+      expect(tabs[2]?.textContent).toBe('Info');
+      // Privacy link is in the About tab (after the about content)
+      const aboutLinks = shadowQueryAll('#ckb-panel-about a');
+      const privacyLink = aboutLinks[aboutLinks.length - 1]; // Last link is privacy
+      expect(privacyLink?.textContent).toBe('Datenschutzerklärung');
       expect(shadowQuery('#ckb')?.getAttribute('aria-label')).toBe('Cookie-Einwilligung');
       expect(shadowQuery('.cat-req')?.textContent).toBe('(Erforderlich)');
       expect(shadowQuery('.cat-name')?.textContent).toContain('Notwendig');
@@ -2139,31 +2209,42 @@ describe('smallest-cookie-banner', () => {
   // MODE SWITCHING TESTS
   // ============================================================================
   describe('Mode Switching', () => {
-    it('minimal mode with no categories shows simple buttons', () => {
+    it('minimal mode with no categories shows 2-tab UI (no Details tab)', () => {
       const banner = createCookieBanner({
         // mode defaults to minimal, no categories
         forceEU: true,
+        // tabs enabled by default
       });
       banner.show();
-      // No categories panel, no settings button
-      expect(shadowQuery('#ckb-cats')).toBeNull();
-      expect(shadowQuery('#cks')).toBeNull();
-      // Simple OK/X buttons
-      expect(shadowQuery('#cky')?.textContent).toBe('OK');
+      // Tabbed UI is shown with only 2 tabs (Consent + About)
+      expect(shadowQuery('.ckb-tab-nav')).not.toBeNull();
+      const tabs = shadowQueryAll('.ckb-tab-btn');
+      expect(tabs.length).toBe(2); // No Details tab when no categories
+      expect(tabs[0]?.textContent).toBe('Consent');
+      expect(tabs[1]?.textContent).toBe('About');
+      expect(shadowQuery('#cky')?.textContent).toBe('Accept All');
+      // No Details panel when no categories
+      expect(shadowQuery('#ckb-panel-details')).toBeNull();
     });
 
-    it('passing categories shows categories even without mode:gdpr', () => {
-      // Categories show regardless of mode when explicitly provided
+    it('passing categories shows 3-tab UI with Details tab', () => {
+      // Categories show in Details tab when explicitly provided
       const banner = createCookieBanner({
         categories: [
           { id: 'essential', name: 'Essential', required: true },
           { id: 'analytics', name: 'Analytics' },
         ],
         forceEU: true,
+        // tabs enabled by default
       });
       banner.show();
-      // Categories panel shows because categories were provided
-      expect(shadowQuery('#ckb-cats')).not.toBeNull();
+      // Tabbed UI with 3 tabs (Consent + Details + About)
+      const tabs = shadowQueryAll('.ckb-tab-btn');
+      expect(tabs.length).toBe(3);
+      expect(tabs[0]?.textContent).toBe('Consent');
+      expect(tabs[1]?.textContent).toBe('Details');
+      expect(tabs[2]?.textContent).toBe('About');
+      // Categories are in the Details tab panel
       const checkboxes = shadowQueryAll('input[name="ckb-cat"]');
       expect(checkboxes.length).toBe(2);
     });
@@ -2192,14 +2273,17 @@ describe('smallest-cookie-banner', () => {
       expect(checkboxes.length).toBe(2);
     });
 
-    it('mode:gdpr without forceEU still shows categories', () => {
+    it('mode:gdpr without forceEU still shows categories in tabbed UI', () => {
       // GDPR mode enables categories even for non-EU
       const banner = createCookieBanner({
         mode: 'gdpr',
         forceEU: false,
+        // tabs enabled by default
       });
       banner.show();
-      expect(shadowQuery('#ckb-cats')).not.toBeNull();
+      // Categories are in the Details tab
+      const checkboxes = shadowQueryAll('input[name="ckb-cat"]');
+      expect(checkboxes.length).toBe(4); // DEFAULT_CATEGORIES
       // But reject button hidden for non-EU
       expect(shadowQuery('#ckn')).toBeNull();
     });
@@ -2434,15 +2518,19 @@ describe('smallest-cookie-banner', () => {
         expect(shadowQuery('#ckn')?.textContent).toBe('Reject All Cookies');
       });
 
-      it('supports GDPR mode via config', () => {
+      it('supports GDPR mode via config with tabbed UI', () => {
         window.CookieBannerConfig = {
           mode: 'gdpr',
           forceEU: true,
+          // tabs enabled by default
         };
         setup();
 
-        expect(shadowQuery('#ckb-cats')).not.toBeNull();
-        expect(shadowQuery('#cks')).not.toBeNull();
+        // Tabbed UI is shown with tabs
+        expect(shadowQuery('.ckb-tab-nav')).not.toBeNull();
+        // Categories are in the Details tab
+        const checkboxes = shadowQueryAll('input[name="ckb-cat"]');
+        expect(checkboxes.length).toBe(4); // DEFAULT_CATEGORIES
       });
 
       it('supports custom categories via config', () => {
@@ -2916,6 +3004,288 @@ describe('smallest-cookie-banner', () => {
         // Should still only have one banner
         const banners = document.querySelectorAll(COMPONENT_NAME);
         expect(banners.length).toBe(1);
+      });
+    });
+  });
+
+  // ============================================================================
+  // COVERAGE TESTS - Lines 644-655, 694, 719, 840, 945-947, 1056-1080, 1389-1436, 1445
+  // ============================================================================
+  describe('Coverage Tests', () => {
+    beforeEach(() => {
+      resetState();
+    });
+
+    describe('Consent Status Edge Cases (Lines 694, 719)', () => {
+      it('sets status to false when existing consent is "0"', () => {
+        // Set rejected consent cookie (using default cookie name)
+        setConsent('0', 'cookie_consent', 365);
+
+        const banner = createCookieBanner({ forceEU: true });
+        // Status should be false since consent was rejected
+        expect(banner.status).toBe(false);
+      });
+
+      it('handles granular consent with null state gracefully', () => {
+        // Set an invalid/malformed consent value that can't be parsed
+        document.cookie = 'cookie_consent=invalid;path=/';
+
+        const banner = createCookieBanner({
+          forceEU: true,
+          mode: 'gdpr',
+        });
+        // Should handle gracefully - either null or parsed state
+        expect(banner.status).toBeDefined();
+      });
+
+      it('sets status based on non-required categories in granular mode', () => {
+        // Set consent with only required category enabled
+        const categories: CookieCategory[] = [
+          { id: 'essential', name: 'Essential', required: true },
+          { id: 'analytics', name: 'Analytics', required: false },
+        ];
+
+        // Encode consent where only essential (required) is true
+        const consent = encodeGranularConsent({ essential: true, analytics: false });
+        setConsent(consent, 'cookie_consent', 365);
+
+        const banner = createCookieBanner({
+          forceEU: true,
+          mode: 'gdpr',
+          categories,
+        });
+
+        // Status should be false since only required category is enabled
+        expect(banner.status).toBe(false);
+      });
+
+      it('sets status to true when non-required category is enabled', () => {
+        const categories: CookieCategory[] = [
+          { id: 'essential', name: 'Essential', required: true },
+          { id: 'analytics', name: 'Analytics', required: false },
+        ];
+
+        // Encode consent where analytics (non-required) is true
+        const consent = encodeGranularConsent({ essential: true, analytics: true });
+        setConsent(consent, 'cookie_consent', 365);
+
+        const banner = createCookieBanner({
+          forceEU: true,
+          mode: 'gdpr',
+          categories,
+        });
+
+        // Status should be true since non-required category is enabled
+        expect(banner.status).toBe(true);
+      });
+    });
+
+    describe('onConsent Callback Error Handling (Lines 778, 841)', () => {
+      it('catches and logs errors thrown by onConsent callback in accept/reject', () => {
+        const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+        const banner = createCookieBanner({
+          forceEU: true,
+          mode: 'gdpr',
+          onConsent: () => {
+            throw new Error('Callback error');
+          },
+        });
+        banner.show();
+        banner.accept();
+
+        expect(consoleError).toHaveBeenCalledWith(
+          'Cookie banner onConsent callback error:',
+          expect.any(Error)
+        );
+
+        consoleError.mockRestore();
+      });
+
+      it('catches and logs errors thrown by onConsent in Save Preferences (non-tabbed)', () => {
+        const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+        const banner = createCookieBanner({
+          forceEU: true,
+          mode: 'gdpr',
+          tabs: { enabled: false },
+          onConsent: () => {
+            throw new Error('Save callback error');
+          },
+        });
+        banner.show();
+
+        // Expand settings to show save button
+        shadowQuery('#cks')?.click();
+        // Click save
+        shadowQuery('#cksv')?.click();
+
+        expect(consoleError).toHaveBeenCalledWith(
+          'Cookie banner onConsent callback error:',
+          expect.any(Error)
+        );
+
+        consoleError.mockRestore();
+      });
+    });
+
+    describe('Tabbed UI Mode (Lines 945-947, 1056-1080)', () => {
+      it('adds tabbed class to wrapper when tabs enabled', () => {
+        const banner = createCookieBanner({
+          forceEU: true,
+          mode: 'gdpr',
+          tabs: { enabled: true },
+        });
+        banner.show();
+
+        const wrapper = shadowQuery('#ckb');
+        expect(wrapper?.classList.contains('tabbed')).toBe(true);
+      });
+
+      it('renders tab navigation buttons', () => {
+        const banner = createCookieBanner({
+          forceEU: true,
+          mode: 'gdpr',
+          tabs: { enabled: true },
+        });
+        banner.show();
+
+        const tabNav = shadowQuery('.ckb-tab-nav');
+        expect(tabNav).not.toBeNull();
+
+        const tabBtns = shadowQueryAll('.ckb-tab-btn');
+        expect(tabBtns.length).toBe(3); // Consent, Details, About
+      });
+
+      it('renders tab panels', () => {
+        const banner = createCookieBanner({
+          forceEU: true,
+          mode: 'gdpr',
+          tabs: { enabled: true },
+        });
+        banner.show();
+
+        const panels = shadowQueryAll('.ckb-tab-panel');
+        expect(panels.length).toBe(3);
+      });
+
+      it('switches tabs when tab button clicked', () => {
+        const banner = createCookieBanner({
+          forceEU: true,
+          mode: 'gdpr',
+          tabs: { enabled: true },
+        });
+        banner.show();
+
+        // Initially consent tab should be active
+        const consentBtn = shadowQuery('.ckb-tab-btn[data-tab="consent"]');
+        expect(consentBtn?.classList.contains('active')).toBe(true);
+        expect(consentBtn?.getAttribute('aria-selected')).toBe('true');
+
+        // Click details tab
+        const detailsBtn = shadowQuery('.ckb-tab-btn[data-tab="details"]');
+        detailsBtn?.click();
+
+        // Details tab should now be active
+        expect(detailsBtn?.classList.contains('active')).toBe(true);
+        expect(detailsBtn?.getAttribute('aria-selected')).toBe('true');
+
+        // Consent tab should be inactive
+        expect(consentBtn?.classList.contains('active')).toBe(false);
+        expect(consentBtn?.getAttribute('aria-selected')).toBe('false');
+
+        // Details panel should be active
+        const detailsPanel = shadowQuery('#ckb-panel-details');
+        expect(detailsPanel?.classList.contains('active')).toBe(true);
+      });
+
+      it('switches to about tab correctly', () => {
+        const banner = createCookieBanner({
+          forceEU: true,
+          mode: 'gdpr',
+          tabs: { enabled: true },
+        });
+        banner.show();
+
+        // Click about tab
+        const aboutBtn = shadowQuery('.ckb-tab-btn[data-tab="about"]');
+        aboutBtn?.click();
+
+        expect(aboutBtn?.classList.contains('active')).toBe(true);
+        expect(aboutBtn?.getAttribute('aria-selected')).toBe('true');
+
+        const aboutPanel = shadowQuery('#ckb-panel-about');
+        expect(aboutPanel?.classList.contains('active')).toBe(true);
+      });
+
+      it('uses custom tab labels when provided', () => {
+        const banner = createCookieBanner({
+          forceEU: true,
+          mode: 'gdpr',
+          tabs: {
+            enabled: true,
+            consentLabel: 'Zustimmung',
+            detailsLabel: 'Details',
+            aboutLabel: 'Info',
+          },
+        });
+        banner.show();
+
+        const tabs = shadowQueryAll('.ckb-tab-btn');
+        expect(tabs[0]?.textContent).toBe('Zustimmung');
+        expect(tabs[1]?.textContent).toBe('Details');
+        expect(tabs[2]?.textContent).toBe('Info');
+      });
+    });
+
+    describe('Data Attributes Parsing - Direct createCookieBanner Tests', () => {
+      // Note: Data attributes are parsed by autoInit which is hard to test directly.
+      // These tests verify the config options work via createCookieBanner directly.
+
+      it('supports all config options that data attributes would set', () => {
+        // This tests the same config options that parseDataAttributes would produce
+        const banner = createCookieBanner({
+          forceEU: true,
+          tabs: { enabled: true },
+          mode: 'gdpr',
+          msg: 'Custom message',
+          acceptText: 'Agree',
+          rejectText: 'Disagree',
+          privacyPolicyUrl: '/privacy',
+          cookieName: 'custom_ck',
+          days: 30,
+        });
+        banner.show();
+
+        expect(shadowQuery('#ckb')?.innerHTML).toContain('Custom message');
+        expect(shadowQuery('#cky')?.textContent).toBe('Agree');
+        expect(shadowQuery('#ckn')?.textContent).toBe('Disagree');
+        expect(shadowQuery('.ckb-tab-nav')).not.toBeNull();
+
+        banner.accept();
+        expect(document.cookie).toContain('custom_ck=');
+      });
+
+      it('correctly uses cookieName config option', () => {
+        const banner = createCookieBanner({
+          forceEU: true,
+          cookieName: 'my_consent',
+        });
+        banner.show();
+        banner.accept();
+
+        expect(document.cookie).toContain('my_consent=');
+      });
+
+      it('correctly uses privacyPolicyUrl config option', () => {
+        const banner = createCookieBanner({
+          forceEU: true,
+          privacyPolicyUrl: '/my-privacy-policy',
+        });
+        banner.show();
+
+        const link = shadowQuery('a[href="/my-privacy-policy"]');
+        expect(link).not.toBeNull();
       });
     });
   });

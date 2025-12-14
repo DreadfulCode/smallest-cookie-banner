@@ -55,9 +55,24 @@ export interface ConsentRecord {
     /** How consent was given */
     method: 'banner' | 'widget' | 'api';
 }
+/** Tab configuration for tabbed UI */
+export interface TabConfig {
+    /** Enable tabbed UI (default: true) */
+    enabled?: boolean;
+    /** Consent tab label (default: "Consent") */
+    consentLabel?: string;
+    /** Details tab label (default: "Details") */
+    detailsLabel?: string;
+    /** About tab label (default: "About") */
+    aboutLabel?: string;
+    /** About tab content - custom HTML or use default boilerplate */
+    aboutContent?: string;
+}
 export interface CookieBannerConfig {
     /** Banner mode: 'minimal' (default) or 'gdpr' for granular consent */
     mode?: BannerMode;
+    /** Tabbed UI configuration */
+    tabs?: TabConfig;
     /** Banner message text */
     msg?: string;
     /** Accept button text (default: "Accept All") */
@@ -163,9 +178,11 @@ declare global {
         CookieBannerConfig?: CookieBannerConfig;
     }
 }
+/** Default About tab content - cookie law boilerplate (concise) */
+export declare const DEFAULT_ABOUT_CONTENT = "<p>Cookies are small text files stored on your device to improve your experience.</p>\n<p>We require your consent for non-essential cookies per GDPR Art. 6. You can change your preferences at any time.</p>\n<p style=\"margin-top:10px;font-size:10px;opacity:0.5\">Powered by <a href=\"https://github.com/DreadfulCode/smallest-cookie-banner\" target=\"_blank\" rel=\"noopener\" style=\"color:inherit\">smallest-cookie-banner</a></p>";
 /** Default CSS - uses CSS custom properties for easy overrides */
 /** Includes WCAG 2.1 AA compliant touch targets (44x44px min) */
-export declare const DEFAULT_CSS = "#ckb{position:var(--ckb-position,fixed);bottom:var(--ckb-bottom,0);top:var(--ckb-top,auto);left:var(--ckb-left,0);right:var(--ckb-right,0);padding:var(--ckb-padding,12px 16px);background:var(--ckb-bg,#222);color:var(--ckb-color,#fff);font:var(--ckb-font,14px/1.4 system-ui,sans-serif);display:flex;align-items:center;gap:var(--ckb-gap,12px);z-index:var(--ckb-z,9999);flex-wrap:wrap}#ckb:focus{outline:2px solid var(--ckb-focus-color,#4299e1);outline-offset:2px}#ckb p{margin:0;flex:1;min-width:200px}#ckb a{color:inherit}#ckb button{min-height:44px;min-width:44px;padding:var(--ckb-btn-padding,10px 20px);border:var(--ckb-btn-border,none);border-radius:var(--ckb-btn-radius,4px);background:var(--ckb-btn-bg,#fff);color:var(--ckb-btn-color,#222);font:inherit;cursor:pointer;touch-action:manipulation}#ckb button:focus{outline:2px solid var(--ckb-focus-color,#4299e1);outline-offset:2px}#ckb button:hover{opacity:0.9}#ckb #ckn{background:var(--ckb-reject-bg,transparent);color:var(--ckb-reject-color,inherit);border:var(--ckb-reject-border,1px solid currentColor)}#ckb #cks{background:var(--ckb-settings-bg,transparent);color:var(--ckb-settings-color,inherit);border:var(--ckb-settings-border,1px solid currentColor)}#ckb-cats{display:none;width:100%;padding:12px 0;border-top:1px solid rgba(255,255,255,0.2);margin-top:8px}#ckb.expanded #ckb-cats{display:block}#ckb-cats label{display:flex;align-items:flex-start;gap:10px;padding:8px 0;cursor:pointer}#ckb-cats input[type=checkbox]{width:20px;height:20px;margin:2px 0;accent-color:var(--ckb-btn-bg,#fff)}#ckb-cats .cat-info{flex:1}#ckb-cats .cat-name{font-weight:600}#ckb-cats .cat-desc{font-size:12px;opacity:0.8;margin-top:2px}#ckb-cats .cat-req{opacity:0.6;font-size:11px}@media(prefers-reduced-motion:reduce){#ckb,#ckb *{transition:none!important;animation:none!important}}";
+export declare const DEFAULT_CSS: string;
 /**
  * Sanitize CSS to prevent injection attacks
  * Blocks: @import, url() with external URLs, expression(), behavior:, -moz-binding, HTML tags
