@@ -318,6 +318,105 @@ createCookieBanner({
 });
 ```
 
+### Complete Example with Custom Categories
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <title>My Site</title>
+</head>
+<body>
+  <h1>Welcome to My Site</h1>
+
+  <!-- Cookie Banner -->
+  <script type="module">
+    import {
+      createCookieBanner,
+      loadOnConsent
+    } from 'https://unpkg.com/smallest-cookie-banner@latest/dist/cookie-banner.js';
+
+    // Step 1: Register scripts with their consent categories
+    // These will NOT load until user consents to that category
+
+    // Analytics scripts
+    loadOnConsent('analytics', 'https://www.googletagmanager.com/gtag/js?id=G-XXXXX', () => {
+      // Callback runs after script loads
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-XXXXX');
+    });
+
+    // Marketing scripts
+    loadOnConsent('marketing', 'https://connect.facebook.net/en_US/fbevents.js');
+
+    // Functional scripts (chat widget, etc.)
+    loadOnConsent('functional', 'https://example.com/chat-widget.js');
+
+    // Step 2: Create the banner with custom categories
+    const banner = createCookieBanner({
+      mode: 'gdpr',
+      forceEU: true,  // Show to all users, not just EU
+
+      // Custom category descriptions (optional)
+      categories: [
+        {
+          id: 'essential',
+          name: 'Essential',
+          description: 'Required for the site to work',
+          required: true
+        },
+        {
+          id: 'analytics',
+          name: 'Analytics',
+          description: 'Google Analytics - helps us improve the site'
+        },
+        {
+          id: 'marketing',
+          name: 'Marketing',
+          description: 'Facebook Pixel - for targeted ads'
+        },
+        {
+          id: 'functional',
+          name: 'Functional',
+          description: 'Live chat and support widgets'
+        },
+      ],
+
+      // Customize text
+      msg: 'We use cookies to enhance your experience.',
+      acceptText: 'Accept All',
+      rejectText: 'Reject All',
+
+      // Privacy policy link
+      privacyPolicyUrl: '/privacy',
+
+      // Show widget to change preferences later
+      widget: { enabled: true, position: 'bottom-left' },
+
+      // Optional: Get notified of consent changes
+      onConsent: (consent, record) => {
+        console.log('User consent:', consent);
+        // consent = { essential: true, analytics: true, marketing: false, functional: true }
+
+        // Optional: Send to your server for audit trail
+        // fetch('/api/consent', { method: 'POST', body: JSON.stringify(record) });
+      }
+    });
+  </script>
+</body>
+</html>
+```
+
+**What users see:**
+
+1. Banner appears with message and category checkboxes
+2. User can toggle: Analytics ☑️, Marketing ☐, Functional ☑️
+3. User clicks "Accept All", "Reject All", or custom selection
+4. Only consented scripts load
+5. Small widget appears (bottom-left) to change preferences later
+
 ## TypeScript
 
 Full type definitions included:
