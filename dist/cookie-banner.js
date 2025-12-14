@@ -1,10 +1,10 @@
 /**
  * smallest-cookie-banner
- * The smallest legally compliant cookie consent banner
+ * A minimal cookie consent banner
  *
  * Features:
- * - EU: Full GDPR compliance (accept/reject required)
- * - Everywhere else: Implied consent (auto-dismiss notice)
+ * - GDPR mode: explicit accept/reject
+ * - Minimal mode: simple acknowledgment
  * - SSR-safe (works with Next.js, Nuxt, etc.)
  * - Framework-friendly (React, Vue, Angular, Svelte)
  * - Tree-shakeable ES modules
@@ -558,7 +558,8 @@
         const cookieName = validatedConfig.cookieName;
         const days = validatedConfig.days;
         const cookieDomain = validatedConfig.cookieDomain;
-        const inEU = config.forceEU !== undefined ? config.forceEU : isEU();
+        // Default to GDPR mode (explicit consent) - devs can opt out with forceEU: false
+        const inEU = config.forceEU !== undefined ? config.forceEU : true;
         const container = validatedConfig.container || document.body;
         const isGdprMode = config.mode === 'gdpr';
         const categories = config.categories || (isGdprMode ? exports.DEFAULT_CATEGORIES : []);
