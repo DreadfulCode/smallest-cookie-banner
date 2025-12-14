@@ -778,6 +778,63 @@
         color: #e0e0e0;
       }
     }
+
+    /* Demo Modal */
+    #demo-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 99999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .demo-modal-backdrop {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.6);
+    }
+    .demo-modal-content {
+      position: relative;
+      background: #1a1a2e;
+      border-radius: 12px;
+      padding: 20px;
+      width: 90%;
+      max-width: 800px;
+      max-height: 90vh;
+    }
+    .demo-modal-close {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      background: none;
+      border: none;
+      color: #888;
+      font-size: 28px;
+      cursor: pointer;
+      line-height: 1;
+    }
+    .demo-modal-close:hover {
+      color: #fff;
+    }
+    .demo-modal-header {
+      font-size: 14px;
+      color: #888;
+      margin-bottom: 15px;
+      text-transform: capitalize;
+    }
+    .demo-modal-frame {
+      position: relative;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 8px;
+      height: 400px;
+      overflow: hidden;
+    }
   </style>
 </head>
 <body>
@@ -2066,6 +2123,7 @@ ${config.bannerMode === 'gdpr' ? `  onConsent: function(consent) {
 
     // Demo functionality
     let demoBanner = null;
+    let demoModal = null;
 
     function launchDemo() {
       // Destroy existing demo
@@ -2074,22 +2132,59 @@ ${config.bannerMode === 'gdpr' ? `  onConsent: function(consent) {
         demoBanner = null;
       }
       document.querySelectorAll('cookie-banner-element').forEach(el => el.remove());
+      if (demoModal) {
+        demoModal.remove();
+        demoModal = null;
+      }
 
       const config = getConfig();
       const isToast = ['bottom-left', 'bottom-right', 'center'].includes(config.position);
       const forceEU = config.mode === 'eu' ? true : config.mode === 'non-eu' ? false : undefined;
 
-      // Build CSS for position
-      let css = '';
+      // Create modal overlay
+      demoModal = document.createElement('div');
+      demoModal.id = 'demo-modal';
+      demoModal.innerHTML = '<div class="demo-modal-backdrop" onclick="closeDemo()"></div>' +
+        '<div class="demo-modal-content">' +
+        '<button class="demo-modal-close" onclick="closeDemo()">&times;</button>' +
+        '<div class="demo-modal-header">Preview: ' + config.position.replace('-', ' ') + '</div>' +
+        '<div class="demo-modal-frame" id="demo-frame"></div>' +
+        '</div>';
+      document.body.appendChild(demoModal);
+
+      // Build CSS for position (relative to modal frame)
+      let css = '#ckb{position:absolute!important;';
       if (config.position === 'top') {
-        css = '#ckb{bottom:auto;top:0;}';
+        css += 'bottom:auto;top:0;left:0;right:0;';
       } else if (config.position === 'bottom-left') {
-        css = '#ckb{right:auto;left:20px;bottom:20px;width:340px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15);}';
+        css += 'right:auto;left:20px;bottom:20px;width:300px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15);';
       } else if (config.position === 'bottom-right') {
-        css = '#ckb{left:auto;right:20px;bottom:20px;width:340px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15);}';
+        css += 'left:auto;right:20px;bottom:20px;width:300px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15);';
       } else if (config.position === 'center') {
-        css = '#ckb{bottom:auto;top:50%;left:50%;right:auto;width:400px;border-radius:12px;box-shadow:0 4px 40px rgba(0,0,0,0.3);transform:translate(-50%,-50%);}';
+        css += 'bottom:auto;top:50%;left:50%;right:auto;width:320px;border-radius:12px;box-shadow:0 4px 40px rgba(0,0,0,0.3);transform:translate(-50%,-50%);';
+      } else {
+        css += 'bottom:0;left:0;right:0;';
       }
+      css += '}';
+
+      // Add custom colors and styling
+      css += '#ckb{';
+      css += '--ckb-bg:' + config.bgColor + ';';
+      css += '--ckb-color:' + config.textColor + ';';
+      css += '--ckb-btn-bg:' + config.btnBg + ';';
+      css += '--ckb-btn-color:' + config.btnColor + ';';
+      css += '--ckb-reject-bg:' + config.rejectBg + ';';
+      css += '--ckb-focus:' + config.focusColor + ';';
+      css += '--ckb-font:' + config.fontFamily + ';';
+      css += '--ckb-size:' + config.fontSize + 'px;';
+      css += '--ckb-line:' + config.lineHeight + ';';
+      css += '--ckb-pad:' + config.padding + 'px;';
+      css += '--ckb-gap:' + config.gap + 'px;';
+      css += '--ckb-radius:' + config.borderRadius + 'px;';
+      css += '--ckb-btn-radius:' + config.btnRadius + 'px;';
+      css += '--ckb-btn-pad:' + config.btnPaddingV + 'px ' + config.btnPaddingH + 'px;';
+      css += 'z-index:1;';
+      css += '}';
       css += config.customCss || '';
 
       const demoConfig = {
@@ -2100,16 +2195,36 @@ ${config.bannerMode === 'gdpr' ? `  onConsent: function(consent) {
         acceptText: config.bannerMode === 'gdpr' ? 'Accept All' : config.acceptText,
         rejectText: config.bannerMode === 'gdpr' ? 'Reject All' : config.rejectText,
         css: css,
-        onAccept: function() { showToast('Accepted!'); },
-        onReject: function() { showToast('Rejected!'); },
-        onConsent: function(c) { showToast('Consent saved!'); console.log('Consent:', c); }
+        onAccept: function() { showToast('Accepted!'); closeDemo(); },
+        onReject: function() { showToast('Rejected!'); closeDemo(); },
+        onConsent: function(c) { console.log('Consent:', c); }
       };
 
       if (typeof window.createCookieBanner === 'function') {
         demoBanner = window.createCookieBanner(demoConfig);
-        demoBanner.show();
+        // Move banner element into the demo frame
+        setTimeout(function() {
+          const frame = document.getElementById('demo-frame');
+          const bannerEl = document.querySelector('cookie-banner-element');
+          if (bannerEl && frame) {
+            frame.appendChild(bannerEl);
+          }
+          demoBanner.show();
+        }, 10);
       } else {
         showToast('Library not loaded. Refresh and try again.');
+      }
+    }
+
+    function closeDemo() {
+      if (demoBanner) {
+        demoBanner.destroy(true);
+        demoBanner = null;
+      }
+      document.querySelectorAll('cookie-banner-element').forEach(el => el.remove());
+      if (demoModal) {
+        demoModal.remove();
+        demoModal = null;
       }
     }
   </script>
