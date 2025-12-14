@@ -40,7 +40,7 @@ If you use this library and want a mention here, send me your URL!
 ### CDN (Vanilla JS)
 
 ```html
-<script src="https://unpkg.com/smallest-cookie-banner@latest/dist/cookie-banner.min.js"></script>
+<script src="https://unpkg.com/smallest-cookie-banner@2/dist/cookie-banner.min.js"></script>
 ```
 
 ### npm (Any Framework)
@@ -334,7 +334,7 @@ createCookieBanner({
     import {
       createCookieBanner,
       loadOnConsent
-    } from 'https://unpkg.com/smallest-cookie-banner@latest/dist/cookie-banner.js';
+    } from 'https://unpkg.com/smallest-cookie-banner@2/dist/cookie-banner.js';
 
     // Step 1: Register scripts with their consent categories
     // These will NOT load until user consents to that category
