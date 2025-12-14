@@ -1180,6 +1180,10 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
             How to Use
           </button>
+          <button class="btn btn-secondary" onclick="launchDemo()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Try Demo
+          </button>
           <button class="btn btn-primary" onclick="copyCode()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
             Copy Code
@@ -2059,6 +2063,58 @@ ${config.bannerMode === 'gdpr' ? `  onConsent: function(consent) {
 
     // Initialize
     updatePreview();
+
+    // Demo functionality
+    let demoBanner = null;
+
+    function launchDemo() {
+      // Destroy existing demo
+      if (demoBanner) {
+        demoBanner.destroy(true);
+        demoBanner = null;
+      }
+      document.querySelectorAll('cookie-banner-element').forEach(el => el.remove());
+
+      const config = getConfig();
+      const isToast = ['bottom-left', 'bottom-right', 'center'].includes(config.position);
+      const forceEU = config.mode === 'eu' ? true : config.mode === 'non-eu' ? false : undefined;
+
+      // Build CSS for position
+      let css = '';
+      if (config.position === 'top') {
+        css = '#ckb{bottom:auto;top:0;}';
+      } else if (config.position === 'bottom-left') {
+        css = '#ckb{right:auto;left:20px;bottom:20px;width:340px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15);}';
+      } else if (config.position === 'bottom-right') {
+        css = '#ckb{left:auto;right:20px;bottom:20px;width:340px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15);}';
+      } else if (config.position === 'center') {
+        css = '#ckb{bottom:auto;top:50%;left:50%;right:auto;width:400px;border-radius:12px;box-shadow:0 4px 40px rgba(0,0,0,0.3);transform:translate(-50%,-50%);}';
+      }
+      css += config.customCss || '';
+
+      const demoConfig = {
+        mode: config.bannerMode,
+        tabs: { enabled: config.enableTabs, toast: isToast },
+        forceEU: forceEU,
+        msg: config.msg,
+        acceptText: config.bannerMode === 'gdpr' ? 'Accept All' : config.acceptText,
+        rejectText: config.bannerMode === 'gdpr' ? 'Reject All' : config.rejectText,
+        css: css,
+        onAccept: function() { showToast('Accepted!'); },
+        onReject: function() { showToast('Rejected!'); },
+        onConsent: function(c) { showToast('Consent saved!'); console.log('Consent:', c); }
+      };
+
+      if (typeof window.createCookieBanner === 'function') {
+        demoBanner = window.createCookieBanner(demoConfig);
+        demoBanner.show();
+      } else {
+        showToast('Library not loaded. Refresh and try again.');
+      }
+    }
   </script>
+
+  <!-- Load the cookie banner library for demo -->
+  <script src="cookie-banner.js"></script>
 </body>
 </html>
