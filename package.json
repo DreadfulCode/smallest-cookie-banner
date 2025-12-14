@@ -1,6 +1,6 @@
 {
   "name": "smallest-cookie-banner",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "The smallest legally compliant cookie consent banner. ~7KB gzipped. Auto-detects EU for GDPR, implied consent elsewhere. Scoped Web Components with Shadow DOM.",
   "main": "dist/cookie-banner.js",
   "module": "dist/cookie-banner.js",
@@ -66,7 +66,11 @@
     "transform": {
       "^.+\\.ts$": "ts-jest"
     },
-    "coverageReporters": ["text", "lcov", "json-summary"],
+    "coverageReporters": [
+      "text",
+      "lcov",
+      "json-summary"
+    ],
     "coverageThreshold": {
       "global": {
         "branches": 89,

@@ -3405,6 +3405,49 @@ describe('smallest-cookie-banner', () => {
       expect(detailsTab).not.toBeNull();
       expect(aboutTab).not.toBeNull();
     });
+
+    it('GDPR mode Details tab shows each category exactly once', () => {
+      const banner = createCookieBanner({
+        forceEU: true,
+        tabs: { enabled: true },
+        mode: 'gdpr',
+      });
+      banner.show();
+
+      // Count category checkboxes - should be exactly 4 (Essential, Analytics, Marketing, Functional)
+      const categoryCheckboxes = shadowQueryAll('input[name="ckb-cat"]');
+      expect(categoryCheckboxes.length).toBe(4);
+
+      // Each category should appear only once
+      const essentialLabels = shadowQueryAll('label:has(input[value="essential"])');
+      const analyticsLabels = shadowQueryAll('label:has(input[value="analytics"])');
+      const marketingLabels = shadowQueryAll('label:has(input[value="marketing"])');
+      const functionalLabels = shadowQueryAll('label:has(input[value="functional"])');
+
+      expect(essentialLabels.length).toBe(1);
+      expect(analyticsLabels.length).toBe(1);
+      expect(marketingLabels.length).toBe(1);
+      expect(functionalLabels.length).toBe(1);
+    });
+
+    it('minimal mode with tabs has exactly 2 tabs', () => {
+      const banner = createCookieBanner({
+        forceEU: true,
+        tabs: { enabled: true },
+        mode: 'minimal',
+      });
+      banner.show();
+
+      // Should have exactly 2 tabs
+      const allTabs = shadowQueryAll('.ckb-tab-btn');
+      expect(allTabs.length).toBe(2);
+
+      // Verify they are Consent and About only
+      const tabNames = Array.from(allTabs).map(t => t.getAttribute('data-tab'));
+      expect(tabNames).toContain('consent');
+      expect(tabNames).toContain('about');
+      expect(tabNames).not.toContain('details');
+    });
   });
 
   describe('Settings and Save buttons in GDPR mode (non-tabbed)', () => {

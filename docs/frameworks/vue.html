@@ -23,6 +23,30 @@
       margin-bottom: 24px;
     }
     .status strong { display: block; margin-bottom: 4px; }
+    .toggle-group {
+      display: flex;
+      gap: 0;
+      margin-bottom: 16px;
+    }
+    .toggle-group button {
+      padding: 8px 16px;
+      border: 1px solid #ddd;
+      background: #fff;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .toggle-group button:first-child {
+      border-radius: 6px 0 0 6px;
+    }
+    .toggle-group button:last-child {
+      border-radius: 0 6px 6px 0;
+      border-left: none;
+    }
+    .toggle-group button.active {
+      background: #333;
+      color: #fff;
+      border-color: #333;
+    }
     button {
       padding: 10px 20px;
       border: 1px solid #ddd;
@@ -32,6 +56,7 @@
       margin-right: 8px;
     }
     button:hover { background: #f5f5f5; }
+    .toggle-group button.active:hover { background: #444; }
     code {
       display: block;
       background: #f5f5f5;
@@ -48,6 +73,11 @@
   <div id="app">
     <h1>smallest-cookie-banner</h1>
     <p class="framework">Vue 3</p>
+
+    <div class="toggle-group">
+      <button :class="{ active: mode === 'minimal' }" @click="setMode('minimal')">Minimal</button>
+      <button :class="{ active: mode === 'gdpr' }" @click="setMode('gdpr')">GDPR</button>
+    </div>
 
     <div class="status">
       <strong>Consent Status:</strong>
@@ -67,53 +97,62 @@
   <script src="../cookie-banner.min.js"></script>
 
   <script>
-    const { createApp, ref, onMounted, onUnmounted } = Vue;
+    const { createApp, ref, computed, onMounted, onUnmounted } = Vue;
 
     createApp({
       setup() {
         const status = ref('Checking...');
+        const mode = ref('minimal');
         let banner = null;
 
         const updateStatus = (s) => {
           status.value = s === true ? 'Accepted' : s === false ? 'Rejected' : 'Pending';
         };
 
-        onMounted(() => {
+        const createBanner = (bannerMode) => {
+          if (banner) {
+            banner.destroy(true);
+          }
           banner = window.createCookieBanner({
-            msg: 'This site uses cookies.',
+            mode: bannerMode,
+            forceEU: true,
+            msg: 'We use cookies to enhance your experience.',
             onAccept: () => updateStatus(true),
             onReject: () => updateStatus(false),
+            onConsent: () => updateStatus(banner?.status)
           });
           banner.show();
           updateStatus(banner.status);
+        };
+
+        onMounted(() => {
+          createBanner(mode.value);
         });
 
         onUnmounted(() => {
           if (banner) banner.destroy();
         });
 
-        const resetConsent = () => {
-          if (banner) {
-            banner.destroy(true);
-            banner = window.createCookieBanner({
-              msg: 'This site uses cookies.',
-              onAccept: () => updateStatus(true),
-              onReject: () => updateStatus(false),
-            });
-            banner.show();
-            updateStatus(null);
-          }
+        const setMode = (newMode) => {
+          mode.value = newMode;
+          createBanner(newMode);
         };
 
-        const codeExample = `<script setup>
-import { onMounted, onUnmounted, ref } from 'vue';
+        const resetConsent = () => {
+          createBanner(mode.value);
+        };
+
+        const codeExample = computed(() => {
+          const modeStr = mode.value === 'gdpr' ? "\n    mode: 'gdpr'," : '';
+          return `<script setup>
+import { onMounted, onUnmounted } from 'vue';
 import { createCookieBanner } from 'smallest-cookie-banner';
 
 let banner = null;
 
 onMounted(() => {
-  banner = createCookieBanner({
-    msg: 'This site uses cookies.',
+  banner = createCookieBanner({${modeStr}
+    msg: 'We use cookies to enhance your experience.',
   });
   banner.show();
 });
@@ -126,8 +165,9 @@ onUnmounted(() => {
 <template>
   <div>My App</div>
 </template>`;
+        });
 
-        return { status, resetConsent, codeExample };
+        return { status, mode, setMode, resetConsent, codeExample };
       }
     }).mount('#app');
   </script>
