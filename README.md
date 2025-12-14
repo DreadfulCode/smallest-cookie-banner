@@ -24,8 +24,8 @@ If you use this library and want a mention here, send me your URL!
 - **Framework agnostic** — React, Vue, Angular, Svelte, or vanilla JS
 
 ### Smart
-- **Geo-detection** — optional timezone-based heuristic (not a compliance guarantee)
-- **Flexible modes** — GDPR mode (explicit consent) or minimal mode (developer's discretion)
+- **GDPR by default** — shows accept/reject to all users
+- **Flexible modes** — minimal mode available via `forceEU: false`
 - **TypeScript** — full type definitions included
 - **Well-tested** — 307 tests, TDD approach
 - **CSS Encapsulation** — Web Components with Shadow DOM (v2.0)
@@ -103,12 +103,12 @@ ngOnInit() {
 
 ## How It Works
 
-| Mode | Behavior | Use Case |
-|------|----------|----------|
-| **GDPR** (`mode: 'gdpr'`) | Shows Accept + Reject buttons | When explicit consent is required |
-| **Minimal** (`mode: 'minimal'`) | Shows OK button | Developer's discretion |
+| Mode | Config | Behavior |
+|------|--------|----------|
+| **GDPR** (default) | `{}` or `forceEU: true` | Shows Accept + Reject buttons |
+| **Minimal** | `forceEU: false` | Shows OK button |
 
-**Note:** GDPR applies to EU citizens/residents regardless of their geographic location. Timezone detection is a heuristic, not a compliance solution. Consult legal counsel for your specific requirements.
+**Note:** GDPR mode is the default. All users see accept/reject buttons unless you explicitly set `forceEU: false`.
 
 ## Configuration
 
@@ -121,7 +121,7 @@ interface CookieBannerConfig {
 
   // Behavior
   days?: number;             // Cookie expiry (1-3650, default: 365)
-  forceEU?: boolean;         // Force EU mode
+  forceEU?: boolean;         // GDPR mode (default: true)
   autoAcceptDelay?: number;  // Auto-accept delay in ms (0-300000)
   cookieName?: string;       // Cookie name (default: "cookie_consent")
   cookieDomain?: string;     // Cookie domain for subdomains
