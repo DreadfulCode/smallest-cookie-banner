@@ -1259,9 +1259,23 @@
           <div id="preview-tab-consent" style="flex:1;min-width:200px;">
             <p id="preview-msg"><span id="preview-msg-text">We use cookies to enhance your experience.</span> <span id="preview-links" style="display:none;font-size:12px;opacity:0.8;"></span></p>
           </div>
-          <div id="preview-tab-details" style="display:none;flex:1;min-width:200px;font-size:12px;opacity:0.9;">
-            <p>Cookies are small text files stored on your device. We use different types of cookies:</p>
-            <ul style="margin:8px 0;padding-left:20px;"><li>Essential: Required for site functionality</li><li>Analytics: Help us improve our site</li><li>Marketing: Used for targeted advertising</li></ul>
+          <div id="preview-tab-details" style="display:none;flex:1;min-width:200px;font-size:12px;">
+            <label style="display:flex;align-items:flex-start;gap:8px;padding:4px 0;cursor:pointer;">
+              <input type="checkbox" checked disabled style="width:16px;height:16px;">
+              <div><span style="font-weight:600">Essential</span> <span style="opacity:0.6;font-size:10px">(Required)</span></div>
+            </label>
+            <label style="display:flex;align-items:flex-start;gap:8px;padding:4px 0;cursor:pointer;">
+              <input type="checkbox" style="width:16px;height:16px;">
+              <span style="font-weight:600">Analytics</span>
+            </label>
+            <label style="display:flex;align-items:flex-start;gap:8px;padding:4px 0;cursor:pointer;">
+              <input type="checkbox" style="width:16px;height:16px;">
+              <span style="font-weight:600">Marketing</span>
+            </label>
+            <label style="display:flex;align-items:flex-start;gap:8px;padding:4px 0;cursor:pointer;">
+              <input type="checkbox" style="width:16px;height:16px;">
+              <span style="font-weight:600">Functional</span>
+            </label>
           </div>
           <div id="preview-tab-about" style="display:none;flex:1;min-width:200px;font-size:12px;opacity:0.9;">
             <p>This cookie consent solution is powered by <a href="https://github.com/DreadfulCode/smallest-cookie-banner" target="_blank" style="color:inherit;">smallest-cookie-banner</a>.</p>
