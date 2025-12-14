@@ -1349,6 +1349,7 @@
       acceptText: document.getElementById('acceptText'),
       rejectText: document.getElementById('rejectText'),
       bannerMode: document.getElementById('bannerMode'),
+      enableTabs: document.getElementById('enableTabs'),
       mode: document.getElementById('mode'),
       autoAcceptDelay: document.getElementById('autoAcceptDelay'),
       days: document.getElementById('days'),
@@ -1456,6 +1457,7 @@
         acceptText: inputs.acceptText.value,
         rejectText: inputs.rejectText.value,
         bannerMode: inputs.bannerMode.value,
+        enableTabs: inputs.enableTabs.checked,
         mode: inputs.mode.value,
         autoAcceptDelay: parseInt(inputs.autoAcceptDelay.value) || 5000,
         days: parseInt(inputs.days.value) || 365,
@@ -1765,6 +1767,13 @@
       if (currentTab === 'json') {
         const jsonConfig = {};
         if (config.bannerMode === 'gdpr') jsonConfig.mode = 'gdpr';
+        // Tabs config (v2.0)
+        const isToast = ['bottom-left', 'bottom-right', 'center'].includes(config.position);
+        if (!config.enableTabs) {
+          jsonConfig.tabs = { enabled: false };
+        } else if (isToast) {
+          jsonConfig.tabs = { toast: true };
+        }
         jsonConfig.msg = config.msg;
         jsonConfig.acceptText = config.acceptText;
         jsonConfig.rejectText = config.rejectText;
@@ -1815,6 +1824,16 @@
       let configObj = [];
       if (config.bannerMode === 'gdpr') {
         configObj.push(`  mode: 'gdpr'`);
+      }
+      // Tabs config (v2.0) - only output if disabled since enabled is default
+      if (!config.enableTabs) {
+        configObj.push(`  tabs: { enabled: false }`);
+      } else {
+        // For toast positions, add toast: true
+        const isToast = ['bottom-left', 'bottom-right', 'center'].includes(config.position);
+        if (isToast) {
+          configObj.push(`  tabs: { toast: true }`);
+        }
       }
       if (config.msg !== 'We use cookies to enhance your experience.') {
         configObj.push(`  msg: '${escapeJs(config.msg)}'`);
