@@ -59,6 +59,8 @@ export interface ConsentRecord {
 export interface TabConfig {
     /** Enable tabbed UI (default: true) */
     enabled?: boolean;
+    /** Toast/modal layout - stacked with tabs on top (default: false = inline) */
+    toast?: boolean;
     /** Consent tab label (default: "Consent") */
     consentLabel?: string;
     /** Details tab label (default: "Details") */

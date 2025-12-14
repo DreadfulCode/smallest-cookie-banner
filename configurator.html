@@ -1013,9 +1013,10 @@ ${configBlock}${config.bannerMode === 'gdpr' ? `  onConsent: function(consent) {
       const config = getConfig();
       const forceEU = config.mode === 'eu' ? true : config.mode === 'non-eu' ? false : undefined;
 
+      const isToast = ['bottom-left', 'bottom-right', 'center'].includes(config.position);
       const demoConfig = {
         mode: config.bannerMode,
-        tabs: { enabled: config.enableTabs },
+        tabs: { enabled: config.enableTabs, toast: isToast },
         forceEU: forceEU,
         autoAcceptDelay: config.autoAcceptDelay,
         msg: config.msg,
@@ -1045,21 +1046,26 @@ ${configBlock}${config.bannerMode === 'gdpr' ? `  onConsent: function(consent) {
         };
       }
 
-      // Add custom CSS via style property
-      let customStyle = '';
-      customStyle += `--ckb-bg: ${config.bgColor};`;
-      customStyle += `--ckb-color: ${config.textColor};`;
-      customStyle += `--ckb-btn-bg: ${config.btnBg};`;
-      customStyle += `--ckb-btn-color: ${config.btnColor};`;
-      customStyle += `--ckb-font: ${config.fontSize}px ${config.fontFamily};`;
-      customStyle += `--ckb-padding: ${config.padding}px 16px;`;
-      customStyle += `--ckb-btn-radius: ${config.btnRadius}px;`;
-      customStyle += `--ckb-z: ${config.zIndex};`;
+      // Build CSS for Shadow DOM (external styles don't work)
+      let css = '';
+      css += `#ckb{--ckb-bg:${config.bgColor};--ckb-color:${config.textColor};--ckb-btn-bg:${config.btnBg};--ckb-btn-color:${config.btnColor};--ckb-font:${config.fontSize}px ${config.fontFamily};--ckb-padding:${config.padding}px 16px;--ckb-btn-radius:${config.btnRadius}px;--ckb-z:${config.zIndex};}`;
 
-      // We'll inject this as a style element
-      demoConfig._customStyle = customStyle;
-      demoConfig._customCss = config.customCss;
-      demoConfig._position = config.position;
+      // Position CSS
+      if (config.position === 'top') {
+        css += '#ckb{bottom:auto;top:0;}';
+      } else if (config.position === 'bottom-left') {
+        css += '#ckb{right:auto;left:20px;bottom:20px;width:340px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15);}#ckb p{min-width:auto;}';
+      } else if (config.position === 'bottom-right') {
+        css += '#ckb{left:auto;right:20px;bottom:20px;width:340px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15);}#ckb p{min-width:auto;}';
+      } else if (config.position === 'center') {
+        css += '#ckb{bottom:auto;top:50%;left:50%;right:auto;width:400px;border-radius:12px;box-shadow:0 4px 40px rgba(0,0,0,0.3);transform:translate(-50%,-50%);}#ckb p{min-width:auto;}';
+      }
+
+      if (config.customCss) {
+        css += config.customCss;
+      }
+
+      demoConfig.css = css;
 
       return demoConfig;
     }
@@ -1070,33 +1076,7 @@ ${configBlock}${config.bannerMode === 'gdpr' ? `  onConsent: function(consent) {
       const config = getDemoConfig();
       console.log('Launching demo with config:', config);
 
-      // Inject custom CSS variables
-      let styleEl = document.getElementById('demo-custom-style');
-      if (!styleEl) {
-        styleEl = document.createElement('style');
-        styleEl.id = 'demo-custom-style';
-        document.head.appendChild(styleEl);
-      }
-
-      let css = `:root { ${config._customStyle} }`;
-
-      // Position CSS
-      const positionCSS = {
-        'bottom': '',
-        'top': '#ckb { bottom: auto; top: 0; }',
-        'bottom-left': '#ckb { right: auto; left: 20px; bottom: 20px; width: 340px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); flex-direction: column; } #ckb p { min-width: auto; margin-bottom: 10px; }',
-        'bottom-right': '#ckb { left: auto; right: 20px; bottom: 20px; width: 340px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); flex-direction: column; } #ckb p { min-width: auto; margin-bottom: 10px; }',
-        'center': '#ckb { bottom: auto; top: 50%; left: 50%; right: auto; width: 400px; border-radius: 12px; box-shadow: 0 4px 40px rgba(0,0,0,0.3); flex-direction: column; text-align: center; transform: translate(-50%, -50%); } #ckb p { min-width: auto; margin-bottom: 12px; }'
-      };
-      css += positionCSS[config._position] || '';
-
-      if (config._customCss) {
-        css += config._customCss;
-      }
-
-      styleEl.textContent = css;
-
-      // Create and show banner
+      // Create and show banner (CSS is passed via config.css for Shadow DOM)
       if (typeof window.createCookieBanner === 'function') {
         currentBanner = window.createCookieBanner(config);
         currentBanner.show();
@@ -1129,15 +1109,9 @@ ${configBlock}${config.bannerMode === 'gdpr' ? `  onConsent: function(consent) {
         currentBanner = null;
       }
 
-      // Clean up DOM
-      const banner = document.getElementById('ckb');
-      if (banner) banner.remove();
-      document.querySelectorAll('[id^="ckb-widget"]').forEach(w => w.remove());
+      // Clean up DOM (v2.0 uses web components)
+      document.querySelectorAll('cookie-banner-element, #ckb, [id^="ckb-widget"]').forEach(el => el.remove());
       document.querySelectorAll('style[id^="ckb-style"]').forEach(s => s.remove());
-
-      // Remove custom style
-      const customStyle = document.getElementById('demo-custom-style');
-      if (customStyle) customStyle.remove();
 
       window.CookieBanner = undefined;
 
