@@ -24,8 +24,8 @@ If you use this library and want a mention here, send me your URL!
 - **Framework agnostic** — React, Vue, Angular, Svelte, or vanilla JS
 
 ### Smart
-- **Geo-aware** — auto-detects EU users via timezone for GDPR
-- **Implied consent** — auto-accepts in regions where it's legal (USA, Asia, etc.)
+- **Geo-detection** — optional timezone-based heuristic (not a compliance guarantee)
+- **Flexible modes** — GDPR mode (explicit consent) or minimal mode (developer's discretion)
 - **TypeScript** — full type definitions included
 - **Well-tested** — 307 tests, TDD approach
 - **CSS Encapsulation** — Web Components with Shadow DOM (v2.0)
@@ -103,10 +103,12 @@ ngOnInit() {
 
 ## How It Works
 
-| User Location | Behavior | Legal Basis |
-|--------------|----------|-------------|
-| **EU** (GDPR) | Shows Accept + Reject buttons | Explicit consent required |
-| **Everywhere else** | Shows OK button, auto-accepts | Implied consent allowed |
+| Mode | Behavior | Use Case |
+|------|----------|----------|
+| **GDPR** (`mode: 'gdpr'`) | Shows Accept + Reject buttons | When explicit consent is required |
+| **Minimal** (`mode: 'minimal'`) | Shows OK button | Developer's discretion |
+
+**Note:** GDPR applies to EU citizens/residents regardless of their geographic location. Timezone detection is a heuristic, not a compliance solution. Consult legal counsel for your specific requirements.
 
 ## Configuration
 
