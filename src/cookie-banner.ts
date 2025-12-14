@@ -616,6 +616,142 @@ function _injectStyles(id: string, css: string, nonce?: string): void {
 export { _injectStyles as injectStyles };
 
 // ============================================================================
+// Script Blocking Utilities
+// ============================================================================
+
+/** Pending script registry entry */
+interface PendingScript {
+  src: string;
+  category: string;
+  callback?: () => void;
+}
+
+const _pendingScripts: PendingScript[] = [];
+const _loadedScripts: Set<string> = new Set();
+
+/** Internal: Load a script dynamically. Callers must check _loadedScripts first. */
+function _loadScript(src: string, callback?: () => void): void {
+  _loadedScripts.add(src);
+
+  const script = document.createElement('script');
+  script.src = src;
+  script.async = true;
+
+  if (callback) {
+    script.onload = () => callback();
+  }
+
+  document.head.appendChild(script);
+}
+
+/**
+ * Register a script to load only after consent is given for a category.
+ * Scripts are loaded automatically when consent is granted via the banner.
+ *
+ * @param category - Consent category (e.g., 'analytics', 'marketing', 'functional')
+ * @param src - Script URL to load
+ * @param callback - Optional callback after script loads
+ *
+ * @example
+ * // Register scripts before creating banner
+ * loadOnConsent('analytics', 'https://www.googletagmanager.com/gtag/js?id=G-XXXXX');
+ * loadOnConsent('marketing', 'https://connect.facebook.net/en_US/fbevents.js');
+ *
+ * // Banner handles loading automatically
+ * createCookieBanner({ mode: 'gdpr', forceEU: true });
+ */
+export function loadOnConsent(category: string, src: string, callback?: () => void): void {
+  if (!isBrowser) return;
+
+  // Check if already loaded
+  if (_loadedScripts.has(src)) {
+    callback?.();
+    return;
+  }
+
+  // Check if consent already given for this category
+  const existingConsent = getConsent();
+  if (existingConsent) {
+    const state = parseGranularConsent(existingConsent);
+    if (state && state[category]) {
+      _loadScript(src, callback);
+      return;
+    }
+    // Also handle minimal mode "1" = all accepted
+    if (existingConsent === '1') {
+      _loadScript(src, callback);
+      return;
+    }
+  }
+
+  // Register for future consent
+  _pendingScripts.push({ src, category, callback });
+}
+
+/**
+ * Load pending scripts for consented categories.
+ * Called automatically by createCookieBanner on consent.
+ * @internal
+ */
+export function _loadConsentedScripts(consent: ConsentState | boolean): void {
+  if (!isBrowser) return;
+
+  // Handle boolean (minimal mode: true = all accepted)
+  if (typeof consent === 'boolean') {
+    if (consent) {
+      _pendingScripts.forEach(script => {
+        if (!_loadedScripts.has(script.src)) {
+          _loadScript(script.src, script.callback);
+        }
+      });
+    }
+    return;
+  }
+
+  // Handle granular consent
+  const toLoad = _pendingScripts.filter(s => consent[s.category] && !_loadedScripts.has(s.src));
+
+  toLoad.forEach(script => {
+    _loadScript(script.src, script.callback);
+  });
+}
+
+/**
+ * Scan DOM for blocked scripts and register them for consent-based loading.
+ * Looks for: <script type="text/plain" data-consent="category" data-src="url">
+ *
+ * @example
+ * // In HTML:
+ * // <script type="text/plain" data-consent="analytics" data-src="https://..."></script>
+ *
+ * // In JS:
+ * blockScriptsUntilConsent();
+ * createCookieBanner({ mode: 'gdpr', forceEU: true });
+ */
+export function blockScriptsUntilConsent(): void {
+  if (!isBrowser) return;
+
+  document.querySelectorAll('script[data-consent][data-src]').forEach(el => {
+    const script = el as HTMLScriptElement;
+    const category = script.dataset.consent || '';
+    const src = script.dataset.src || '';
+
+    if (category && src) {
+      loadOnConsent(category, src);
+    }
+  });
+}
+
+/**
+ * Clear script registry (for testing)
+ * @internal
+ */
+export function _resetScriptRegistry(): void {
+  _pendingScripts.length = 0;
+  _loadedScripts.clear();
+}
+
+// ============================================================================
 // Cookie Banner Class (Framework-Friendly)
 // ============================================================================
 
@@ -737,6 +873,13 @@ export function createCookieBanner(config: CookieBannerConfig = {}): CookieBanne
     }
     _status = accepted;
 
+    // Load any pending scripts registered with loadOnConsent()
+    if (hasCategories && _consentState) {
+      _loadConsentedScripts(_consentState);
+    } else {
+      _loadConsentedScripts(accepted);
+    }
+
     if (banner) {
       if (banner._cleanup) banner._cleanup();
       banner.remove();
@@ -809,6 +952,9 @@ export function createCookieBanner(config: CookieBannerConfig = {}): CookieBanne
       }
     }
     _status = hasNonRequiredEnabled;
+
+    // Load any pending scripts registered with loadOnConsent()
+    _loadConsentedScripts(state);
 
     if (banner) {
       if (banner._cleanup) banner._cleanup();

@@ -236,6 +236,47 @@ export declare function encodeGranularConsent(state: ConsentState): string;
 declare function _injectStyles(id: string, css: string, nonce?: string): void;
 export { _injectStyles as injectStyles };
 /**
+ * Register a script to load only after consent is given for a category.
+ * Scripts are loaded automatically when consent is granted via the banner.
+ *
+ * @param category - Consent category (e.g., 'analytics', 'marketing', 'functional')
+ * @param src - Script URL to load
+ * @param callback - Optional callback after script loads
+ *
+ * @example
+ * // Register scripts before creating banner
+ * loadOnConsent('analytics', 'https://www.googletagmanager.com/gtag/js?id=G-XXXXX');
+ * loadOnConsent('marketing', 'https://connect.facebook.net/en_US/fbevents.js');
+ *
+ * // Banner handles loading automatically
+ * createCookieBanner({ mode: 'gdpr', forceEU: true });
+ */
+export declare function loadOnConsent(category: string, src: string, callback?: () => void): void;
+/**
+ * Load pending scripts for consented categories.
+ * Called automatically by createCookieBanner on consent.
+ * @internal
+ */
+export declare function _loadConsentedScripts(consent: ConsentState | boolean): void;
+/**
+ * Scan DOM for blocked scripts and register them for consent-based loading.
+ * Looks for: <script type="text/plain" data-consent="category" data-src="url">
+ *
+ * @example
+ * // In HTML:
+ * // <script type="text/plain" data-consent="analytics" data-src="https://..."></script>
+ *
+ * // In JS:
+ * blockScriptsUntilConsent();
+ * createCookieBanner({ mode: 'gdpr', forceEU: true });
+ */
+export declare function blockScriptsUntilConsent(): void;
+/**
+ * Clear script registry (for testing)
+ * @internal
+ */
+export declare function _resetScriptRegistry(): void;
+/**
  * Reset singleton state (for testing only)
  * @internal
  */

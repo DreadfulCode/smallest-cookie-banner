@@ -23,6 +23,10 @@ import {
   ConsentRecord,
   _resetSingleton,
   injectStyles,
+  loadOnConsent,
+  blockScriptsUntilConsent,
+  _resetScriptRegistry,
+  _loadConsentedScripts,
 } from '../src/cookie-banner';
 
 // Store original location for restoration
@@ -3493,6 +3497,213 @@ describe('smallest-cookie-banner', () => {
       saveBtn?.click();
 
       expect(onConsent).toHaveBeenCalled();
+    });
+  });
+
+  describe('Script Blocking Utilities', () => {
+    beforeEach(() => {
+      _resetScriptRegistry();
+      // Clear any dynamically added scripts
+      document.querySelectorAll('script[data-test-script]').forEach(s => s.remove());
+    });
+
+    describe('loadOnConsent()', () => {
+      it('registers script for future consent', () => {
+        const callback = jest.fn();
+        loadOnConsent('analytics', 'https://example.com/analytics.js', callback);
+
+        // Script should not be loaded yet
+        const scripts = document.querySelectorAll('script[src="https://example.com/analytics.js"]');
+        expect(scripts.length).toBe(0);
+        expect(callback).not.toHaveBeenCalled();
+      });
+
+      it('loads script immediately if consent already given', () => {
+        // Set consent first
+        setConsent('1', 'cookie_consent', 365);
+
+        loadOnConsent('analytics', 'https://example.com/ga-immediate.js');
+
+        // Script should be added to head
+        const scripts = document.querySelectorAll('script[src="https://example.com/ga-immediate.js"]');
+        expect(scripts.length).toBe(1);
+      });
+
+      it('loads script immediately if granular consent already given for category', () => {
+        // Set granular consent with analytics enabled
+        setConsent('essential:1,analytics:1,marketing:0,functional:0', 'cookie_consent', 365);
+
+        loadOnConsent('analytics', 'https://example.com/ga-granular.js');
+
+        // Script should be added
+        const scripts = document.querySelectorAll('script[src="https://example.com/ga-granular.js"]');
+        expect(scripts.length).toBe(1);
+      });
+
+      it('does not load script if granular consent denied for category', () => {
+        // Set granular consent with analytics disabled
+        setConsent('essential:1,analytics:0,marketing:0,functional:0', 'cookie_consent', 365);
+
+        loadOnConsent('analytics', 'https://example.com/ga-denied.js');
+
+        // Script should NOT be added
+        const scripts = document.querySelectorAll('script[src="https://example.com/ga-denied.js"]');
+        expect(scripts.length).toBe(0);
+      });
+
+      it('does not duplicate scripts if called multiple times', () => {
+        setConsent('1', 'cookie_consent', 365);
+
+        loadOnConsent('analytics', 'https://example.com/no-dupe.js');
+        loadOnConsent('analytics', 'https://example.com/no-dupe.js');
+        loadOnConsent('analytics', 'https://example.com/no-dupe.js');
+
+        const scripts = document.querySelectorAll('script[src="https://example.com/no-dupe.js"]');
+        expect(scripts.length).toBe(1);
+      });
+
+      it('calls callback when script already loaded', () => {
+        setConsent('1', 'cookie_consent', 365);
+
+        const callback1 = jest.fn();
+        const callback2 = jest.fn();
+
+        // First call loads script
+        loadOnConsent('analytics', 'https://example.com/callback-test.js', callback1);
+
+        // Second call should trigger callback immediately since script already loaded
+        loadOnConsent('analytics', 'https://example.com/callback-test.js', callback2);
+
+        expect(callback2).toHaveBeenCalled();
+      });
+
+      it('handles consent value "0" (rejected) correctly', () => {
+        setConsent('0', 'cookie_consent', 365);
+
+        loadOnConsent('analytics', 'https://example.com/rejected.js');
+
+        // Script should NOT be loaded
+        const scripts = document.querySelectorAll('script[src="https://example.com/rejected.js"]');
+        expect(scripts.length).toBe(0);
+      });
+    });
+
+    describe('_loadConsentedScripts()', () => {
+      it('loads scripts for consented categories', () => {
+        // Register scripts
+        loadOnConsent('analytics', 'https://example.com/load-analytics.js');
+        loadOnConsent('marketing', 'https://example.com/load-marketing.js');
+
+        // Simulate consent
+        _loadConsentedScripts({ analytics: true, marketing: false, essential: true });
+
+        // Only analytics should be loaded
+        expect(document.querySelectorAll('script[src="https://example.com/load-analytics.js"]').length).toBe(1);
+        expect(document.querySelectorAll('script[src="https://example.com/load-marketing.js"]').length).toBe(0);
+      });
+
+      it('loads all scripts when boolean true passed (minimal mode)', () => {
+        loadOnConsent('analytics', 'https://example.com/all-analytics.js');
+        loadOnConsent('marketing', 'https://example.com/all-marketing.js');
+
+        _loadConsentedScripts(true);
+
+        expect(document.querySelectorAll('script[src="https://example.com/all-analytics.js"]').length).toBe(1);
+        expect(document.querySelectorAll('script[src="https://example.com/all-marketing.js"]').length).toBe(1);
+      });
+
+      it('loads no scripts when boolean false passed', () => {
+        loadOnConsent('analytics', 'https://example.com/none-analytics.js');
+
+        _loadConsentedScripts(false);
+
+        expect(document.querySelectorAll('script[src="https://example.com/none-analytics.js"]').length).toBe(0);
+      });
+    });
+
+    describe('blockScriptsUntilConsent()', () => {
+      it('scans DOM for data-consent scripts and registers them', () => {
+        // Add blocked script to DOM
+        const blockedScript = document.createElement('script');
+        blockedScript.type = 'text/plain';
+        blockedScript.dataset.consent = 'analytics';
+        blockedScript.dataset.src = 'https://example.com/blocked-script.js';
+        blockedScript.dataset.testScript = 'true';
+        document.body.appendChild(blockedScript);
+
+        // Scan for blocked scripts
+        blockScriptsUntilConsent();
+
+        // Should not be loaded yet (no consent)
+        expect(document.querySelectorAll('script[src="https://example.com/blocked-script.js"]').length).toBe(0);
+
+        // Now give consent
+        _loadConsentedScripts({ analytics: true });
+
+        // Should be loaded now
+        expect(document.querySelectorAll('script[src="https://example.com/blocked-script.js"]').length).toBe(1);
+      });
+    });
+
+    describe('Integration with createCookieBanner', () => {
+      it('loads registered scripts when user accepts (minimal mode)', () => {
+        loadOnConsent('analytics', 'https://example.com/banner-accept.js');
+
+        const banner = createCookieBanner({ forceEU: true });
+        banner.show();
+
+        // Accept
+        const acceptBtn = shadowQuery('#cky');
+        acceptBtn?.click();
+
+        // Script should be loaded
+        expect(document.querySelectorAll('script[src="https://example.com/banner-accept.js"]').length).toBe(1);
+      });
+
+      it('does not load scripts when user rejects', () => {
+        loadOnConsent('analytics', 'https://example.com/banner-reject.js');
+
+        const banner = createCookieBanner({ forceEU: true });
+        banner.show();
+
+        // Reject
+        const rejectBtn = shadowQuery('#ckn');
+        rejectBtn?.click();
+
+        // Script should NOT be loaded
+        expect(document.querySelectorAll('script[src="https://example.com/banner-reject.js"]').length).toBe(0);
+      });
+
+      it('loads only consented category scripts in GDPR mode', () => {
+        loadOnConsent('analytics', 'https://example.com/gdpr-analytics.js');
+        loadOnConsent('marketing', 'https://example.com/gdpr-marketing.js');
+
+        const banner = createCookieBanner({
+          forceEU: true,
+          mode: 'gdpr',
+          tabs: { enabled: false },
+        });
+        banner.show();
+
+        // Open settings, uncheck marketing, save
+        const settingsBtn = shadowQuery('#cks');
+        settingsBtn?.click();
+
+        // Check analytics checkbox (should be unchecked by default)
+        const checkboxes = getShadowRoot()?.querySelectorAll('input[name="ckb-cat"]') as NodeListOf<HTMLInputElement>;
+        checkboxes.forEach(cb => {
+          if (cb.value === 'analytics') cb.checked = true;
+          if (cb.value === 'marketing') cb.checked = false;
+        });
+
+        // Save
+        const saveBtn = shadowQuery('#cksv');
+        saveBtn?.click();
+
+        // Only analytics should be loaded
+        expect(document.querySelectorAll('script[src="https://example.com/gdpr-analytics.js"]').length).toBe(1);
+        expect(document.querySelectorAll('script[src="https://example.com/gdpr-marketing.js"]').length).toBe(0);
+      });
     });
   });
 });

@@ -27,7 +27,7 @@ If you use this library and want a mention here, send me your URL!
 - **Geo-aware** — auto-detects EU users via timezone for GDPR
 - **Implied consent** — auto-accepts in regions where it's legal (USA, Asia, etc.)
 - **TypeScript** — full type definitions included
-- **Well-tested** — 293 tests, TDD approach
+- **Well-tested** — 307 tests, TDD approach
 - **CSS Encapsulation** — Web Components with Shadow DOM (v2.0)
 
 ### Compliant & Accessible
@@ -226,6 +226,96 @@ CookieBanner.ok    // true | false | null
 CookieBanner.yes()    // Accept
 CookieBanner.no()     // Reject
 CookieBanner.reset()  // Clear & reload
+```
+
+## Script Blocking
+
+**Important:** The library manages consent state but doesn't block scripts automatically. You must use one of these approaches:
+
+### Quick Start (Recommended)
+
+```javascript
+import { createCookieBanner, loadOnConsent } from 'smallest-cookie-banner';
+
+// 1. Register scripts BEFORE creating banner (they won't load yet)
+loadOnConsent('analytics', 'https://www.googletagmanager.com/gtag/js?id=G-XXXXX');
+loadOnConsent('marketing', 'https://connect.facebook.net/en_US/fbevents.js');
+
+// 2. Create banner - scripts load automatically when user consents
+createCookieBanner({ mode: 'gdpr', forceEU: true });
+```
+
+**What happens:**
+- User clicks "Accept All" → Both scripts load
+- User clicks "Reject All" → No scripts load
+- User enables only Analytics → Only analytics script loads
+
+### HTML Approach (No JS Changes)
+
+```html
+<!-- Mark scripts as blocked with data attributes -->
+<script type="text/plain" data-consent="analytics" data-src="https://www.googletagmanager.com/gtag/js?id=G-XXXXX"></script>
+<script type="text/plain" data-consent="marketing" data-src="https://connect.facebook.net/en_US/fbevents.js"></script>
+
+<script type="module">
+  import { createCookieBanner, blockScriptsUntilConsent } from 'smallest-cookie-banner';
+
+  // Scan DOM for blocked scripts
+  blockScriptsUntilConsent();
+
+  // Banner handles the rest
+  createCookieBanner({ mode: 'gdpr', forceEU: true });
+</script>
+```
+
+### Callback Approach (Full Control)
+
+```javascript
+import { createCookieBanner } from 'smallest-cookie-banner';
+
+createCookieBanner({
+  mode: 'gdpr',
+  forceEU: true,
+  onConsent: (consent) => {
+    // consent = { essential: true, analytics: true/false, marketing: true/false, functional: true/false }
+
+    if (consent.analytics) {
+      // Load Google Analytics
+      const script = document.createElement('script');
+      script.src = 'https://www.googletagmanager.com/gtag/js?id=G-XXXXX';
+      document.head.appendChild(script);
+    }
+
+    if (consent.marketing) {
+      // Load Facebook Pixel, etc.
+    }
+  }
+});
+```
+
+### Google Consent Mode v2
+
+```javascript
+// Set defaults BEFORE gtag loads
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+
+gtag('consent', 'default', {
+  'analytics_storage': 'denied',
+  'ad_storage': 'denied',
+});
+
+// Update on consent
+createCookieBanner({
+  mode: 'gdpr',
+  forceEU: true,
+  onConsent: (consent) => {
+    gtag('consent', 'update', {
+      'analytics_storage': consent.analytics ? 'granted' : 'denied',
+      'ad_storage': consent.marketing ? 'granted' : 'denied',
+    });
+  }
+});
 ```
 
 ## TypeScript
