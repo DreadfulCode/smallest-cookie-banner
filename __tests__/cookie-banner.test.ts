@@ -3704,6 +3704,183 @@ describe('smallest-cookie-banner', () => {
         expect(document.querySelectorAll('script[src="https://example.com/gdpr-analytics.js"]').length).toBe(1);
         expect(document.querySelectorAll('script[src="https://example.com/gdpr-marketing.js"]').length).toBe(0);
       });
+
+      describe('Return visit scenario (Issue: loadOnConsent not loading on subsequent visits)', () => {
+        it('loads script on return visit when consent was given previously (minimal mode)', () => {
+          // FIRST VISIT: User consents
+          loadOnConsent('analytics', 'https://example.com/return-visit-minimal.js');
+          const banner1 = createCookieBanner({ forceEU: true });
+          banner1.show();
+          const acceptBtn1 = shadowQuery('#cky');
+          acceptBtn1?.click();
+
+          // Verify script loaded on first visit
+          expect(document.querySelectorAll('script[src="https://example.com/return-visit-minimal.js"]').length).toBe(1);
+
+          // SIMULATE PAGE RELOAD: Reset script registry but keep cookie
+          _resetScriptRegistry();
+          _resetSingleton();
+          document.querySelectorAll('script[src="https://example.com/return-visit-minimal.js"]').forEach(s => s.remove());
+
+          // SECOND VISIT: Cookie exists, banner should not show, script should load immediately
+          loadOnConsent('analytics', 'https://example.com/return-visit-minimal.js');
+
+          // Script should be loaded immediately on return visit
+          const scripts = document.querySelectorAll('script[src="https://example.com/return-visit-minimal.js"]');
+          expect(scripts.length).toBe(1);
+        });
+
+        it('loads script on return visit when consent was given previously (GDPR mode)', () => {
+          // FIRST VISIT: User accepts all in GDPR mode
+          loadOnConsent('analytics', 'https://example.com/return-visit-gdpr.js');
+          const banner1 = createCookieBanner({ forceEU: true, mode: 'gdpr' });
+          banner1.show();
+          const acceptBtn1 = shadowQuery('#cky');
+          acceptBtn1?.click();
+
+          // Verify script loaded on first visit
+          expect(document.querySelectorAll('script[src="https://example.com/return-visit-gdpr.js"]').length).toBe(1);
+
+          // SIMULATE PAGE RELOAD: Reset script registry but keep cookie
+          _resetScriptRegistry();
+          _resetSingleton();
+          document.querySelectorAll('script[src="https://example.com/return-visit-gdpr.js"]').forEach(s => s.remove());
+
+          // SECOND VISIT: Cookie exists (granular format), banner should not show
+          loadOnConsent('analytics', 'https://example.com/return-visit-gdpr.js');
+
+          // Script should be loaded immediately on return visit
+          const scripts = document.querySelectorAll('script[src="https://example.com/return-visit-gdpr.js"]');
+          expect(scripts.length).toBe(1);
+        });
+
+        it('loads script on return visit with createCookieBanner and loadOnConsent called in any order', () => {
+          // FIRST VISIT: User consents
+          const banner1 = createCookieBanner({ forceEU: true, mode: 'gdpr' });
+          loadOnConsent('analytics', 'https://example.com/return-order.js');
+          banner1.show();
+          shadowQuery('#cky')?.click();
+
+          expect(document.querySelectorAll('script[src="https://example.com/return-order.js"]').length).toBe(1);
+
+          // SIMULATE PAGE RELOAD
+          _resetScriptRegistry();
+          _resetSingleton();
+          document.querySelectorAll('script[src="https://example.com/return-order.js"]').forEach(s => s.remove());
+
+          // SECOND VISIT: Different call order - createCookieBanner first, then loadOnConsent
+          createCookieBanner({ forceEU: true, mode: 'gdpr' });
+          loadOnConsent('analytics', 'https://example.com/return-order.js');
+
+          // Script should still load
+          const scripts = document.querySelectorAll('script[src="https://example.com/return-order.js"]');
+          expect(scripts.length).toBe(1);
+        });
+
+        it('does not load script on return visit if category was denied', () => {
+          // FIRST VISIT: User saves with analytics unchecked
+          loadOnConsent('analytics', 'https://example.com/return-denied.js');
+          const banner1 = createCookieBanner({ forceEU: true, mode: 'gdpr', tabs: { enabled: false } });
+          banner1.show();
+
+          // Open settings and save with analytics unchecked (default is unchecked)
+          shadowQuery('#cks')?.click();
+          shadowQuery('#cksv')?.click();
+
+          // Script should NOT have loaded (analytics was not consented)
+          expect(document.querySelectorAll('script[src="https://example.com/return-denied.js"]').length).toBe(0);
+
+          // SIMULATE PAGE RELOAD
+          _resetScriptRegistry();
+          _resetSingleton();
+
+          // SECOND VISIT: Analytics was denied, script should not load
+          loadOnConsent('analytics', 'https://example.com/return-denied.js');
+
+          const scripts = document.querySelectorAll('script[src="https://example.com/return-denied.js"]');
+          expect(scripts.length).toBe(0);
+        });
+
+        it('loads script on return visit with CUSTOM cookie name using cookieName option', () => {
+          // FIX: loadOnConsent now accepts cookieName option to match banner config
+          const customCookieName = 'my_custom_consent';
+
+          // FIRST VISIT: Banner configured with custom cookie name
+          loadOnConsent('analytics', 'https://example.com/custom-cookie.js', { cookieName: customCookieName });
+          const banner1 = createCookieBanner({
+            forceEU: true,
+            mode: 'gdpr',
+            cookieName: customCookieName,
+          });
+          banner1.show();
+          shadowQuery('#cky')?.click();
+
+          // Verify script loaded on first visit (via _loadConsentedScripts)
+          expect(document.querySelectorAll('script[src="https://example.com/custom-cookie.js"]').length).toBe(1);
+
+          // Verify cookie was set with custom name
+          expect(document.cookie).toContain(customCookieName);
+
+          // SIMULATE PAGE RELOAD
+          _resetScriptRegistry();
+          _resetSingleton();
+          document.querySelectorAll('script[src="https://example.com/custom-cookie.js"]').forEach(s => s.remove());
+
+          // SECOND VISIT: loadOnConsent with cookieName option finds the consent
+          loadOnConsent('analytics', 'https://example.com/custom-cookie.js', { cookieName: customCookieName });
+
+          // Script loads because loadOnConsent now checks the correct cookie
+          const scripts = document.querySelectorAll('script[src="https://example.com/custom-cookie.js"]');
+          expect(scripts.length).toBe(1);
+        });
+
+        it('does not load script on return visit without cookieName option when banner uses custom name', () => {
+          // This test documents that users MUST pass cookieName if they use a custom one
+          const customCookieName = 'my_other_consent';
+
+          // FIRST VISIT: Banner with custom cookie name, but loadOnConsent without cookieName option
+          loadOnConsent('analytics', 'https://example.com/no-option.js'); // No cookieName option!
+          const banner1 = createCookieBanner({
+            forceEU: true,
+            mode: 'gdpr',
+            cookieName: customCookieName,
+          });
+          banner1.show();
+          shadowQuery('#cky')?.click();
+
+          // Script loaded on first visit via _loadConsentedScripts (called by banner)
+          expect(document.querySelectorAll('script[src="https://example.com/no-option.js"]').length).toBe(1);
+
+          // SIMULATE PAGE RELOAD
+          _resetScriptRegistry();
+          _resetSingleton();
+          document.querySelectorAll('script[src="https://example.com/no-option.js"]').forEach(s => s.remove());
+
+          // SECOND VISIT: loadOnConsent without cookieName looks for default 'cookie_consent'
+          loadOnConsent('analytics', 'https://example.com/no-option.js'); // Still no cookieName!
+
+          // Script does NOT load because loadOnConsent checks wrong cookie
+          const scripts = document.querySelectorAll('script[src="https://example.com/no-option.js"]');
+          expect(scripts.length).toBe(0); // Expected behavior - user must pass cookieName
+        });
+
+        it('supports callback with cookieName option', () => {
+          const customCookieName = 'callback_test_consent';
+          const callback = jest.fn();
+
+          // Set consent with custom cookie name
+          setConsent('essential:1,analytics:1', customCookieName, 365);
+
+          // Call loadOnConsent with both callback and cookieName
+          loadOnConsent('analytics', 'https://example.com/callback-option.js', {
+            callback,
+            cookieName: customCookieName,
+          });
+
+          // Script should be loaded
+          expect(document.querySelectorAll('script[src="https://example.com/callback-option.js"]').length).toBe(1);
+        });
+      });
     });
   });
 });

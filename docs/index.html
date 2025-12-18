@@ -838,11 +838,184 @@
       height: 400px;
       overflow: hidden;
     }
+
+    /* Mobile Responsive */
+    @media (max-width: 600px) {
+      /* Header */
+      .header {
+        padding: 10px 12px;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .header h1 {
+        font-size: 14px;
+        width: 100%;
+      }
+      .header h1 a {
+        font-size: 10px !important;
+        padding: 2px 6px !important;
+      }
+      .header-links {
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .header-links a {
+        font-size: 12px;
+        text-align: center;
+      }
+
+      /* Hero */
+      .hero {
+        padding: 16px 12px;
+      }
+      .hero-tagline {
+        font-size: 14px;
+      }
+      .hero-stats {
+        gap: 16px;
+      }
+      .hero-stats .stat strong {
+        font-size: 18px;
+      }
+      .hero-stats .stat span {
+        font-size: 10px;
+      }
+      .hero-features span {
+        font-size: 10px;
+        padding: 3px 8px;
+      }
+
+      /* Sidebar */
+      .sidebar {
+        padding: 12px;
+      }
+
+      /* Presets - 2 columns on mobile */
+      .presets {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 6px;
+      }
+      .preset {
+        padding: 6px;
+        font-size: 10px;
+      }
+
+      /* Form fields - stack vertically */
+      .field-row,
+      .field-row-3 {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      .section {
+        margin-bottom: 16px;
+        padding-bottom: 16px;
+      }
+
+      /* Preview area */
+      .preview-area {
+        padding: 12px;
+      }
+      .preview-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .preview-controls {
+        width: 100%;
+        flex-wrap: wrap;
+      }
+      .preview-actions {
+        width: 100%;
+        flex-wrap: wrap;
+      }
+      .btn {
+        padding: 8px 12px;
+        font-size: 12px;
+        flex: 1;
+        justify-content: center;
+        min-width: 0;
+      }
+
+      /* Code output */
+      .code-output {
+        border-radius: 8px;
+      }
+      .code-header {
+        padding: 10px 12px;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .code-tabs {
+        width: 100%;
+        overflow-x: auto;
+      }
+      .code-tab {
+        padding: 6px 10px;
+        font-size: 11px;
+      }
+      .code-actions {
+        width: 100%;
+        justify-content: flex-end;
+      }
+      .code-body {
+        padding: 12px;
+        font-size: 11px;
+      }
+      .code-body pre {
+        overflow-x: auto;
+      }
+
+      /* Modal */
+      .modal {
+        width: 95%;
+        margin: 10px;
+      }
+      .modal-header,
+      .modal-body {
+        padding: 16px;
+      }
+
+      /* Toast */
+      .toast {
+        left: 12px;
+        right: 12px;
+        bottom: 12px;
+        text-align: center;
+      }
+
+      /* Demo modal */
+      .demo-modal-content {
+        padding: 12px;
+        width: 95%;
+      }
+      .demo-modal-frame {
+        height: 300px;
+      }
+    }
+
+    /* Extra small screens */
+    @media (max-width: 400px) {
+      .header h1 {
+        font-size: 12px;
+      }
+      .presets {
+        grid-template-columns: 1fr 1fr;
+      }
+      .btn {
+        padding: 6px 10px;
+        font-size: 11px;
+      }
+      .code-body {
+        font-size: 10px;
+      }
+    }
   </style>
 </head>
 <body>
   <header class="header">
-    <h1><span>🍪</span> Cookie Banner Configurator <a href="https://www.npmjs.com/package/smallest-cookie-banner" target="_blank" style="font-size:12px;background:#cb3837;color:#fff;padding:2px 8px;border-radius:4px;text-decoration:none;margin-left:8px;font-weight:normal;">v2.1.0</a></h1>
+    <h1><span>🍪</span> Cookie Banner Configurator <a href="https://www.npmjs.com/package/smallest-cookie-banner" target="_blank" style="font-size:12px;background:#cb3837;color:#fff;padding:2px 8px;border-radius:4px;text-decoration:none;margin-left:8px;font-weight:normal;">v2.1.1</a></h1>
     <div class="header-links">
       <a href="https://vibecodingwithfred.com/blog/gdpr-cookie-banner-cdn/" target="_blank">
         Read more about the library and see it in action on my blog
