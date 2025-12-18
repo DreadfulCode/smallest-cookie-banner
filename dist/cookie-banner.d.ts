@@ -236,22 +236,38 @@ export declare function encodeGranularConsent(state: ConsentState): string;
 declare function _injectStyles(id: string, css: string, nonce?: string): void;
 export { _injectStyles as injectStyles };
 /**
+ * Options for loadOnConsent function.
+ */
+export interface LoadOnConsentOptions {
+    /** Callback function to execute after script loads */
+    callback?: () => void;
+    /** Cookie name to check for consent (default: 'cookie_consent').
+     * Must match the cookieName used in createCookieBanner config. */
+    cookieName?: string;
+}
+/**
  * Register a script to load only after consent is given for a category.
  * Scripts are loaded automatically when consent is granted via the banner.
  *
  * @param category - Consent category (e.g., 'analytics', 'marketing', 'functional')
  * @param src - Script URL to load
- * @param callback - Optional callback after script loads
+ * @param callbackOrOptions - Optional callback function or options object
  *
  * @example
- * // Register scripts before creating banner
+ * // Basic usage with default cookie name
  * loadOnConsent('analytics', 'https://www.googletagmanager.com/gtag/js?id=G-XXXXX');
  * loadOnConsent('marketing', 'https://connect.facebook.net/en_US/fbevents.js');
+ *
+ * // With callback
+ * loadOnConsent('analytics', 'https://example.com/script.js', () => console.log('loaded'));
+ *
+ * // With custom cookie name (must match banner config)
+ * loadOnConsent('analytics', 'https://example.com/script.js', { cookieName: 'my_consent' });
  *
  * // Banner handles loading automatically
  * createCookieBanner({ mode: 'gdpr', forceEU: true });
  */
-export declare function loadOnConsent(category: string, src: string, callback?: () => void): void;
+export declare function loadOnConsent(category: string, src: string, callbackOrOptions?: (() => void) | LoadOnConsentOptions): void;
 /**
  * Load pending scripts for consented categories.
  * Called automatically by createCookieBanner on consent.

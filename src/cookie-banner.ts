@@ -645,23 +645,57 @@ function _loadScript(src: string, callback?: () => void): void {
 }
 
 /**
+ * Options for loadOnConsent function.
+ */
+export interface LoadOnConsentOptions {
+  /** Callback function to execute after script loads */
+  callback?: () => void;
+  /** Cookie name to check for consent (default: 'cookie_consent').
+   * Must match the cookieName used in createCookieBanner config. */
+  cookieName?: string;
+}
+
+/**
  * Register a script to load only after consent is given for a category.
  * Scripts are loaded automatically when consent is granted via the banner.
  *
  * @param category - Consent category (e.g., 'analytics', 'marketing', 'functional')
  * @param src - Script URL to load
- * @param callback - Optional callback after script loads
+ * @param callbackOrOptions - Optional callback function or options object
  *
  * @example
- * // Register scripts before creating banner
+ * // Basic usage with default cookie name
  * loadOnConsent('analytics', 'https://www.googletagmanager.com/gtag/js?id=G-XXXXX');
  * loadOnConsent('marketing', 'https://connect.facebook.net/en_US/fbevents.js');
+ *
+ * // With callback
+ * loadOnConsent('analytics', 'https://example.com/script.js', () => console.log('loaded'));
+ *
+ * // With custom cookie name (must match banner config)
+ * loadOnConsent('analytics', 'https://example.com/script.js', { cookieName: 'my_consent' });
  *
  * // Banner handles loading automatically
  * createCookieBanner({ mode: 'gdpr', forceEU: true });
  */
-export function loadOnConsent(category: string, src: string, callback?: () => void): void {
+export function loadOnConsent(
+  category: string,
+  src: string,
+  callbackOrOptions?: (() => void) | LoadOnConsentOptions
+): void {
   if (!isBrowser) return;
+
+  // Parse options - support both legacy callback and new options object
+  let callback: (() => void) | undefined;
+  let cookieName = 'cookie_consent';
+
+  if (typeof callbackOrOptions === 'function') {
+    callback = callbackOrOptions;
+  } else if (callbackOrOptions) {
+    callback = callbackOrOptions.callback;
+    if (callbackOrOptions.cookieName) {
+      cookieName = callbackOrOptions.cookieName;
+    }
+  }
 
   // Check if already loaded
   if (_loadedScripts.has(src)) {
@@ -670,7 +704,7 @@ export function loadOnConsent(category: string, src: string, callback?: () => vo
   }
 
   // Check if consent already given for this category
-  const existingConsent = getConsent();
+  const existingConsent = getConsent(cookieName);
   if (existingConsent) {
     const state = parseGranularConsent(existingConsent);
     if (state && state[category]) {
