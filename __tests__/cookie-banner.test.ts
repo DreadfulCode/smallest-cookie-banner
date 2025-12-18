@@ -3834,11 +3834,11 @@ describe('smallest-cookie-banner', () => {
           expect(scripts.length).toBe(1);
         });
 
-        it('does not load script on return visit without cookieName option when banner uses custom name', () => {
-          // This test documents that users MUST pass cookieName if they use a custom one
+        it('loads script on return visit with custom cookieName when createCookieBanner is called (auto-inherit)', () => {
+          // This tests that createCookieBanner loads pending scripts on init even with custom cookieName
           const customCookieName = 'my_other_consent';
 
-          // FIRST VISIT: Banner with custom cookie name, but loadOnConsent without cookieName option
+          // FIRST VISIT: Banner with custom cookie name, loadOnConsent without cookieName option
           loadOnConsent('analytics', 'https://example.com/no-option.js'); // No cookieName option!
           const banner1 = createCookieBanner({
             forceEU: true,
@@ -3856,12 +3856,46 @@ describe('smallest-cookie-banner', () => {
           _resetSingleton();
           document.querySelectorAll('script[src="https://example.com/no-option.js"]').forEach(s => s.remove());
 
-          // SECOND VISIT: loadOnConsent without cookieName looks for default 'cookie_consent'
+          // SECOND VISIT: loadOnConsent without cookieName, but createCookieBanner with custom cookieName
           loadOnConsent('analytics', 'https://example.com/no-option.js'); // Still no cookieName!
+          createCookieBanner({
+            forceEU: true,
+            mode: 'gdpr',
+            cookieName: customCookieName,
+          });
 
-          // Script does NOT load because loadOnConsent checks wrong cookie
+          // Script DOES load because createCookieBanner loads pending scripts on init
           const scripts = document.querySelectorAll('script[src="https://example.com/no-option.js"]');
-          expect(scripts.length).toBe(0); // Expected behavior - user must pass cookieName
+          expect(scripts.length).toBe(1);
+        });
+
+        it('does not load script on return visit without cookieName option when createCookieBanner not called', () => {
+          // Edge case: if user only calls loadOnConsent without createCookieBanner, they still need cookieName
+          const customCookieName = 'edge_case_consent';
+
+          // FIRST VISIT: Banner with custom cookie name
+          loadOnConsent('analytics', 'https://example.com/edge-case.js');
+          const banner1 = createCookieBanner({
+            forceEU: true,
+            mode: 'gdpr',
+            cookieName: customCookieName,
+          });
+          banner1.show();
+          shadowQuery('#cky')?.click();
+
+          expect(document.querySelectorAll('script[src="https://example.com/edge-case.js"]').length).toBe(1);
+
+          // SIMULATE PAGE RELOAD
+          _resetScriptRegistry();
+          _resetSingleton();
+          document.querySelectorAll('script[src="https://example.com/edge-case.js"]').forEach(s => s.remove());
+
+          // SECOND VISIT: ONLY loadOnConsent called (no createCookieBanner)
+          loadOnConsent('analytics', 'https://example.com/edge-case.js'); // No cookieName, no banner
+
+          // Script does NOT load - loadOnConsent alone can't know about custom cookie name
+          const scripts = document.querySelectorAll('script[src="https://example.com/edge-case.js"]');
+          expect(scripts.length).toBe(0);
         });
 
         it('supports callback with cookieName option', () => {

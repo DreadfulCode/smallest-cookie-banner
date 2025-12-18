@@ -419,26 +419,44 @@
      *
      * @param category - Consent category (e.g., 'analytics', 'marketing', 'functional')
      * @param src - Script URL to load
-     * @param callback - Optional callback after script loads
+     * @param callbackOrOptions - Optional callback function or options object
      *
      * @example
-     * // Register scripts before creating banner
+     * // Basic usage with default cookie name
      * loadOnConsent('analytics', 'https://www.googletagmanager.com/gtag/js?id=G-XXXXX');
      * loadOnConsent('marketing', 'https://connect.facebook.net/en_US/fbevents.js');
+     *
+     * // With callback
+     * loadOnConsent('analytics', 'https://example.com/script.js', () => console.log('loaded'));
+     *
+     * // With custom cookie name (must match banner config)
+     * loadOnConsent('analytics', 'https://example.com/script.js', { cookieName: 'my_consent' });
      *
      * // Banner handles loading automatically
      * createCookieBanner({ mode: 'gdpr', forceEU: true });
      */
-    function loadOnConsent(category, src, callback) {
+    function loadOnConsent(category, src, callbackOrOptions) {
         if (!isBrowser)
             return;
+        // Parse options - support both legacy callback and new options object
+        let callback;
+        let cookieName = 'cookie_consent';
+        if (typeof callbackOrOptions === 'function') {
+            callback = callbackOrOptions;
+        }
+        else if (callbackOrOptions) {
+            callback = callbackOrOptions.callback;
+            if (callbackOrOptions.cookieName) {
+                cookieName = callbackOrOptions.cookieName;
+            }
+        }
         // Check if already loaded
         if (_loadedScripts.has(src)) {
             callback === null || callback === void 0 ? void 0 : callback();
             return;
         }
         // Check if consent already given for this category
-        const existingConsent = getConsent();
+        const existingConsent = getConsent(cookieName);
         if (existingConsent) {
             const state = parseGranularConsent(existingConsent);
             if (state && state[category]) {
@@ -610,6 +628,13 @@
                 else {
                     _status = null;
                 }
+            }
+            // Load any pending scripts registered with loadOnConsent() for return visitors
+            if (_consentState) {
+                _loadConsentedScripts(_consentState);
+            }
+            else if (existing === '1') {
+                _loadConsentedScripts(true);
             }
         }
         function handleConsent(accepted) {

@@ -270,6 +270,28 @@ createCookieBanner({ mode: 'gdpr', forceEU: true });
 </script>
 ```
 
+### loadOnConsent API
+
+```javascript
+import { createCookieBanner, loadOnConsent } from 'smallest-cookie-banner';
+
+// Basic usage
+loadOnConsent('analytics', 'https://example.com/analytics.js');
+
+// With callback (runs after script loads)
+loadOnConsent('analytics', 'https://example.com/script.js', () => {
+  console.log('Script loaded!');
+});
+
+// Works with custom cookie names - no extra config needed!
+createCookieBanner({
+  mode: 'gdpr',
+  cookieName: 'my_consent'  // loadOnConsent automatically inherits this
+});
+```
+
+**Note:** `loadOnConsent` automatically works with custom cookie names when you call `createCookieBanner`. The banner loads any pending scripts on init using its configured cookie name.
+
 ### Callback Approach (Full Control)
 
 ```javascript

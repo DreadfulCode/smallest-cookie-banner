@@ -888,6 +888,13 @@ export function createCookieBanner(config: CookieBannerConfig = {}): CookieBanne
         _status = null;
       }
     }
+
+    // Load any pending scripts registered with loadOnConsent() for return visitors
+    if (_consentState) {
+      _loadConsentedScripts(_consentState);
+    } else if (existing === '1') {
+      _loadConsentedScripts(true);
+    }
   }
 
   function handleConsent(accepted: boolean): void {
