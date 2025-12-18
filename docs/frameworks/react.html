@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>React - smallest-cookie-banner</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 40px 20px;
+      background: #fff;
+      color: #333;
+    }
+    h1 { font-size: 24px; margin-bottom: 8px; }
+    .framework { color: #666; font-size: 14px; margin-bottom: 24px; }
+    .status {
+      padding: 16px;
+      background: #f5f5f5;
+      border-radius: 8px;
+      margin-bottom: 24px;
+    }
+    .status strong { display: block; margin-bottom: 4px; }
+    .toggle-group {
+      display: flex;
+      gap: 0;
+      margin-bottom: 16px;
+    }
+    .toggle-group button {
+      padding: 8px 16px;
+      border: 1px solid #ddd;
+      background: #fff;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .toggle-group button:first-child {
+      border-radius: 6px 0 0 6px;
+    }
+    .toggle-group button:last-child {
+      border-radius: 0 6px 6px 0;
+      border-left: none;
+    }
+    .toggle-group button.active {
+      background: #333;
+      color: #fff;
+      border-color: #333;
+    }
+    button {
+      padding: 10px 20px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      background: #fff;
+      cursor: pointer;
+      margin-right: 8px;
+    }
+    button:hover { background: #f5f5f5; }
+    .toggle-group button.active:hover { background: #444; }
+    code {
+      display: block;
+      background: #f5f5f5;
+      padding: 16px;
+      border-radius: 8px;
+      margin-top: 24px;
+      font-size: 13px;
+      white-space: pre-wrap;
+    }
+    a { color: #0066cc; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- React via CDN -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+  <!-- Cookie Banner -->
+  <script src="../cookie-banner.min.js"></script>
+
+  <script>
+    const { useState, useEffect, useRef, useCallback } = React;
+
+    function App() {
+      const [status, setStatus] = useState('Checking...');
+      const [mode, setMode] = useState('minimal');
+      const bannerRef = useRef(null);
+
+      const createBanner = useCallback((bannerMode) => {
+        if (bannerRef.current) {
+          bannerRef.current.destroy(true);
+        }
+        bannerRef.current = window.createCookieBanner({
+          mode: bannerMode,
+          forceEU: true,
+          msg: 'We use cookies to enhance your experience.',
+          onAccept: () => setStatus('Accepted'),
+          onReject: () => setStatus('Rejected'),
+          onConsent: () => {
+            const s = bannerRef.current?.status;
+            setStatus(s === true ? 'Accepted' : s === false ? 'Rejected' : 'Pending');
+          }
+        });
+        bannerRef.current.show();
+
+        const s = bannerRef.current.status;
+        setStatus(s === true ? 'Accepted' : s === false ? 'Rejected' : 'Pending');
+      }, []);
+
+      useEffect(() => {
+        createBanner(mode);
+        return () => {
+          if (bannerRef.current) {
+            bannerRef.current.destroy();
+          }
+        };
+      }, []);
+
+      const handleModeChange = (newMode) => {
+        setMode(newMode);
+        createBanner(newMode);
+      };
+
+      const resetConsent = () => {
+        createBanner(mode);
+      };
+
+      const getCodeExample = () => {
+        const modeStr = mode === 'gdpr' ? "\n      mode: 'gdpr'," : '';
+        return `import { useEffect, useRef } from 'react';
+import { createCookieBanner } from 'smallest-cookie-banner';
+
+function App() {
+  const bannerRef = useRef(null);
+
+  useEffect(() => {
+    bannerRef.current = createCookieBanner({${modeStr}
+      msg: 'We use cookies to enhance your experience.',
+    });
+    bannerRef.current.show();
+
+    return () => bannerRef.current?.destroy();
+  }, []);
+
+  return <div>My App</div>;
+}`;
+      };
+
+      return React.createElement('div', null,
+        React.createElement('h1', null, 'smallest-cookie-banner'),
+        React.createElement('p', { className: 'framework' }, 'React 18'),
+        React.createElement('div', { className: 'toggle-group' },
+          React.createElement('button', {
+            className: mode === 'minimal' ? 'active' : '',
+            onClick: () => handleModeChange('minimal')
+          }, 'Minimal'),
+          React.createElement('button', {
+            className: mode === 'gdpr' ? 'active' : '',
+            onClick: () => handleModeChange('gdpr')
+          }, 'GDPR')
+        ),
+        React.createElement('div', { className: 'status' },
+          React.createElement('strong', null, 'Consent Status:'),
+          React.createElement('span', null, status)
+        ),
+        React.createElement('button', { onClick: resetConsent }, 'Reset Consent'),
+        React.createElement('a', { href: 'index.html' }, 'Back to frameworks'),
+        React.createElement('code', null, getCodeExample())
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(
+      React.createElement(App)
+    );
+  </script>
+</body>
+</html>

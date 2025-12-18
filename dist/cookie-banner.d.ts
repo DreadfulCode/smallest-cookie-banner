@@ -1,10 +1,10 @@
 /**
  * smallest-cookie-banner
- * The smallest legally compliant cookie consent banner
+ * A minimal cookie consent banner
  *
  * Features:
- * - EU: Full GDPR compliance (accept/reject required)
- * - Everywhere else: Implied consent (auto-dismiss notice)
+ * - GDPR mode: explicit accept/reject
+ * - Minimal mode: simple acknowledgment
  * - SSR-safe (works with Next.js, Nuxt, etc.)
  * - Framework-friendly (React, Vue, Angular, Svelte)
  * - Tree-shakeable ES modules
@@ -33,9 +33,48 @@ export interface ConsentState {
 export type BannerMode = 'minimal' | 'gdpr';
 /** Default categories for GDPR mode */
 export declare const DEFAULT_CATEGORIES: CookieCategory[];
+/** Consent widget configuration for managing preferences after initial consent */
+export interface ConsentWidgetConfig {
+    /** Enable the floating consent widget (default: false) */
+    enabled?: boolean;
+    /** Widget position: 'bottom-left' | 'bottom-right' (default: 'bottom-left') */
+    position?: 'bottom-left' | 'bottom-right';
+    /** Widget text (default: "🍪") */
+    text?: string;
+    /** Widget aria-label (default: "Manage cookie preferences") */
+    ariaLabel?: string;
+}
+/** Consent record with audit trail metadata */
+export interface ConsentRecord {
+    /** Consent state for each category */
+    state: ConsentState;
+    /** ISO 8601 timestamp when consent was given */
+    timestamp: string;
+    /** Version of the consent policy (optional) */
+    policyVersion?: string;
+    /** How consent was given */
+    method: 'banner' | 'widget' | 'api';
+}
+/** Tab configuration for tabbed UI */
+export interface TabConfig {
+    /** Enable tabbed UI (default: true) */
+    enabled?: boolean;
+    /** Toast/modal layout - stacked with tabs on top (default: false = inline) */
+    toast?: boolean;
+    /** Consent tab label (default: "Consent") */
+    consentLabel?: string;
+    /** Details tab label (default: "Details") */
+    detailsLabel?: string;
+    /** About tab label (default: "About") */
+    aboutLabel?: string;
+    /** About tab content - custom HTML or use default boilerplate */
+    aboutContent?: string;
+}
 export interface CookieBannerConfig {
     /** Banner mode: 'minimal' (default) or 'gdpr' for granular consent */
     mode?: BannerMode;
+    /** Tabbed UI configuration */
+    tabs?: TabConfig;
     /** Banner message text */
     msg?: string;
     /** Accept button text (default: "Accept All") */
@@ -52,7 +91,13 @@ export interface CookieBannerConfig {
     privacyPolicyUrl?: string;
     /** Privacy policy link text (default: "Privacy Policy") */
     privacyPolicyText?: string;
-    /** Cookie name (default: "ck") */
+    /** Banner ARIA label for accessibility (default: "Cookie consent") */
+    bannerAriaLabel?: string;
+    /** Label for required categories (default: "(Required)") */
+    requiredLabel?: string;
+    /** Text direction for RTL languages: 'ltr' | 'rtl' | 'auto' (default: inherits from page) */
+    dir?: 'ltr' | 'rtl' | 'auto';
+    /** Cookie name (default: "cookie_consent") */
     cookieName?: string;
     /** Cookie expiry in days (default: 365, max: 3650) */
     days?: number;
@@ -62,6 +107,8 @@ export interface CookieBannerConfig {
     forceEU?: boolean;
     /** Milliseconds before auto-accept in non-EU mode (default: 5000, 0 to disable, max: 300000) */
     autoAcceptDelay?: number;
+    /** Auto-accept on scroll in non-EU mode (default: false) */
+    autoAcceptOnScroll?: boolean;
     /** Additional inline styles for the banner element (sanitized for security) */
     style?: string;
     /** Additional CSS rules to inject (sanitized for security) */
@@ -70,8 +117,14 @@ export interface CookieBannerConfig {
     container?: HTMLElement;
     /** CSP nonce for inline styles */
     cspNonce?: string;
-    /** Callback when user saves consent (receives consent state) */
-    onConsent?: (consent: ConsentState) => void;
+    /** Policy version for audit trail (e.g., "1.0", "2024-01") */
+    policyVersion?: string;
+    /** Consent widget configuration for managing preferences after consent */
+    widget?: ConsentWidgetConfig;
+    /** Allow multiple banner instances (default: false - singleton behavior) */
+    allowMultiple?: boolean;
+    /** Callback when user saves consent (receives consent record with metadata) */
+    onConsent?: (consent: ConsentState, record?: ConsentRecord) => void;
     /** Callback when user accepts all */
     onAccept?: () => void;
     /** Callback when user rejects all */
@@ -86,6 +139,8 @@ export interface CookieBannerInstance {
     readonly status: boolean | null;
     /** Get granular consent state (returns null if no consent yet) */
     getConsent(): ConsentState | null;
+    /** Get full consent record with audit metadata (returns null if no consent yet) */
+    getConsentRecord(): ConsentRecord | null;
     /** Check if a specific category is enabled */
     hasConsent(categoryId: string): boolean;
     /** Accept all consent programmatically */
@@ -102,6 +157,10 @@ export interface CookieBannerInstance {
     destroy(clearCookie?: boolean): void;
     /** Check if banner is currently visible */
     isVisible(): boolean;
+    /** Show/hide the consent management widget */
+    showWidget(): void;
+    /** Hide the consent management widget */
+    hideWidget(): void;
 }
 export interface LegacyCookieBannerAPI {
     readonly ok: boolean | null;
@@ -121,14 +180,21 @@ declare global {
         CookieBannerConfig?: CookieBannerConfig;
     }
 }
+/** Default About tab content - cookie law boilerplate (concise) */
+export declare const DEFAULT_ABOUT_CONTENT = "<p>Cookies are small text files stored on your device to improve your experience.</p>\n<p>We require your consent for non-essential cookies per GDPR Art. 6. You can change your preferences at any time.</p>\n<p style=\"margin-top:10px;font-size:10px;opacity:0.5\">Powered by <a href=\"https://github.com/DreadfulCode/smallest-cookie-banner\" target=\"_blank\" rel=\"noopener\" style=\"color:inherit\">smallest-cookie-banner</a></p>";
 /** Default CSS - uses CSS custom properties for easy overrides */
 /** Includes WCAG 2.1 AA compliant touch targets (44x44px min) */
-export declare const DEFAULT_CSS = "#ckb{position:var(--ckb-position,fixed);bottom:var(--ckb-bottom,0);top:var(--ckb-top,auto);left:var(--ckb-left,0);right:var(--ckb-right,0);padding:var(--ckb-padding,12px 16px);background:var(--ckb-bg,#222);color:var(--ckb-color,#fff);font:var(--ckb-font,14px/1.4 system-ui,sans-serif);display:flex;align-items:center;gap:var(--ckb-gap,12px);z-index:var(--ckb-z,9999);flex-wrap:wrap}#ckb:focus{outline:2px solid var(--ckb-focus-color,#4299e1);outline-offset:2px}#ckb p{margin:0;flex:1;min-width:200px}#ckb a{color:inherit}#ckb button{min-height:44px;min-width:44px;padding:var(--ckb-btn-padding,10px 20px);border:var(--ckb-btn-border,none);border-radius:var(--ckb-btn-radius,4px);background:var(--ckb-btn-bg,#fff);color:var(--ckb-btn-color,#222);font:inherit;cursor:pointer;touch-action:manipulation}#ckb button:focus{outline:2px solid var(--ckb-focus-color,#4299e1);outline-offset:2px}#ckb button:hover{opacity:0.9}#ckb #ckn{background:var(--ckb-reject-bg,transparent);color:var(--ckb-reject-color,inherit);border:var(--ckb-reject-border,1px solid currentColor)}#ckb #cks{background:var(--ckb-settings-bg,transparent);color:var(--ckb-settings-color,inherit);border:var(--ckb-settings-border,1px solid currentColor)}#ckb-cats{display:none;width:100%;padding:12px 0;border-top:1px solid rgba(255,255,255,0.2);margin-top:8px}#ckb.expanded #ckb-cats{display:block}#ckb-cats label{display:flex;align-items:flex-start;gap:10px;padding:8px 0;cursor:pointer}#ckb-cats input[type=checkbox]{width:20px;height:20px;margin:2px 0;accent-color:var(--ckb-btn-bg,#fff)}#ckb-cats .cat-info{flex:1}#ckb-cats .cat-name{font-weight:600}#ckb-cats .cat-desc{font-size:12px;opacity:0.8;margin-top:2px}#ckb-cats .cat-req{opacity:0.6;font-size:11px}@media(prefers-reduced-motion:reduce){#ckb,#ckb *{transition:none!important;animation:none!important}}";
+export declare const DEFAULT_CSS: string;
 /**
  * Sanitize CSS to prevent injection attacks
  * Blocks: @import, url() with external URLs, expression(), behavior:, -moz-binding, HTML tags
  */
 export declare function sanitizeCss(css: string): string;
+/**
+ * Sanitize URLs to prevent javascript: XSS and phishing
+ * Only allows http:, https:, and relative URLs
+ */
+export declare function sanitizeUrl(url: string): string;
 /**
  * Sanitize inline styles (more restrictive than CSS blocks)
  */
@@ -164,13 +230,66 @@ export declare function parseGranularConsent(value: string | null, categories?: 
  */
 export declare function encodeGranularConsent(state: ConsentState): string;
 /**
+ * Inject styles (once per ID) - kept for backwards compatibility
+ * @internal In v2.0, styles are injected into Shadow DOM instead
+ */
+declare function _injectStyles(id: string, css: string, nonce?: string): void;
+export { _injectStyles as injectStyles };
+/**
+ * Register a script to load only after consent is given for a category.
+ * Scripts are loaded automatically when consent is granted via the banner.
+ *
+ * @param category - Consent category (e.g., 'analytics', 'marketing', 'functional')
+ * @param src - Script URL to load
+ * @param callback - Optional callback after script loads
+ *
+ * @example
+ * // Register scripts before creating banner
+ * loadOnConsent('analytics', 'https://www.googletagmanager.com/gtag/js?id=G-XXXXX');
+ * loadOnConsent('marketing', 'https://connect.facebook.net/en_US/fbevents.js');
+ *
+ * // Banner handles loading automatically
+ * createCookieBanner({ mode: 'gdpr', forceEU: true });
+ */
+export declare function loadOnConsent(category: string, src: string, callback?: () => void): void;
+/**
+ * Load pending scripts for consented categories.
+ * Called automatically by createCookieBanner on consent.
+ * @internal
+ */
+export declare function _loadConsentedScripts(consent: ConsentState | boolean): void;
+/**
+ * Scan DOM for blocked scripts and register them for consent-based loading.
+ * Looks for: <script type="text/plain" data-consent="category" data-src="url">
+ *
+ * @example
+ * // In HTML:
+ * // <script type="text/plain" data-consent="analytics" data-src="https://..."></script>
+ *
+ * // In JS:
+ * blockScriptsUntilConsent();
+ * createCookieBanner({ mode: 'gdpr', forceEU: true });
+ */
+export declare function blockScriptsUntilConsent(): void;
+/**
+ * Clear script registry (for testing)
+ * @internal
+ */
+export declare function _resetScriptRegistry(): void;
+/**
+ * Reset singleton state (for testing only)
+ * @internal
+ */
+export declare function _resetSingleton(): void;
+/**
  * Create a new cookie banner instance
  * Framework-friendly: no global state, proper cleanup, SSR-safe
+ *
+ * By default, prevents duplicate banners. Set `config.allowMultiple = true` to override.
  */
 export declare function createCookieBanner(config?: CookieBannerConfig): CookieBannerInstance;
 /**
- * Initialize with legacy global API (window.CookieBanner)
+ * Set up the global window.CookieBanner API
  * Called automatically when loaded via script tag
  */
-export declare function initLegacy(): LegacyCookieBannerAPI | null;
-export {};
+export declare function setup(): LegacyCookieBannerAPI | null;

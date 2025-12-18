@@ -426,10 +426,13 @@
       flex-wrap: wrap;
     }
 
+    .banner-preview #preview-tabs {
+      width: 100%;
+      margin-bottom: 8px;
+    }
+
     .banner-preview p {
       margin: 0;
-      flex: 1;
-      min-width: 200px;
     }
 
     .banner-preview button {
@@ -558,17 +561,6 @@
       color: #fff;
     }
 
-    .bookmarklet-btn {
-      text-decoration: none;
-      cursor: grab;
-      border: 2px dashed #4a9eff !important;
-      background: rgba(74, 158, 255, 0.1) !important;
-    }
-
-    .bookmarklet-btn:hover {
-      background: rgba(74, 158, 255, 0.2) !important;
-      border-style: solid !important;
-    }
     .code-body .number { color: #b5cea8; }
 
     /* Modal */
@@ -789,12 +781,75 @@
         color: #e0e0e0;
       }
     }
+
+    /* Demo Modal */
+    #demo-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 99999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .demo-modal-backdrop {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.6);
+    }
+    .demo-modal-content {
+      position: relative;
+      background: #1a1a2e;
+      border-radius: 12px;
+      padding: 20px;
+      width: 90%;
+      max-width: 800px;
+      max-height: 90vh;
+    }
+    .demo-modal-close {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      background: none;
+      border: none;
+      color: #888;
+      font-size: 28px;
+      cursor: pointer;
+      line-height: 1;
+    }
+    .demo-modal-close:hover {
+      color: #fff;
+    }
+    .demo-modal-header {
+      font-size: 14px;
+      color: #888;
+      margin-bottom: 15px;
+      text-transform: capitalize;
+    }
+    .demo-modal-frame {
+      position: relative;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 8px;
+      height: 400px;
+      overflow: hidden;
+    }
   </style>
 </head>
 <body>
   <header class="header">
-    <h1><span>🍪</span> Cookie Banner Configurator</h1>
+    <h1><span>🍪</span> Cookie Banner Configurator <a href="https://www.npmjs.com/package/smallest-cookie-banner" target="_blank" style="font-size:12px;background:#cb3837;color:#fff;padding:2px 8px;border-radius:4px;text-decoration:none;margin-left:8px;font-weight:normal;">v2.1.0</a></h1>
     <div class="header-links">
+      <a href="https://vibecodingwithfred.com/blog/gdpr-cookie-banner-cdn/" target="_blank">
+        Read more about the library and see it in action on my blog
+      </a>
+      <a href="frameworks/">
+        Framework Examples
+      </a>
       <a href="https://github.com/DreadfulCode/smallest-cookie-banner" target="_blank">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
         GitHub
@@ -811,9 +866,9 @@
     <div class="hero-content">
       <p class="hero-tagline">The smallest legally compliant cookie consent banner in existence.</p>
       <div class="hero-stats">
-        <div class="stat"><strong>~2KB</strong><span>gzipped</span></div>
+        <div class="stat"><strong>~7KB</strong><span>gzipped</span></div>
         <div class="stat"><strong>0</strong><span>dependencies</span></div>
-        <div class="stat"><strong>86</strong><span>tests</span></div>
+        <div class="stat"><strong>307</strong><span>tests</span></div>
         <div class="stat"><strong>100%</strong><span>TypeScript</span></div>
       </div>
       <div class="hero-features">
@@ -828,6 +883,28 @@
   <div class="layout">
     <!-- Sidebar Controls -->
     <div class="sidebar">
+      <!-- Banner Mode - FIRST CHOICE -->
+      <div class="section" style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); margin: -20px -20px 20px -20px; padding: 20px; border-radius: 0;">
+        <h2 style="color: #0369a1;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+          Banner Mode
+        </h2>
+        <div class="field" style="margin-bottom: 0;">
+          <select id="bannerMode" style="font-size: 15px; padding: 10px 12px; font-weight: 500;">
+            <option value="minimal">Minimal - Simple Accept/Reject</option>
+            <option value="gdpr">GDPR - Granular Consent Categories</option>
+          </select>
+          <div class="help-text" style="margin-top: 8px;">
+            <strong>Minimal:</strong> Quick accept/reject buttons<br>
+            <strong>GDPR:</strong> Cookie categories (analytics, marketing, etc.)
+          </div>
+        </div>
+        <div class="checkbox-field" style="margin-top: 12px;">
+          <input type="checkbox" id="enableTabs" checked>
+          <label for="enableTabs">Enable Tabbed UI (Consent/Details/About)</label>
+        </div>
+      </div>
+
       <!-- Theme Presets -->
       <div class="section">
         <h2>
@@ -842,10 +919,6 @@
           <div class="preset" data-preset="light" onclick="applyPreset('light')">
             <div class="preset-preview" style="background:#fff;border:1px solid #ddd"></div>
             Light
-          </div>
-          <div class="preset" data-preset="gradient" onclick="applyPreset('gradient')">
-            <div class="preset-preview" style="background:linear-gradient(135deg,#667eea,#764ba2)"></div>
-            Gradient
           </div>
           <div class="preset" data-preset="minimal" onclick="applyPreset('minimal')">
             <div class="preset-preview" style="background:#f8f8f8;border:1px solid #e0e0e0"></div>
@@ -880,6 +953,27 @@
         </h2>
         <div class="section-content">
           <div class="field">
+            <label>Language Preset</label>
+            <select id="languagePreset" onchange="applyLanguage(this.value)">
+              <option value="en">English</option>
+              <option value="nl">Nederlands (Dutch)</option>
+              <option value="de">Deutsch (German)</option>
+              <option value="fr">Français (French)</option>
+              <option value="es">Español (Spanish)</option>
+              <option value="it">Italiano (Italian)</option>
+              <option value="pt">Português (Portuguese)</option>
+              <option value="pl">Polski (Polish)</option>
+              <option value="ru">Русский (Russian)</option>
+              <option value="uk">Українська (Ukrainian)</option>
+              <option value="zh">中文 (Chinese)</option>
+              <option value="ja">日本語 (Japanese)</option>
+              <option value="ko">한국어 (Korean)</option>
+              <option value="ar">العربية (Arabic) ← RTL</option>
+              <option value="he">עברית (Hebrew) ← RTL</option>
+              <option value="custom">Custom</option>
+            </select>
+          </div>
+          <div class="field">
             <label>Message</label>
             <textarea id="msg">We use cookies to enhance your experience.</textarea>
           </div>
@@ -893,6 +987,24 @@
               <input type="text" id="rejectText" value="Decline">
             </div>
           </div>
+          <!-- GDPR-specific text options -->
+          <div id="gdpr-text-options" style="display:none;margin-top:12px;padding-top:12px;border-top:1px dashed #ddd;">
+            <div class="help-text" style="margin-bottom:8px;color:#0369a1;font-weight:500;">GDPR Mode Text Options:</div>
+            <div class="field-row">
+              <div class="field">
+                <label>Customize Button</label>
+                <input type="text" id="settingsText" value="Customize">
+              </div>
+              <div class="field">
+                <label>Save Button</label>
+                <input type="text" id="saveText" value="Save Preferences">
+              </div>
+            </div>
+            <div class="field">
+              <label>Privacy Link Text</label>
+              <input type="text" id="privacyPolicyText" value="Privacy Policy">
+            </div>
+          </div>
         </div>
       </div>
 
@@ -904,26 +1016,17 @@
         </h2>
         <div class="section-content">
           <div class="field">
-            <label>Banner Mode</label>
-            <select id="bannerMode">
-              <option value="minimal">Minimal (simple accept/reject)</option>
-              <option value="gdpr">GDPR (granular consent categories)</option>
-            </select>
-            <div class="help-text">GDPR mode shows cookie category checkboxes</div>
-          </div>
-          <div class="field">
-            <label>Region Mode</label>
+            <label>Consent Mode</label>
             <select id="mode">
-              <option value="auto">Auto-detect (EU vs non-EU)</option>
-              <option value="eu">Force EU mode (always show reject)</option>
-              <option value="non-eu">Force non-EU mode (auto-accept)</option>
+              <option value="eu">GDPR mode (accept/reject) — default</option>
+              <option value="non-eu">Minimal mode (OK button only)</option>
             </select>
           </div>
           <div class="field-row">
             <div class="field">
               <label>Auto-accept (ms)</label>
-              <input type="number" id="autoAcceptDelay" value="5000" min="0" step="1000">
-              <div class="help-text">Non-EU only. 0 = disabled</div>
+              <input type="number" id="autoAcceptDelay" value="0" min="0" step="1000">
+              <div class="help-text">Minimal mode only. 0 = disabled</div>
             </div>
             <div class="field">
               <label>Cookie expiry (days)</label>
@@ -1136,14 +1239,6 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
             How to Use
           </button>
-          <a class="btn btn-secondary bookmarklet-btn" id="bookmarklet-link" href="#" title="Drag this to your bookmarks bar!">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
-            ⬆️ Drag to Bookmarks
-          </a>
-          <button class="btn btn-secondary" onclick="tryOnCodePen()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/><line x1="12" y1="22" x2="12" y2="15.5"/><polyline points="22 8.5 12 15.5 2 8.5"/></svg>
-            CodePen
-          </button>
           <button class="btn btn-primary" onclick="copyCode()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
             Copy Code
@@ -1151,34 +1246,10 @@
         </div>
       </div>
 
-      <!-- Live Banner Preview -->
+      <!-- Live Banner Preview - Real library renders here -->
       <div class="banner-preview-container" id="banner-preview-container">
         <h3>Live Preview</h3>
-        <div class="banner-preview" id="banner-preview">
-          <p id="preview-msg">We use cookies to enhance your experience. <span id="preview-links" style="display:none;font-size:12px;opacity:0.8;"></span></p>
-          <div id="preview-categories" style="display:none;width:100%;padding:12px 0;border-top:1px solid rgba(255,255,255,0.2);margin-top:8px;">
-            <label style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;cursor:pointer;">
-              <input type="checkbox" checked disabled style="width:20px;height:20px;">
-              <div><div style="font-weight:600">Essential <span style="opacity:0.6;font-size:11px">(Required)</span></div><div style="font-size:12px;opacity:0.8">Required for the website to function</div></div>
-            </label>
-            <label style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;cursor:pointer;">
-              <input type="checkbox" style="width:20px;height:20px;">
-              <div><div style="font-weight:600">Analytics</div><div style="font-size:12px;opacity:0.8">Help us understand how visitors use our site</div></div>
-            </label>
-            <label style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;cursor:pointer;">
-              <input type="checkbox" style="width:20px;height:20px;">
-              <div><div style="font-weight:600">Marketing</div><div style="font-size:12px;opacity:0.8">Used to deliver relevant ads</div></div>
-            </label>
-            <label style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;cursor:pointer;">
-              <input type="checkbox" style="width:20px;height:20px;">
-              <div><div style="font-weight:600">Functional</div><div style="font-size:12px;opacity:0.8">Enable enhanced features and personalization</div></div>
-            </label>
-          </div>
-          <button class="settings-btn" id="preview-settings" onclick="togglePreviewCategories()" style="display:none;background:transparent;color:inherit;border:1px solid currentColor;">Customize</button>
-          <button class="save-btn" id="preview-save" style="display:none;">Save Preferences</button>
-          <button class="reject-btn" id="preview-reject">Decline</button>
-          <button id="preview-accept">Accept</button>
-        </div>
+        <div id="live-banner-container" style="position:relative;min-height:80px;width:100%;margin-top:4px;"></div>
       </div>
 
       <div class="code-output">
@@ -1204,9 +1275,7 @@
         </div>
         <div class="code-help">
           <strong>How to use:</strong>
-          1. Copy code → paste <code>&lt;style&gt;</code> in <code>&lt;head&gt;</code>, <code>&lt;script&gt;</code> before <code>&lt;/body&gt;</code>
-          <br>
-          <strong>Or test first:</strong> Drag "⬆️ Drag to Bookmarks" to your bookmarks bar, then click it on any website to preview!
+          Copy code → paste <code>&lt;style&gt;</code> in <code>&lt;head&gt;</code>, <code>&lt;script&gt;</code> before <code>&lt;/body&gt;</code>
         </div>
       </div>
     </div>
@@ -1242,9 +1311,6 @@
 
         <h3>GDPR Mode</h3>
         <p>For full GDPR compliance with granular consent categories, set <strong>Banner Mode</strong> to "GDPR" in the Behavior section. This shows users checkboxes for each cookie type (Essential, Analytics, Marketing, Functional).</p>
-
-        <h3>Testing</h3>
-        <p>Use the <strong>Drag to Bookmarks</strong> button to create a bookmarklet you can run on any website to preview your banner configuration.</p>
 
         <h3>Documentation</h3>
         <p><a href="https://github.com/DreadfulCode/smallest-cookie-banner" target="_blank">View full documentation on GitHub →</a></p>
@@ -1302,14 +1368,6 @@
         rejectBg: 'transparent',
         focusColor: '#2563eb'
       },
-      gradient: {
-        bgColor: '#667eea',
-        textColor: '#ffffff',
-        btnBg: '#ffffff',
-        btnColor: '#667eea',
-        rejectBg: 'transparent',
-        focusColor: '#ffffff'
-      },
       minimal: {
         bgColor: '#f8f8f8',
         textColor: '#333333',
@@ -1326,6 +1384,7 @@
       acceptText: document.getElementById('acceptText'),
       rejectText: document.getElementById('rejectText'),
       bannerMode: document.getElementById('bannerMode'),
+      enableTabs: document.getElementById('enableTabs'),
       mode: document.getElementById('mode'),
       autoAcceptDelay: document.getElementById('autoAcceptDelay'),
       days: document.getElementById('days'),
@@ -1356,7 +1415,18 @@
       customCss: document.getElementById('customCss'),
       privacyUrl: document.getElementById('privacyUrl'),
       termsUrl: document.getElementById('termsUrl'),
+      settingsText: document.getElementById('settingsText'),
+      saveText: document.getElementById('saveText'),
+      privacyPolicyText: document.getElementById('privacyPolicyText'),
     };
+
+    // Show/hide GDPR text options based on banner mode
+    const gdprTextOptions = document.getElementById('gdpr-text-options');
+    inputs.bannerMode?.addEventListener('change', () => {
+      const isGdpr = inputs.bannerMode.value === 'gdpr';
+      if (gdprTextOptions) gdprTextOptions.style.display = isGdpr ? 'block' : 'none';
+      updatePreview();
+    });
 
     // Sync color inputs
     ['bgColor', 'textColor', 'btnBg', 'btnColor', 'rejectBg', 'focusColor'].forEach(name => {
@@ -1422,6 +1492,7 @@
         acceptText: inputs.acceptText.value,
         rejectText: inputs.rejectText.value,
         bannerMode: inputs.bannerMode.value,
+        enableTabs: inputs.enableTabs.checked,
         mode: inputs.mode.value,
         autoAcceptDelay: parseInt(inputs.autoAcceptDelay.value) || 5000,
         days: parseInt(inputs.days.value) || 365,
@@ -1446,19 +1517,10 @@
         customCss: inputs.customCss.value,
         privacyUrl: inputs.privacyUrl.value.trim(),
         termsUrl: inputs.termsUrl.value.trim(),
+        settingsText: inputs.settingsText.value,
+        saveText: inputs.saveText.value,
+        privacyPolicyText: inputs.privacyPolicyText.value,
       };
-    }
-
-    // Toggle preview categories (for GDPR mode demo)
-    let previewCategoriesExpanded = false;
-    function togglePreviewCategories() {
-      previewCategoriesExpanded = !previewCategoriesExpanded;
-      const categories = document.getElementById('preview-categories');
-      const saveBtn = document.getElementById('preview-save');
-      const settingsBtn = document.getElementById('preview-settings');
-      categories.style.display = previewCategoriesExpanded ? 'block' : 'none';
-      saveBtn.style.display = previewCategoriesExpanded ? 'inline-block' : 'none';
-      settingsBtn.textContent = previewCategoriesExpanded ? 'Hide Options' : 'Customize';
     }
 
     // Apply preset
@@ -1491,6 +1553,185 @@
       if (quickText && preset.textColor.startsWith('#')) quickText.value = preset.textColor;
       if (quickBtnBg && preset.btnBg.startsWith('#')) quickBtnBg.value = preset.btnBg;
       if (quickBtnColor && preset.btnColor.startsWith('#')) quickBtnColor.value = preset.btnColor;
+
+      updatePreview();
+    }
+
+    // Language presets
+    const languages = {
+      en: {
+        msg: 'We use cookies to enhance your experience.',
+        acceptText: 'Accept',
+        rejectText: 'Decline',
+        settingsText: 'Customize',
+        saveText: 'Save Preferences',
+        privacyPolicyText: 'Privacy Policy',
+        requiredLabel: '(Required)',
+        dir: 'ltr'
+      },
+      nl: {
+        msg: 'Wij gebruiken cookies om uw ervaring te verbeteren.',
+        acceptText: 'Accepteren',
+        rejectText: 'Weigeren',
+        settingsText: 'Aanpassen',
+        saveText: 'Voorkeuren opslaan',
+        privacyPolicyText: 'Privacybeleid',
+        requiredLabel: '(Vereist)',
+        dir: 'ltr'
+      },
+      de: {
+        msg: 'Wir verwenden Cookies, um Ihre Erfahrung zu verbessern.',
+        acceptText: 'Akzeptieren',
+        rejectText: 'Ablehnen',
+        settingsText: 'Anpassen',
+        saveText: 'Einstellungen speichern',
+        privacyPolicyText: 'Datenschutz',
+        requiredLabel: '(Erforderlich)',
+        dir: 'ltr'
+      },
+      fr: {
+        msg: 'Nous utilisons des cookies pour améliorer votre expérience.',
+        acceptText: 'Accepter',
+        rejectText: 'Refuser',
+        settingsText: 'Personnaliser',
+        saveText: 'Enregistrer',
+        privacyPolicyText: 'Politique de confidentialité',
+        requiredLabel: '(Requis)',
+        dir: 'ltr'
+      },
+      es: {
+        msg: 'Usamos cookies para mejorar tu experiencia.',
+        acceptText: 'Aceptar',
+        rejectText: 'Rechazar',
+        settingsText: 'Personalizar',
+        saveText: 'Guardar preferencias',
+        privacyPolicyText: 'Política de privacidad',
+        requiredLabel: '(Requerido)',
+        dir: 'ltr'
+      },
+      it: {
+        msg: 'Utilizziamo i cookie per migliorare la tua esperienza.',
+        acceptText: 'Accetta',
+        rejectText: 'Rifiuta',
+        settingsText: 'Personalizza',
+        saveText: 'Salva preferenze',
+        privacyPolicyText: 'Privacy Policy',
+        requiredLabel: '(Obbligatorio)',
+        dir: 'ltr'
+      },
+      pt: {
+        msg: 'Usamos cookies para melhorar sua experiência.',
+        acceptText: 'Aceitar',
+        rejectText: 'Recusar',
+        settingsText: 'Personalizar',
+        saveText: 'Salvar preferências',
+        privacyPolicyText: 'Política de Privacidade',
+        requiredLabel: '(Obrigatório)',
+        dir: 'ltr'
+      },
+      pl: {
+        msg: 'Używamy plików cookie, aby poprawić Twoje wrażenia.',
+        acceptText: 'Akceptuj',
+        rejectText: 'Odrzuć',
+        settingsText: 'Dostosuj',
+        saveText: 'Zapisz preferencje',
+        privacyPolicyText: 'Polityka prywatności',
+        requiredLabel: '(Wymagane)',
+        dir: 'ltr'
+      },
+      ru: {
+        msg: 'Мы используем файлы cookie для улучшения вашего опыта.',
+        acceptText: 'Принять',
+        rejectText: 'Отклонить',
+        settingsText: 'Настроить',
+        saveText: 'Сохранить настройки',
+        privacyPolicyText: 'Политика конфиденциальности',
+        requiredLabel: '(Обязательно)',
+        dir: 'ltr'
+      },
+      uk: {
+        msg: 'Ми використовуємо файли cookie для покращення вашого досвіду.',
+        acceptText: 'Прийняти',
+        rejectText: 'Відхилити',
+        settingsText: 'Налаштувати',
+        saveText: 'Зберегти налаштування',
+        privacyPolicyText: 'Політика конфіденційності',
+        requiredLabel: '(Обов\'язково)',
+        dir: 'ltr'
+      },
+      zh: {
+        msg: '我们使用cookies来提升您的体验。',
+        acceptText: '接受',
+        rejectText: '拒绝',
+        settingsText: '自定义',
+        saveText: '保存设置',
+        privacyPolicyText: '隐私政策',
+        requiredLabel: '(必需)',
+        dir: 'ltr'
+      },
+      ja: {
+        msg: 'このサイトはクッキーを使用しています。',
+        acceptText: '同意する',
+        rejectText: '拒否する',
+        settingsText: 'カスタマイズ',
+        saveText: '設定を保存',
+        privacyPolicyText: 'プライバシーポリシー',
+        requiredLabel: '(必須)',
+        dir: 'ltr'
+      },
+      ko: {
+        msg: '저희는 경험을 향상시키기 위해 쿠키를 사용합니다.',
+        acceptText: '동의',
+        rejectText: '거부',
+        settingsText: '사용자 정의',
+        saveText: '설정 저장',
+        privacyPolicyText: '개인정보처리방침',
+        requiredLabel: '(필수)',
+        dir: 'ltr'
+      },
+      ar: {
+        msg: 'نستخدم ملفات تعريف الارتباط لتحسين تجربتك.',
+        acceptText: 'قبول',
+        rejectText: 'رفض',
+        settingsText: 'تخصيص',
+        saveText: 'حفظ التفضيلات',
+        privacyPolicyText: 'سياسة الخصوصية',
+        requiredLabel: '(مطلوب)',
+        dir: 'rtl'
+      },
+      he: {
+        msg: 'אנחנו משתמשים בעוגיות כדי לשפר את החוויה שלך.',
+        acceptText: 'אישור',
+        rejectText: 'דחייה',
+        settingsText: 'התאמה אישית',
+        saveText: 'שמור העדפות',
+        privacyPolicyText: 'מדיניות פרטיות',
+        requiredLabel: '(נדרש)',
+        dir: 'rtl'
+      }
+    };
+
+    // Apply language preset
+    function applyLanguage(lang) {
+      if (lang === 'custom') return;
+      const l = languages[lang];
+      if (!l) return;
+
+      if (inputs.msg) inputs.msg.value = l.msg;
+      if (inputs.acceptText) inputs.acceptText.value = l.acceptText;
+      if (inputs.rejectText) inputs.rejectText.value = l.rejectText;
+
+      const settingsText = document.getElementById('settingsText');
+      const saveText = document.getElementById('saveText');
+      const privacyPolicyText = document.getElementById('privacyPolicyText');
+
+      if (settingsText) settingsText.value = l.settingsText;
+      if (saveText) saveText.value = l.saveText;
+      if (privacyPolicyText) privacyPolicyText.value = l.privacyPolicyText;
+
+      // Store required label and direction for code generation
+      window._langRequiredLabel = l.requiredLabel;
+      window._langDir = l.dir;
 
       updatePreview();
     }
@@ -1549,6 +1790,13 @@
       if (currentTab === 'json') {
         const jsonConfig = {};
         if (config.bannerMode === 'gdpr') jsonConfig.mode = 'gdpr';
+        // Tabs config (v2.0)
+        const isToast = ['bottom-left', 'bottom-right', 'center'].includes(config.position);
+        if (!config.enableTabs) {
+          jsonConfig.tabs = { enabled: false };
+        } else if (isToast) {
+          jsonConfig.tabs = { toast: true };
+        }
         jsonConfig.msg = config.msg;
         jsonConfig.acceptText = config.acceptText;
         jsonConfig.rejectText = config.rejectText;
@@ -1600,6 +1848,16 @@
       if (config.bannerMode === 'gdpr') {
         configObj.push(`  mode: 'gdpr'`);
       }
+      // Tabs config (v2.0) - only output if disabled since enabled is default
+      if (!config.enableTabs) {
+        configObj.push(`  tabs: { enabled: false }`);
+      } else {
+        // For toast positions, add toast: true
+        const isToast = ['bottom-left', 'bottom-right', 'center'].includes(config.position);
+        if (isToast) {
+          configObj.push(`  tabs: { toast: true }`);
+        }
+      }
       if (config.msg !== 'We use cookies to enhance your experience.') {
         configObj.push(`  msg: '${escapeJs(config.msg)}'`);
       }
@@ -1618,11 +1876,28 @@
       if (config.days !== 365) {
         configObj.push(`  days: ${config.days}`);
       }
+      // Privacy policy URL (library uses privacyPolicyUrl)
       if (config.privacyUrl) {
-        configObj.push(`  privacyUrl: '${escapeJs(config.privacyUrl)}'`);
+        configObj.push(`  privacyPolicyUrl: '${escapeJs(config.privacyUrl)}'`);
       }
-      if (config.termsUrl) {
-        configObj.push(`  termsUrl: '${escapeJs(config.termsUrl)}'`);
+      // GDPR-specific options
+      if (config.bannerMode === 'gdpr') {
+        if (config.settingsText !== 'Customize') {
+          configObj.push(`  settingsText: '${escapeJs(config.settingsText)}'`);
+        }
+        if (config.saveText !== 'Save Preferences') {
+          configObj.push(`  saveText: '${escapeJs(config.saveText)}'`);
+        }
+      }
+      if (config.privacyUrl && config.privacyPolicyText !== 'Privacy Policy') {
+        configObj.push(`  privacyPolicyText: '${escapeJs(config.privacyPolicyText)}'`);
+      }
+      // Language-specific options
+      if (window._langRequiredLabel && window._langRequiredLabel !== '(Required)') {
+        configObj.push(`  requiredLabel: '${escapeJs(window._langRequiredLabel)}'`);
+      }
+      if (window._langDir === 'rtl') {
+        configObj.push(`  dir: 'rtl'`);
       }
 
       let cssVars = `  --ckb-bg: ${escapeHtml(config.bgColor)};
@@ -1657,108 +1932,81 @@ ${config.bannerMode === 'gdpr' ? `  onConsent: function(consent) {
   onReject: function() { <span class="comment">/* Respect choice */</span> }`}
 };
 <span class="keyword">&lt;/script&gt;</span>
-` : ''}<span class="keyword">&lt;script</span> <span class="property">src</span>=<span class="string">"https://unpkg.com/smallest-cookie-banner@latest/dist/cookie-banner.min.js"</span><span class="keyword">&gt;&lt;/script&gt;</span>`;
+` : ''}<span class="keyword">&lt;script</span> <span class="property">src</span>=<span class="string">"https://unpkg.com/smallest-cookie-banner@2/dist/cookie-banner.min.js"</span><span class="keyword">&gt;&lt;/script&gt;</span>`;
     }
 
-    // Update preview
+    // Live preview banner instance
+    let liveBanner = null;
+    let updateTimeout = null;
+
+    // Update preview using the REAL library
     function updatePreview() {
       const config = getConfig();
 
-      // Update live banner preview
-      const container = document.getElementById('banner-preview-container');
-      const banner = document.getElementById('banner-preview');
-      const fontValue = config.fontFamily === 'inherit' ? 'inherit' : `${config.fontSize}px/${config.lineHeight} ${config.fontFamily}`;
-
-      container.style.setProperty('--preview-bg', config.bgColor);
-      container.style.setProperty('--preview-color', config.textColor);
-      container.style.setProperty('--preview-btn-bg', config.btnBg);
-      container.style.setProperty('--preview-btn-color', config.btnColor);
-      container.style.setProperty('--preview-reject-bg', config.rejectBg);
-      container.style.setProperty('--preview-font', fontValue);
-      container.style.setProperty('--preview-padding', `${config.padding}px 16px`);
-      container.style.setProperty('--preview-gap', `${config.gap}px`);
-      container.style.setProperty('--preview-btn-padding', `${config.btnPaddingV}px ${config.btnPaddingH}px`);
-      container.style.setProperty('--preview-btn-radius', `${config.btnRadius}px`);
-      container.style.setProperty('--preview-radius', `${config.borderRadius}px`);
-
-      // Update text content
-      document.getElementById('preview-msg').textContent = config.msg;
-      document.getElementById('preview-accept').textContent = config.acceptText;
-      document.getElementById('preview-reject').textContent = config.rejectText;
-
-      // Update privacy/terms links
-      const linksSpan = document.getElementById('preview-links');
-      let linksHtml = [];
-      if (config.privacyUrl) linksHtml.push(`<a href="#" style="color:inherit;text-decoration:underline;">Privacy Policy</a>`);
-      if (config.termsUrl) linksHtml.push(`<a href="#" style="color:inherit;text-decoration:underline;">Terms</a>`);
-      if (linksHtml.length > 0) {
-        linksSpan.innerHTML = 'See our ' + linksHtml.join(' and ') + '.';
-        linksSpan.style.display = 'inline';
-      } else {
-        linksSpan.style.display = 'none';
-      }
-
-      // Show/hide reject button based on mode
-      const rejectBtn = document.getElementById('preview-reject');
-      rejectBtn.style.display = config.mode === 'non-eu' ? 'none' : 'inline-block';
-
-      // Show/hide GDPR elements based on banner mode
-      const isGdpr = config.bannerMode === 'gdpr';
-      // Reset expanded state when mode changes
-      if (!isGdpr) previewCategoriesExpanded = false;
-      // Categories start collapsed in GDPR mode, shown via Customize button
-      document.getElementById('preview-categories').style.display = (isGdpr && previewCategoriesExpanded) ? 'block' : 'none';
-      document.getElementById('preview-settings').style.display = isGdpr ? 'inline-block' : 'none';
-      document.getElementById('preview-save').style.display = (isGdpr && previewCategoriesExpanded) ? 'inline-block' : 'none';
-      document.getElementById('preview-settings').textContent = previewCategoriesExpanded ? 'Hide Options' : 'Customize';
-
-      // Update button text for GDPR mode
-      if (isGdpr) {
-        document.getElementById('preview-accept').textContent = 'Accept All';
-        if (config.mode !== 'non-eu') {
-          document.getElementById('preview-reject').textContent = 'Reject All';
-        }
-      } else {
-        document.getElementById('preview-accept').textContent = config.acceptText;
-        document.getElementById('preview-reject').textContent = config.rejectText;
-      }
-
-      // Update code output
+      // Update code output immediately
       document.getElementById('code-output').innerHTML = generateOutputCode(config);
 
-      // Update bookmarklet
-      document.getElementById('bookmarklet-link').href = generateBookmarklet(config);
+      // Debounce banner recreation
+      if (updateTimeout) clearTimeout(updateTimeout);
+      updateTimeout = setTimeout(() => updateLiveBanner(config), 100);
     }
 
-    // Generate bookmarklet
-    function generateBookmarklet(config) {
-      const fontValue = config.fontFamily === 'inherit' ? 'inherit' : `${config.fontSize}px/${config.lineHeight} ${config.fontFamily}`;
+    function updateLiveBanner(config) {
+      const container = document.getElementById('live-banner-container');
 
-      // Build config object parts
-      let configParts = [
-        `msg:'${config.msg.replace(/'/g,"\\'")}'`,
-        `acceptText:'${config.acceptText.replace(/'/g,"\\'")}'`,
-        `rejectText:'${config.rejectText.replace(/'/g,"\\'")}' `
-      ];
+      // Destroy existing banner
+      if (liveBanner) {
+        liveBanner.destroy();
+        liveBanner = null;
+      }
+      container.innerHTML = '';
+      document.querySelectorAll('cookie-banner-element').forEach(el => el.remove());
 
-      if (config.mode === 'eu') configParts.push('forceEU:true');
-      else if (config.mode === 'non-eu') configParts.push('forceEU:false');
+      // Clear cookies so banner shows
+      document.cookie.split(';').forEach(c => {
+        const name = c.trim().split('=')[0];
+        if (name) document.cookie = name + '=;expires=Thu,01 Jan 1970 00:00:00 GMT;path=/';
+      });
 
-      if (config.bannerMode === 'gdpr') configParts.push("mode:'gdpr'");
+      // Build CSS
+      const forceEU = config.mode === 'eu' ? true : config.mode === 'non-eu' ? false : undefined;
+      const isToast = ['bottom-left', 'bottom-right', 'center'].includes(config.position);
 
-      const code = `(function(){
-if(document.getElementById('ckb')){document.getElementById('ckb').remove();document.getElementById('ckb-style')?.remove();}
-var s=document.createElement('style');
-s.id='ckb-style';
-s.textContent=':root{--ckb-bg:${config.bgColor};--ckb-color:${config.textColor};--ckb-btn-bg:${config.btnBg};--ckb-btn-color:${config.btnColor};--ckb-reject-bg:${config.rejectBg};--ckb-font:${fontValue};--ckb-padding:${config.padding}px 16px;--ckb-gap:${config.gap}px;--ckb-btn-padding:${config.btnPaddingV}px ${config.btnPaddingH}px;--ckb-btn-radius:${config.btnRadius}px}';
-document.head.appendChild(s);
-window.CookieBannerConfig={${configParts.join(',')}};
-var sc=document.createElement('script');
-sc.src='https://unpkg.com/smallest-cookie-banner@latest/dist/cookie-banner.min.js';
-document.body.appendChild(sc);
-})();`;
+      let css = '#ckb{position:relative!important;bottom:auto!important;left:auto!important;right:auto!important;top:auto!important;width:100%!important;';
+      css += '--ckb-bg:' + config.bgColor + ';';
+      css += '--ckb-color:' + config.textColor + ';';
+      css += '--ckb-btn-bg:' + config.btnBg + ';';
+      css += '--ckb-btn-color:' + config.btnColor + ';';
+      css += '--ckb-font:' + config.fontSize + 'px ' + config.fontFamily + ';';
+      css += '--ckb-pad:' + config.padding + 'px;';
+      css += '--ckb-gap:' + config.gap + 'px;';
+      css += '--ckb-radius:' + config.borderRadius + 'px;';
+      css += '--ckb-btn-radius:' + config.btnRadius + 'px;';
+      css += '}';
+      if (config.customCss) css += config.customCss;
 
-      return 'javascript:' + encodeURIComponent(code);
+      // Create real banner
+      if (typeof window.createCookieBanner === 'function') {
+        liveBanner = window.createCookieBanner({
+          mode: config.bannerMode,
+          tabs: { enabled: config.enableTabs, toast: isToast },
+          forceEU: forceEU,
+          msg: config.msg,
+          acceptText: config.bannerMode === 'gdpr' ? 'Accept All' : config.acceptText,
+          rejectText: config.bannerMode === 'gdpr' ? 'Reject All' : config.rejectText,
+          settingsText: config.settingsText,
+          saveText: config.saveText,
+          privacyPolicyUrl: config.privacyUrl || undefined,
+          container: container,
+          allowMultiple: true,
+          autoAcceptDelay: 0,
+          css: css,
+          onAccept: () => console.log('Accepted'),
+          onReject: () => console.log('Rejected'),
+          onConsent: (c) => console.log('Consent:', c)
+        });
+        liveBanner.show();
+      }
     }
 
     // Show tab
@@ -1798,81 +2046,6 @@ document.body.appendChild(sc);
         showToast('Copy failed');
       }
       document.body.removeChild(textarea);
-    }
-
-    // Try on CodePen
-    function tryOnCodePen() {
-      const config = getConfig();
-      const fontValue = config.fontFamily === 'inherit' ? 'inherit' : `${config.fontSize}px/${config.lineHeight} ${config.fontFamily}`;
-
-      const css = `:root {
-  --ckb-bg: ${config.bgColor};
-  --ckb-color: ${config.textColor};
-  --ckb-btn-bg: ${config.btnBg};
-  --ckb-btn-color: ${config.btnColor};
-  --ckb-reject-bg: ${config.rejectBg};
-  --ckb-font: ${fontValue};
-  --ckb-padding: ${config.padding}px 16px;
-  --ckb-gap: ${config.gap}px;
-  --ckb-btn-padding: ${config.btnPaddingV}px ${config.btnPaddingH}px;
-  --ckb-btn-radius: ${config.btnRadius}px;
-}
-
-body {
-  font-family: system-ui, sans-serif;
-  padding: 40px;
-  background: #f5f5f5;
-}
-
-.content {
-  max-width: 600px;
-  margin: 0 auto;
-  background: white;
-  padding: 30px;
-  border-radius: 12px;
-}`;
-
-      const forceEU = config.mode === 'eu' ? 'true' : config.mode === 'non-eu' ? 'false' : null;
-      let jsConfig = `window.CookieBannerConfig = {
-  msg: '${config.msg.replace(/'/g, "\\'")}',
-  acceptText: '${config.acceptText.replace(/'/g, "\\'")}',
-  rejectText: '${config.rejectText.replace(/'/g, "\\'")}'`;
-      if (forceEU !== null) jsConfig += `,\n  forceEU: ${forceEU}`;
-      if (config.bannerMode === 'gdpr') jsConfig += `,\n  mode: 'gdpr'`;
-      jsConfig += `\n};`;
-
-      const html = `<div class="content">
-  <h1>Cookie Banner Demo</h1>
-  <p>This is a demo page. The cookie banner will appear at the bottom.</p>
-  <p>Customize it using the configurator at:</p>
-  <a href="https://dreadfulcode.github.io/smallest-cookie-banner/">dreadfulcode.github.io/smallest-cookie-banner</a>
-</div>`;
-
-      const data = {
-        title: 'Cookie Banner Demo',
-        html: html,
-        css: css,
-        js: jsConfig,
-        js_external: 'https://unpkg.com/smallest-cookie-banner@latest/dist/cookie-banner.min.js',
-        editors: '111'
-      };
-
-      const form = document.createElement('form');
-      form.action = 'https://codepen.io/pen/define';
-      form.method = 'POST';
-      form.target = '_blank';
-
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = 'data';
-      input.value = JSON.stringify(data);
-
-      form.appendChild(input);
-      document.body.appendChild(form);
-      form.submit();
-      document.body.removeChild(form);
-
-      showToast('Opening CodePen...');
     }
 
     // Download config
@@ -1918,8 +2091,125 @@ body {
       setTimeout(() => toast.classList.remove('show'), 2000);
     }
 
-    // Initialize
-    updatePreview();
+    // Initialize (updatePreview called after library loads below)
+
+    // Demo functionality
+    let demoBanner = null;
+    let demoModal = null;
+
+    function launchDemo() {
+      // Destroy existing demo
+      if (demoBanner) {
+        demoBanner.destroy(true);
+        demoBanner = null;
+      }
+      document.querySelectorAll('cookie-banner-element').forEach(el => el.remove());
+      if (demoModal) {
+        demoModal.remove();
+        demoModal = null;
+      }
+
+      const config = getConfig();
+      const isToast = ['bottom-left', 'bottom-right', 'center'].includes(config.position);
+      const forceEU = config.mode === 'eu' ? true : config.mode === 'non-eu' ? false : undefined;
+
+      // Create modal overlay
+      demoModal = document.createElement('div');
+      demoModal.id = 'demo-modal';
+      demoModal.innerHTML = '<div class="demo-modal-backdrop" onclick="closeDemo()"></div>' +
+        '<div class="demo-modal-content">' +
+        '<button class="demo-modal-close" onclick="closeDemo()">&times;</button>' +
+        '<div class="demo-modal-header">Preview: ' + config.position.replace('-', ' ') + '</div>' +
+        '<div class="demo-modal-frame" id="demo-frame"></div>' +
+        '</div>';
+      document.body.appendChild(demoModal);
+
+      // Build CSS for position (relative to modal frame)
+      let css = '#ckb{position:absolute!important;';
+      if (config.position === 'top') {
+        css += 'bottom:auto;top:0;left:0;right:0;';
+      } else if (config.position === 'bottom-left') {
+        css += 'right:auto;left:20px;bottom:20px;width:300px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15);';
+      } else if (config.position === 'bottom-right') {
+        css += 'left:auto;right:20px;bottom:20px;width:300px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15);';
+      } else if (config.position === 'center') {
+        css += 'bottom:auto;top:50%;left:50%;right:auto;width:320px;border-radius:12px;box-shadow:0 4px 40px rgba(0,0,0,0.3);transform:translate(-50%,-50%);';
+      } else {
+        css += 'bottom:0;left:0;right:0;';
+      }
+      css += '}';
+
+      // Add custom colors and styling
+      css += '#ckb{';
+      css += '--ckb-bg:' + config.bgColor + ';';
+      css += '--ckb-color:' + config.textColor + ';';
+      css += '--ckb-btn-bg:' + config.btnBg + ';';
+      css += '--ckb-btn-color:' + config.btnColor + ';';
+      css += '--ckb-reject-bg:' + config.rejectBg + ';';
+      css += '--ckb-focus:' + config.focusColor + ';';
+      css += '--ckb-font:' + config.fontFamily + ';';
+      css += '--ckb-size:' + config.fontSize + 'px;';
+      css += '--ckb-line:' + config.lineHeight + ';';
+      css += '--ckb-pad:' + config.padding + 'px;';
+      css += '--ckb-gap:' + config.gap + 'px;';
+      css += '--ckb-radius:' + config.borderRadius + 'px;';
+      css += '--ckb-btn-radius:' + config.btnRadius + 'px;';
+      css += '--ckb-btn-pad:' + config.btnPaddingV + 'px ' + config.btnPaddingH + 'px;';
+      css += 'z-index:1;';
+      css += '}';
+      css += config.customCss || '';
+
+      const demoConfig = {
+        mode: config.bannerMode,
+        tabs: { enabled: config.enableTabs, toast: isToast },
+        forceEU: forceEU,
+        msg: config.msg,
+        acceptText: config.bannerMode === 'gdpr' ? 'Accept All' : config.acceptText,
+        rejectText: config.bannerMode === 'gdpr' ? 'Reject All' : config.rejectText,
+        css: css,
+        onAccept: function() { showToast('Accepted!'); closeDemo(); },
+        onReject: function() { showToast('Rejected!'); closeDemo(); },
+        onConsent: function(c) { console.log('Consent:', c); }
+      };
+
+      if (typeof window.createCookieBanner === 'function') {
+        demoBanner = window.createCookieBanner(demoConfig);
+        // Move banner element into the demo frame
+        setTimeout(function() {
+          const frame = document.getElementById('demo-frame');
+          const bannerEl = document.querySelector('cookie-banner-element');
+          if (bannerEl && frame) {
+            frame.appendChild(bannerEl);
+          }
+          demoBanner.show();
+        }, 10);
+      } else {
+        showToast('Library not loaded. Refresh and try again.');
+      }
+    }
+
+    function closeDemo() {
+      if (demoBanner) {
+        demoBanner.destroy(true);
+        demoBanner = null;
+      }
+      document.querySelectorAll('cookie-banner-element').forEach(el => el.remove());
+      if (demoModal) {
+        demoModal.remove();
+        demoModal = null;
+      }
+    }
+  </script>
+
+  <!-- Load the cookie banner library -->
+  <script src="cookie-banner.js"></script>
+  <script>
+    // Initialize live preview after library loads
+    if (typeof window.createCookieBanner === 'function') {
+      updatePreview();
+    } else {
+      console.error('Cookie banner library failed to load');
+    }
   </script>
 </body>
 </html>

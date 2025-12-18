@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Framework Examples - smallest-cookie-banner</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 40px 20px;
+      background: #fff;
+      color: #333;
+    }
+    h1 { font-size: 24px; margin-bottom: 8px; }
+    .subtitle { color: #666; font-size: 14px; margin-bottom: 32px; }
+    .frameworks {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    .frameworks a {
+      display: block;
+      padding: 16px;
+      background: #f5f5f5;
+      border-radius: 8px;
+      text-decoration: none;
+      color: #333;
+      font-weight: 500;
+      transition: background 0.15s;
+    }
+    .frameworks a:hover {
+      background: #eee;
+    }
+    .frameworks a span {
+      display: block;
+      font-size: 12px;
+      font-weight: normal;
+      color: #666;
+      margin-top: 4px;
+    }
+    .back {
+      display: inline-block;
+      margin-top: 32px;
+      color: #0066cc;
+    }
+  </style>
+</head>
+<body>
+  <h1>smallest-cookie-banner</h1>
+  <p class="subtitle">Live Framework Demos</p>
+
+  <div class="frameworks">
+    <a href="vanilla.html">
+      Vanilla JS
+      <span>No framework</span>
+    </a>
+    <a href="react.html">
+      React
+      <span>React 18 via CDN</span>
+    </a>
+    <a href="vue.html">
+      Vue
+      <span>Vue 3 via CDN</span>
+    </a>
+  </div>
+
+  <a class="back" href="../index.html">Back to configurator</a>
+</body>
+</html>

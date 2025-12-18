@@ -1,7 +1,7 @@
 {
   "name": "smallest-cookie-banner",
-  "version": "1.0.1",
-  "description": "The smallest legally compliant cookie consent banner. ~1.5KB gzipped. Auto-detects EU for GDPR, implied consent elsewhere.",
+  "version": "2.1.0",
+  "description": "The smallest legally compliant cookie consent banner. ~7KB gzipped. Auto-detects EU for GDPR, implied consent elsewhere. Scoped Web Components with Shadow DOM.",
   "main": "dist/cookie-banner.js",
   "module": "dist/cookie-banner.js",
   "types": "dist/cookie-banner.d.ts",
@@ -11,7 +11,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc && terser dist/cookie-banner.js -o dist/cookie-banner.min.js -c -m --comments false",
+    "build": "tsc && node scripts/fix-umd.js && terser dist/cookie-banner.js -o dist/cookie-banner.min.js -c -m --comments false",
     "build:watch": "tsc --watch",
     "test": "jest --coverage",
     "test:watch": "jest --watch",
@@ -66,12 +66,17 @@
     "transform": {
       "^.+\\.ts$": "ts-jest"
     },
+    "coverageReporters": [
+      "text",
+      "lcov",
+      "json-summary"
+    ],
     "coverageThreshold": {
       "global": {
-        "branches": 80,
-        "functions": 70,
+        "branches": 89,
+        "functions": 80,
         "lines": 90,
-        "statements": 85
+        "statements": 90
       }
     },
     "collectCoverageFrom": [
