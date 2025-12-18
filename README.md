@@ -27,7 +27,7 @@ If you use this library and want a mention here, send me your URL!
 - **GDPR by default** — shows accept/reject to all users
 - **Flexible modes** — minimal mode available via `forceEU: false`
 - **TypeScript** — full type definitions included
-- **Well-tested** — 307 tests, TDD approach
+- **Well-tested** — 315 tests, TDD approach
 - **CSS Encapsulation** — Web Components with Shadow DOM (v2.0)
 
 ### Compliant & Accessible
@@ -530,7 +530,7 @@ All PRs must include:
 
 All PRs are automatically checked for:
 - Linting (ESLint + TypeScript)
-- Tests (Jest, 260+ test cases)
+- Tests (Jest, 315 test cases)
 - Coverage threshold (90% minimum)
 - Build verification
 
