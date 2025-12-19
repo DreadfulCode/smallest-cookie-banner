@@ -27,7 +27,7 @@ If you use this library and want a mention here, send me your URL!
 - **GDPR by default** — shows accept/reject to all users
 - **Flexible modes** — minimal mode available via `forceEU: false`
 - **TypeScript** — full type definitions included
-- **Well-tested** — 315 tests, TDD approach
+- **Well-tested** — 319 tests, TDD approach
 - **CSS Encapsulation** — Web Components with Shadow DOM (v2.0)
 
 ### Compliant & Accessible
@@ -283,14 +283,12 @@ loadOnConsent('analytics', 'https://example.com/script.js', () => {
   console.log('Script loaded!');
 });
 
-// Works with custom cookie names - no extra config needed!
-createCookieBanner({
-  mode: 'gdpr',
-  cookieName: 'my_consent'  // loadOnConsent automatically inherits this
-});
+// Works with custom cookie names - reads from window.CookieBannerConfig
+window.CookieBannerConfig = { cookieName: 'my_consent' };
+loadOnConsent('analytics', 'https://example.com/analytics.js'); // Uses 'my_consent'
 ```
 
-**Note:** `loadOnConsent` automatically works with custom cookie names when you call `createCookieBanner`. The banner loads any pending scripts on init using its configured cookie name.
+**Note:** `loadOnConsent` automatically reads `cookieName` from `window.CookieBannerConfig` if set. This works on return visits even before `createCookieBanner` is called.
 
 ### Callback Approach (Full Control)
 
@@ -530,7 +528,7 @@ All PRs must include:
 
 All PRs are automatically checked for:
 - Linting (ESLint + TypeScript)
-- Tests (Jest, 315 test cases)
+- Tests (Jest, 319 test cases)
 - Coverage threshold (90% minimum)
 - Build verification
 

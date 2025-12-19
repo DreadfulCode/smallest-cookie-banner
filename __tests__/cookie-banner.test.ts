@@ -3918,14 +3918,14 @@ describe('smallest-cookie-banner', () => {
         it('loadOnConsent should read cookieName from window.CookieBannerConfig on return visit', () => {
           window.CookieBannerConfig = {
             forceEU: true,
-            cookieName: 'ck',
+            cookieName: 'asdfghj',
           };
 
           // First visit: user accepts
-          const banner = createCookieBanner({ forceEU: true, cookieName: 'ck' });
+          const banner = createCookieBanner({ forceEU: true, cookieName: 'asdfghj' });
           banner.show();
           shadowQuery('#cky')?.click();
-          expect(document.cookie).toContain('ck=');
+          expect(document.cookie).toContain('asdfghj=');
 
           // Simulate page reload
           _resetScriptRegistry();
@@ -3938,6 +3938,56 @@ describe('smallest-cookie-banner', () => {
 
           // Should load because loadOnConsent reads cookieName from window.CookieBannerConfig
           const scripts = document.querySelectorAll('script[src="https://example.com/dietervb-bug.js"]');
+          expect(scripts.length).toBe(1);
+
+          delete window.CookieBannerConfig;
+        });
+
+        it('loadOnConsent ignores invalid cookieName with special characters in CookieBannerConfig', () => {
+          // Set consent with default cookie name
+          setConsent('essential:1,analytics:1', 'cookie_consent', 365);
+
+          // Invalid cookie name with special characters should be ignored
+          window.CookieBannerConfig = {
+            cookieName: 'bad;cookie=injection',
+          };
+
+          loadOnConsent('analytics', 'https://example.com/special-chars.js');
+
+          // Should load because it falls back to default 'cookie_consent'
+          const scripts = document.querySelectorAll('script[src="https://example.com/special-chars.js"]');
+          expect(scripts.length).toBe(1);
+
+          delete window.CookieBannerConfig;
+        });
+
+        it('loadOnConsent ignores empty cookieName in CookieBannerConfig', () => {
+          setConsent('essential:1,analytics:1', 'cookie_consent', 365);
+
+          window.CookieBannerConfig = {
+            cookieName: '',
+          };
+
+          loadOnConsent('analytics', 'https://example.com/empty-name.js');
+
+          // Should load because empty string is falsy, falls back to default
+          const scripts = document.querySelectorAll('script[src="https://example.com/empty-name.js"]');
+          expect(scripts.length).toBe(1);
+
+          delete window.CookieBannerConfig;
+        });
+
+        it('loadOnConsent ignores cookieName with spaces in CookieBannerConfig', () => {
+          setConsent('essential:1,analytics:1', 'cookie_consent', 365);
+
+          window.CookieBannerConfig = {
+            cookieName: 'cookie name',
+          };
+
+          loadOnConsent('analytics', 'https://example.com/spaces.js');
+
+          // Should load because spaces fail regex, falls back to default
+          const scripts = document.querySelectorAll('script[src="https://example.com/spaces.js"]');
           expect(scripts.length).toBe(1);
 
           delete window.CookieBannerConfig;
