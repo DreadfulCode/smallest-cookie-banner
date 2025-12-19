@@ -3914,6 +3914,34 @@ describe('smallest-cookie-banner', () => {
           // Script should be loaded
           expect(document.querySelectorAll('script[src="https://example.com/callback-option.js"]').length).toBe(1);
         });
+
+        it('loadOnConsent should read cookieName from window.CookieBannerConfig on return visit', () => {
+          window.CookieBannerConfig = {
+            forceEU: true,
+            cookieName: 'ck',
+          };
+
+          // First visit: user accepts
+          const banner = createCookieBanner({ forceEU: true, cookieName: 'ck' });
+          banner.show();
+          shadowQuery('#cky')?.click();
+          expect(document.cookie).toContain('ck=');
+
+          // Simulate page reload
+          _resetScriptRegistry();
+          _resetSingleton();
+
+          // Return visit: loadOnConsent without explicit cookieName (reads from CookieBannerConfig)
+          loadOnConsent('analytics', 'https://example.com/dietervb-bug.js', {
+            callback: () => console.log('loaded'),
+          });
+
+          // Should load because loadOnConsent reads cookieName from window.CookieBannerConfig
+          const scripts = document.querySelectorAll('script[src="https://example.com/dietervb-bug.js"]');
+          expect(scripts.length).toBe(1);
+
+          delete window.CookieBannerConfig;
+        });
       });
     });
   });

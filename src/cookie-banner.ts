@@ -687,6 +687,10 @@ export function loadOnConsent(
   // Parse options - support both legacy callback and new options object
   let callback: (() => void) | undefined;
   let cookieName = 'cookie_consent';
+  const globalConfig = window.CookieBannerConfig;
+  if (globalConfig?.cookieName && COOKIE_NAME_REGEX.test(globalConfig.cookieName)) {
+    cookieName = globalConfig.cookieName;
+  }
 
   if (typeof callbackOrOptions === 'function') {
     callback = callbackOrOptions;

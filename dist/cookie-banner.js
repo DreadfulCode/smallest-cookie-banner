@@ -441,6 +441,10 @@
         // Parse options - support both legacy callback and new options object
         let callback;
         let cookieName = 'cookie_consent';
+        const globalConfig = window.CookieBannerConfig;
+        if ((globalConfig === null || globalConfig === void 0 ? void 0 : globalConfig.cookieName) && COOKIE_NAME_REGEX.test(globalConfig.cookieName)) {
+            cookieName = globalConfig.cookieName;
+        }
         if (typeof callbackOrOptions === 'function') {
             callback = callbackOrOptions;
         }
